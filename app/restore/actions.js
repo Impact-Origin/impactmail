@@ -9,7 +9,7 @@ export async function restoreDeletedAccount() {
 	const current = await getCurrentAccount();
 	if (!current) redirect("/signin");
 	if (isDeletionPending(current.account) && !(await restoreAccount(current.account))) {
-		return { error: "Your account is being deleted, so it can't be restored anymore." };
+		return { error: "A tua conta está a ser eliminada, por isso já não pode ser restaurada." };
 	}
 	redirect("/");
 }

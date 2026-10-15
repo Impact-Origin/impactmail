@@ -8,21 +8,21 @@ export default function ListCleanupPreview({ summary, isCounting, error }) {
 	if (error) {
 		return (
 			<p className="rounded-lg bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground">
-				Couldn&apos;t count the list cleanup. It still runs when the issue goes out.
+				Não foi possível contar a limpeza da lista. Corre na mesma quando a edição for enviada.
 			</p>
 		);
 	}
 	if (!summary) return null;
 
 	const rows = [
-		{ icon: MailQuestionMark, count: summary.lastChance, label: "get the last-chance email instead" },
-		{ icon: Moon, count: summary.dormant, label: "become dormant" },
-		{ icon: Hourglass, count: summary.waiting, label: "skip it while they have time to answer" },
+		{ icon: MailQuestionMark, count: summary.lastChance, label: "recebem antes o email de última oportunidade" },
+		{ icon: Moon, count: summary.dormant, label: "ficam inativos" },
+		{ icon: Hourglass, count: summary.waiting, label: "não a recebem enquanto têm tempo para responder" },
 	].filter(({ count }) => count > 0);
 
 	return (
 		<div className="rounded-lg bg-muted/60 px-3 py-2.5 text-sm">
-			<p className="font-medium">List cleanup</p>
+			<p className="font-medium">Limpeza da lista</p>
 			{rows.length > 0 ? (
 				<ul className="mt-1.5 flex flex-col gap-1">
 					{rows.map(({ icon: Icon, count, label }) => (
@@ -35,7 +35,7 @@ export default function ListCleanupPreview({ summary, isCounting, error }) {
 					))}
 				</ul>
 			) : (
-				<p className="mt-0.5 text-muted-foreground">Nobody in this send is cold.</p>
+				<p className="mt-0.5 text-muted-foreground">Ninguém neste envio está inativo.</p>
 			)}
 		</div>
 	);

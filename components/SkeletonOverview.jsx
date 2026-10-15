@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 export default function SkeletonOverview() {
 	return (
 		<>
-			<HeaderPage title="Overview" />
+			<HeaderPage title="Visão geral" />
 			<div className="flex flex-col gap-8">
-				<SectionSkeleton title={`Last ${PERIOD_DAYS} days`}>
+				<SectionSkeleton title={`Últimos ${PERIOD_DAYS} dias`}>
 					<div className="overflow-hidden rounded-2xl bg-card shadow-border">
 						<SkeletonStats />
 						<div className="border-t border-border/60">
@@ -19,10 +19,10 @@ export default function SkeletonOverview() {
 						</div>
 					</div>
 				</SectionSkeleton>
-				<SectionSkeleton title="Today">
+				<SectionSkeleton title="Hoje">
 					<SkeletonSends />
 				</SectionSkeleton>
-				<SectionSkeleton title="Campaigns">
+				<SectionSkeleton title="Campanhas">
 					<SkeletonCampaigns rows={5} />
 				</SectionSkeleton>
 			</div>

@@ -6,10 +6,8 @@ import CardSettings from "@/components/CardSettings";
 import InputCampaignSlug from "@/components/InputCampaignSlug";
 import ListCleanupPreview from "@/components/ListCleanupPreview";
 import NoticeFirstSend from "@/components/NoticeFirstSend";
-import NoticeWarmup from "@/components/NoticeWarmup";
 import PickerSendTime from "@/components/PickerSendTime";
 import RowCampaign from "@/components/RowCampaign";
-import TextPlanLimit from "@/components/TextPlanLimit";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -21,13 +19,12 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { FIRST_SEND } from "@/lib/config";
-import { formatCount, formatNumber, formatSendTime } from "@/lib/format";
-import { getPaceHours } from "@/lib/send-spread";
+import { LOCALE, formatCount, formatNumber, formatSendTime } from "@/lib/format";
 import { slugify } from "@/lib/slug";
 import { useIsClient } from "@/lib/use-is-client";
 import { cn } from "@/lib/utils";
 
-// The send step: who gets the issue and how fast it goes out, then now or at a time. Its button is in the editor's
+// The send step: who gets the issue, then now or at a time. Its button is in the editor's
 // bar, and lib/use-send-campaign.js holds what it does.
 export default function PanelSend({
 	sending,
@@ -35,8 +32,6 @@ export default function PanelSend({
 	newsletter,
 	subject,
 	audienceCount,
-	emailsLeft,
-	pace,
 	newContacts,
 	archiveUrlBase,
 }) {
@@ -45,29 +40,25 @@ export default function PanelSend({
 	// The browser's time zone, which the server doesn't know.
 	const scheduledTime = scheduledAt && isClient ? formatSendTime(scheduledAt) : null;
 	const isNow = sending.choice === "now";
-	// As the send and schedule dialogs counted them: a send with its last-chance emails, a schedule its contacts.
-	const paceEmails = isNow ? sending.sendEmails : sending.scheduleRecipients;
-	const isPaced = Boolean(pace?.warmup) || getPaceHours(pace, { emails: paceEmails, newContacts }) > 0;
 	const isCleanupEnabled = Boolean(newsletter.cleanup?.enabled);
-	const isOverPlan = isNow && emailsLeft !== null && sending.sendEmails > emailsLeft;
 	const from = newsletter.fromName ? `${newsletter.fromName} <${newsletter.fromEmail}>` : newsletter.fromEmail;
 
 	return (
 		<div className="flex flex-col gap-6">
-			<CardSettings title="Who gets it">
-				<RowCampaign label="From">
+			<CardSettings title="Quem recebe">
+				<RowCampaign label="De">
 					<span className="truncate text-sm">{from}</span>
 				</RowCampaign>
-				<RowCampaign label="To">
+				<RowCampaign label="Para">
 					<span className="flex min-w-0 items-center gap-2 text-sm">
 						<AvatarNewsletter newsletter={newsletter} size={18} />
 						<span className="truncate">
 							{newsletter.name}
-							<span className="text-muted-foreground tabular-nums"> · {formatCount(audienceCount, "contact")}</span>
+							<span className="text-muted-foreground tabular-nums"> · {formatCount(audienceCount, "contacto")}</span>
 						</span>
 					</span>
 				</RowCampaign>
-				<RowCampaign label="Limit">
+				<RowCampaign label="Limite">
 					<span className="flex min-w-0 items-center gap-3">
 						<input
 							type="number"
@@ -75,19 +66,19 @@ export default function PanelSend({
 							inputMode="numeric"
 							value={sending.limit}
 							onChange={(event) => sending.setLimit(event.target.value)}
-							placeholder={`All ${formatNumber(isNow ? sending.issueAudience : audienceCount)}`}
-							aria-label="Limit"
+							placeholder={`Todos os ${formatNumber(isNow ? sending.issueAudience : audienceCount)}`}
+							aria-label="Limite"
 							className="h-11 w-full min-w-0 bg-transparent text-sm tabular-nums outline-none placeholder:text-muted-foreground"
 						/>
-						<span className="shrink-0 text-xs text-muted-foreground">Most engaged first</span>
+						<span className="shrink-0 text-xs text-muted-foreground">Os mais envolvidos primeiro</span>
 					</span>
 				</RowCampaign>
 				{archiveUrlBase && (
-					<RowCampaign label="Web page">
+					<RowCampaign label="Página web">
 						<InputCampaignSlug
 							campaignId={campaign._id}
 							initialSlug={campaign.archiveSlug ?? ""}
-							placeholder={slugify(subject, 80) || "issue"}
+							placeholder={slugify(subject, 80) || "edicao"}
 							urlBase={archiveUrlBase}
 						/>
 					</RowCampaign>
@@ -99,24 +90,24 @@ export default function PanelSend({
 						</div>
 					) : (
 						<p className="px-4 py-3 text-sm text-pretty text-muted-foreground">
-							The list cleanup runs when it goes out, so cold contacts get the last-chance email instead.
+							A limpeza da lista corre no momento do envio, por isso os contactos inativos recebem o email de última oportunidade.
 						</p>
 					))}
 			</CardSettings>
 
-			<CardSettings title="When" stagger={1}>
-				<div role="radiogroup" aria-label="When" className="grid gap-2 p-3 sm:grid-cols-2">
+			<CardSettings title="Quando" stagger={1}>
+				<div role="radiogroup" aria-label="Quando" className="grid gap-2 p-3 sm:grid-cols-2">
 					<CardChoice
 						icon={Send}
-						title="Send now"
-						description={scheduledTime ? `Instead of ${scheduledTime}` : "Goes out right away"}
+						title="Enviar já"
+						description={scheduledTime ? `Em vez de ${scheduledTime}` : "É enviada de imediato"}
 						isSelected={isNow}
 						onSelect={() => sending.setChoice("now")}
 					/>
 					<CardChoice
 						icon={CalendarClock}
-						title="Schedule"
-						description={scheduledTime ? `Scheduled for ${scheduledTime}` : "Pick a day and time"}
+						title="Agendar"
+						description={scheduledTime ? `Agendada para ${scheduledTime}` : "Escolhe um dia e uma hora"}
 						isSelected={!isNow}
 						onSelect={() => sending.setChoice("later")}
 					/>
@@ -132,41 +123,38 @@ export default function PanelSend({
 						<SummarySendTime value={sending.sendAt} problem={sending.scheduleProblem} />
 						<div className="flex items-center justify-between gap-3">
 							<p className="text-sm text-muted-foreground tabular-nums">
-								Goes out to {formatCount(sending.scheduleRecipients, "contact")}. You can keep editing until then.
+								Vai para {formatCount(sending.scheduleRecipients, "contacto")}. Podes continuar a editar até lá.
 							</p>
 							{scheduledAt && (
 								<Button variant="ghost" size="sm" onClick={sending.unschedule} disabled={sending.isPending}>
-									Unschedule
+									Desagendar
 								</Button>
 							)}
 						</div>
 					</div>
 				)}
-				{(isPaced || newContacts > FIRST_SEND.minSlice) && (
+				{newContacts > FIRST_SEND.minSlice && (
 					<div className="flex flex-col gap-2 p-3">
-						<NoticeWarmup pace={pace} emails={paceEmails} newContacts={newContacts} />
-						{newContacts > FIRST_SEND.minSlice && <NoticeFirstSend count={newContacts} />}
+						<NoticeFirstSend count={newContacts} />
 					</div>
 				)}
 			</CardSettings>
 
-			{isOverPlan && <TextPlanLimit emailsLeft={emailsLeft} />}
-
 			<Dialog open={sending.isConfirmOpen} onOpenChange={sending.setIsConfirmOpen}>
 				<DialogContent className="sm:max-w-sm">
 					<DialogHeader>
-						<DialogTitle className="tabular-nums">Send to {formatCount(sending.sendRecipients, "contact")}?</DialogTitle>
+						<DialogTitle className="tabular-nums">Enviar para {formatCount(sending.sendRecipients, "contacto")}?</DialogTitle>
 						<DialogDescription>
-							{scheduledTime ? `It goes out now instead of ${scheduledTime}.` : "Most engaged contacts receive it first."}
-							{sending.sendRecipients < sending.issueAudience && " Send it to more later from its page."}
+							{scheduledTime ? `É enviada agora em vez de ${scheduledTime}.` : "Os contactos mais envolvidos recebem-na primeiro."}
+							{sending.sendRecipients < sending.issueAudience && " Podes enviá-la a mais pessoas depois, na página da campanha."}
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant="outline">Cancel</Button>
+							<Button variant="outline">Cancelar</Button>
 						</DialogClose>
 						<Button onClick={sending.send} disabled={sending.isPending} className="min-w-20">
-							{sending.isPending ? <Loader2 className="animate-spin" /> : "Send"}
+							{sending.isPending ? <Loader2 className="animate-spin" /> : "Enviar"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -210,7 +198,7 @@ function CardChoice({ icon: Icon, title, description, isSelected, onSelect }) {
 function SummarySendTime({ value, problem }) {
 	if (problem) return <p className="text-sm text-destructive">{problem}</p>;
 
-	const zone = new Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
+	const zone = new Intl.DateTimeFormat(LOCALE, { timeZoneName: "short" })
 		.formatToParts(value)
 		.find(({ type }) => type === "timeZoneName")?.value;
 

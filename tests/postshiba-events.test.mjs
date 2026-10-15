@@ -4,7 +4,7 @@ import { after, before, describe, test } from "node:test";
 import mongoose from "mongoose";
 import { getEventPlan } from "../lib/email-event-rules.js";
 import { normalizePostshibaEvent, verifyPostshibaSignature } from "../lib/email-provider/postshiba-events.js";
-import { activate, catchRedirect, form, as, signIn, startTestApp } from "./helpers/app.mjs";
+import { catchRedirect, form, as, signIn, startTestApp } from "./helpers/app.mjs";
 import { POSTSHIBA, POSTSHIBA_ENV } from "./helpers/postshiba.mjs";
 
 const SECRET = POSTSHIBA.webhookSecret;
@@ -107,7 +107,6 @@ describe("the PostShiba webhook", () => {
 
 	async function customer(email, slug) {
 		const user = await signIn(email);
-		await activate(user);
 		const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St" }))));
 		user.newsletterId = url.split("/").at(-1);
 		user.tenantSlug = `mc-${user.accountId}`;

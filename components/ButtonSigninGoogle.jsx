@@ -8,7 +8,7 @@ export default function ButtonSigninGoogle({ next, oauthQuery }) {
 			{oauthQuery && <input type="hidden" name="oauth_query" value={oauthQuery} />}
 			<Button type="submit" variant="outline" size="lg" className="h-11 w-full">
 				<IconGoogle />
-				Continue with Google
+				Continuar com o Google
 			</Button>
 		</form>
 	);

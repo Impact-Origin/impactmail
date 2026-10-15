@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { runDashboardAction, toFormError } from "@/lib/actions/dashboard";
 import { requireAccount } from "@/lib/auth";
 import { LIST_SIZES, LIST_SOURCES, OTHER_LIST_SOURCE, findFreeSlug, needsOnboarding } from "@/lib/onboarding";
-import { siteExtensions } from "@/lib/site-extensions";
 import Account from "@/models/Account";
 
 function readText(formData, key) {
@@ -22,7 +21,7 @@ function readChoice(formData, key, choices) {
 export async function completeOnboarding(_state, formData) {
 	const { account } = await requireAccount();
 	const name = readText(formData, "name");
-	if (!name) return { error: "Name your newsletter" };
+	if (!name) return { error: "Dá um nome à tua newsletter" };
 	if (await needsOnboarding(account)) {
 		const { failure } = await runDashboardAction("create_newsletter", {
 			name,
@@ -31,7 +30,6 @@ export async function completeOnboarding(_state, formData) {
 			fromName: readText(formData, "fromName"),
 		});
 		if (failure) return toFormError(failure);
-		await siteExtensions.sendGoalOnNextPage("onboarding_completed");
 	}
 
 	const listSize = readChoice(formData, "listSize", LIST_SIZES.map(({ id }) => id));

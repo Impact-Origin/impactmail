@@ -28,7 +28,7 @@ export default function FormSignin({ next, oauthQuery }) {
 				/>
 				{sent?.error && <p className="text-sm text-destructive">{sent.error}</p>}
 				<Button type="submit" size="lg" disabled={isSending} className="mt-1 h-11">
-					{isSending ? <Loader2 className="animate-spin" /> : "Email me a code"}
+					{isSending ? <Loader2 className="animate-spin" /> : "Enviar-me um código"}
 					{!isSending && <ArrowRight data-icon="inline-end" />}
 				</Button>
 			</form>
@@ -42,7 +42,7 @@ export default function FormSignin({ next, oauthQuery }) {
 				<input type="hidden" name="next" value={next} />
 				{oauthQuery && <input type="hidden" name="oauth_query" value={oauthQuery} />}
 				<p className="text-sm text-pretty text-muted-foreground">
-					Enter the code sent to <span className="font-medium text-foreground">{email}</span>
+					Introduz o código enviado para <span className="font-medium text-foreground">{email}</span>
 				</p>
 				<Input
 					name="code"
@@ -52,12 +52,12 @@ export default function FormSignin({ next, oauthQuery }) {
 					maxLength={10}
 					required
 					autoFocus
-					aria-label="Code"
+					aria-label="Código"
 					className="h-11 text-center font-mono text-lg tracking-[0.4em] tabular-nums"
 				/>
 				{checked?.error && <p className="text-sm text-destructive">{checked.error}</p>}
 				<Button type="submit" size="lg" disabled={isVerifying} className="h-11">
-					{isVerifying ? <Loader2 className="animate-spin" /> : "Sign in"}
+					{isVerifying ? <Loader2 className="animate-spin" /> : "Entrar"}
 				</Button>
 			</form>
 			<div className="flex items-center justify-between gap-3 text-sm">
@@ -66,7 +66,7 @@ export default function FormSignin({ next, oauthQuery }) {
 					onClick={() => setDismissed(sent)}
 					className="text-muted-foreground transition-colors duration-150 hover:text-foreground"
 				>
-					Use another email
+					Usar outro email
 				</button>
 				<form action={sendAction}>
 					<input type="hidden" name="email" value={email} />
@@ -75,7 +75,7 @@ export default function FormSignin({ next, oauthQuery }) {
 						disabled={isSending}
 						className="text-muted-foreground transition-colors duration-150 hover:text-foreground disabled:opacity-50"
 					>
-						{isSending ? "Sending…" : "Send a new code"}
+						{isSending ? "A enviar…" : "Enviar um novo código"}
 					</button>
 				</form>
 			</div>

@@ -12,7 +12,7 @@ const DISABLED = {
 };
 
 // The public site's look, with its fonts' fallbacks: a route's own HTML doesn't get the site's fonts.
-const DISABLED_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>This link is disabled</title><style>
+const DISABLED_PAGE = `<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Este link está desativado</title><style>
 :root{--site:#fafafa;--ink:#0a0a0a;--muted:#737373;--dot:rgb(10 10 10/14%);color-scheme:light dark}
 @media (prefers-color-scheme:dark){:root{--site:#0d0d0d;--ink:#fafafa;--muted:#a1a1a1;--dot:rgb(250 250 250/14%)}}
 body{margin:0;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:0 20px;box-sizing:border-box;background:var(--site);color:var(--ink);font-family:Geist,ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
@@ -21,7 +21,7 @@ main{max-width:24rem;padding-bottom:8vh;text-align:center}
 h1{margin:0;font:480 2rem/1.05 Newsreader,"Iowan Old Style",Georgia,serif;letter-spacing:-0.03em;text-wrap:balance}
 p{margin:12px 0 0;font-size:15px;line-height:24px;color:var(--muted);text-wrap:pretty}
 @media (min-width:640px){h1{font-size:2.5rem}}
-</style></head><body><main><h1>This link is disabled</h1><p>The sender's account is suspended.</p></main></body></html>`;
+</style></head><body><main><h1>Este link está desativado</h1><p>A conta do remetente está suspensa.</p></main></body></html>`;
 
 function redirectTo(url) {
 	return new Response(null, { status: 302, headers: { Location: url, "Cache-Control": "no-store" } });
@@ -31,8 +31,8 @@ function redirectTo(url) {
 // would let anyone send visitors anywhere through this domain.
 function continuePage(url) {
 	const href = escapeHtml(url);
-	const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Continue</title></head>
-<body style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#27272a;"><main style="max-width:32rem;margin:20vh auto;padding:0 20px;"><p>This link goes to:</p><p><a href="${href}" rel="noopener noreferrer nofollow" style="color:#18181b;word-break:break-all;">${href}</a></p></main></body></html>`;
+	const html = `<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Continuar</title></head>
+<body style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#27272a;"><main style="max-width:32rem;margin:20vh auto;padding:0 20px;"><p>Este link vai para:</p><p><a href="${href}" rel="noopener noreferrer nofollow" style="color:#18181b;word-break:break-all;">${href}</a></p></main></body></html>`;
 	return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
 }
 

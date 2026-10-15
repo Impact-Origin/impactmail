@@ -6,7 +6,6 @@ import { checkSlug, saveNewsletter, sendWelcomeTest } from "@/app/(app)/newslett
 import BarSave from "@/components/BarSave";
 import ButtonCopy from "@/components/ButtonCopy";
 import InputImage from "@/components/InputImage";
-import NoticeWelcomePaused from "@/components/NoticeWelcomePaused";
 import PreviewEmail from "@/components/PreviewEmail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,34 +30,27 @@ import { UNSUBSCRIBE_PLACEHOLDER, renderEmail } from "@/lib/render-email";
 import { getSharedAddress } from "@/lib/sender-rules";
 import { slugify } from "@/lib/slug";
 import { toast } from "@/lib/toast";
-import { usePaywall } from "@/lib/use-paywall";
 import { cn } from "@/lib/utils";
 import { prefillWelcome } from "@/lib/welcome-content";
 
 const IMAGE_PREVIEW_PATTERN = /^(https:\/\/\S+\.\S{2,}\/\S+|\/\S+\.\w{3,4})$/;
 
-// welcomePause: the notice to show while the month's emails are used up and welcome emails are skipped. It saves from
-// onSubmit, not a form action: React resets a form after its action, which turned the switches back to how the page
+// It saves from onSubmit, not a form action: React resets a form after its action, which turned the switches back to how the page
 // opened and dropped what an error refused. Discard goes back to what the newsletter has saved.
-// defaultPostalAddress: what its emails print until it has its own (lib/postal-address.js); the editor's checks link
-// to the field with #postal-address. hasArchiveHost: the server hosts websites on customers' own subdomains.
+// The editor's checks link to the postal address field with #postal-address. hasArchiveHost: the server hosts websites on customers' own subdomains.
 export default function FormNewsletter({
 	newsletter,
 	domains,
 	sharedDomain,
 	appUrl,
 	hasArchiveHost,
-	defaultPostalAddress,
 	isSendingEnabled,
 	testEmail,
 	cleanupTotals,
-	welcomePause,
 }) {
-	const paywall = usePaywall();
-	const hasPlan = paywall?.hasPlan ?? true;
 	const slugId = useId();
 	const postalAddressRef = useRef(null);
-	const [draft, setDraft] = useState(() => getNewsletterDraft({ newsletter, domains, sharedDomain, defaultPostalAddress }));
+	const [draft, setDraft] = useState(() => getNewsletterDraft({ newsletter, domains, sharedDomain }));
 	const draftKey = getDraftKey(draft, { newsletter, sharedDomain });
 	const [savedKey, setSavedKey] = useState(draftKey);
 	const [savedAt, setSavedAt] = useState(null);
@@ -169,7 +161,7 @@ export default function FormNewsletter({
 	}
 
 	function discard() {
-		const saved = getNewsletterDraft({ newsletter, domains, sharedDomain, defaultPostalAddress });
+		const saved = getNewsletterDraft({ newsletter, domains, sharedDomain });
 		setDraft(saved);
 		setSavedKey(getDraftKey(saved, { newsletter, sharedDomain }));
 		setSavedAt(null);
@@ -177,11 +169,10 @@ export default function FormNewsletter({
 	}
 
 	function sendTest() {
-		if (!hasPlan) return paywall.open("test");
 		startTesting(async () => {
 			const result = await sendWelcomeTest(newsletter._id);
 			if (result?.error) toast.error(result.error);
-			else toast.success(`Test sent to ${testEmail}`);
+			else toast.success(`Teste enviado para ${testEmail}`);
 		});
 	}
 
@@ -189,13 +180,13 @@ export default function FormNewsletter({
 		<form onSubmit={save} className="flex flex-col gap-4">
 			{newsletter && <input type="hidden" name="id" value={newsletter._id} />}
 
-			<Section title="General" stagger={0}>
-				<Field label="Name">
+			<Section title="Geral" stagger={0}>
+				<Field label="Nome">
 					<Input
 						name="name"
 						value={name}
 						required
-						placeholder="Field notes"
+						placeholder="Notas de campo"
 						onChange={(event) => {
 							const { value } = event.target;
 							setDraft((current) => ({ ...current, name: value, ...(!current.isSlugEdited && { slug: slugify(value) }) }));
@@ -209,7 +200,7 @@ export default function FormNewsletter({
 							name="slug"
 							value={slug}
 							required
-							placeholder="field-notes"
+							placeholder="notas-de-campo"
 							aria-invalid={slugCheck.message ? true : undefined}
 							aria-describedby={slugCheck.status === "saved" ? undefined : `${slugId}-check`}
 							className="pr-9 font-mono"
@@ -240,30 +231,30 @@ export default function FormNewsletter({
 						</span>
 					)}
 				</Field>
-				<Field label="Image" hint="Square logo, 128×128 or larger">
+				<Field label="Imagem" hint="Logótipo quadrado, 128×128 ou maior">
 					<InputImage
 						key={discardCount}
 						name="imageUrl"
 						defaultValue={imageUrl}
-						label="newsletter image"
+						label="imagem da newsletter"
 						onChange={(value) => set("imageUrl", value)}
 					/>
 				</Field>
 			</Section>
 
-			<Section title="Sender" stagger={1}>
-				<Field label="From name">
-					<Input name="fromName" value={fromName} placeholder="Jane Doe" onChange={update("fromName")} />
+			<Section title="Remetente" stagger={1}>
+				<Field label="Nome do remetente">
+					<Input name="fromName" value={fromName} placeholder="Joana Silva" onChange={update("fromName")} />
 				</Field>
-				<Field label="From email" hint={fromHint} isWarning={isDomainUnverified}>
+				<Field label="Email do remetente" hint={fromHint} isWarning={isDomainUnverified}>
 					<span className="flex flex-wrap items-center gap-2">
 						<span className="flex items-center gap-2">
 							<Input
 								value={isShared ? sharedAddress.split("@")[0] : fromLocal}
 								readOnly={isShared}
 								required
-								aria-label="From email name"
-								placeholder="hi"
+								aria-label="Nome do email do remetente"
+								placeholder="ola"
 								className={cn("w-32 font-mono", isShared && "text-muted-foreground")}
 								onChange={(event) => set("fromLocal", event.target.value.trim())}
 							/>
@@ -273,9 +264,9 @@ export default function FormNewsletter({
 						<Select value={fromDomain} onValueChange={(value) => set("fromDomain", value)}>
 							<SelectTrigger
 								className="min-h-9 min-w-0 flex-auto py-1.5 text-left font-mono whitespace-normal wrap-anywhere data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none"
-								aria-label="From domain"
+								aria-label="Domínio do remetente"
 							>
-								<SelectValue placeholder="Add a domain first" />
+								<SelectValue placeholder="Adiciona primeiro um domínio" />
 							</SelectTrigger>
 							<SelectContent className="max-w-[calc(100vw-20px)] wrap-anywhere">
 								{sharedDomain && <SelectItem value={sharedDomain}>{sharedAddress.split("@")[1]}</SelectItem>}
@@ -289,34 +280,16 @@ export default function FormNewsletter({
 					</span>
 					<input type="hidden" name="fromEmail" value={fromEmail} />
 				</Field>
-				<Field label="Reply-to">
-					<Input name="replyTo" type="email" value={draft.replyTo} placeholder="Optional" onChange={update("replyTo")} />
+				<Field label="Responder para">
+					<Input name="replyTo" type="email" value={draft.replyTo} placeholder="Opcional" onChange={update("replyTo")} />
 				</Field>
 				<Field
-					label="Postal address"
+					label="Morada postal"
 					htmlFor={POSTAL_ADDRESS_ID}
 					hint={
-						defaultPostalAddress && postalAddress === defaultPostalAddress ? (
-							"MailCheap's address is used by default. Replace it with yours anytime."
-						) : postalAddress.trim() ? (
-							"Shown in the footer of every email. Anti-spam laws require one."
-						) : (
-							<>
-								Shown in the footer of every email. Anti-spam laws require one, so sending waits for it.
-								{defaultPostalAddress && (
-									<>
-										{" "}
-										<button
-											type="button"
-											onClick={() => set("postalAddress", defaultPostalAddress)}
-											className="font-medium text-foreground underline decoration-foreground/30 underline-offset-2 transition-colors duration-150 hover:decoration-foreground"
-										>
-											Use MailCheap&apos;s address
-										</button>
-									</>
-								)}
-							</>
-						)
+						postalAddress.trim()
+							? "Aparece no rodapé de todos os emails. As leis anti-spam exigem uma."
+							: "Aparece no rodapé de todos os emails. As leis anti-spam exigem uma, por isso o envio espera por ela."
 					}
 				>
 					<Textarea
@@ -325,7 +298,7 @@ export default function FormNewsletter({
 						name="postalAddress"
 						value={postalAddress}
 						rows={2}
-						placeholder="Company name, street, city, country"
+						placeholder="Nome da empresa, rua, cidade, país"
 						className="scroll-mt-28"
 						onChange={update("postalAddress")}
 					/>
@@ -333,24 +306,24 @@ export default function FormNewsletter({
 			</Section>
 
 			<Section
-				title="Confirm new signups"
+				title="Confirmar novas inscrições"
 				stagger={2}
 				action={
 					<Switch
 						name="requireConfirmation"
 						checked={isConfirmationRequired}
 						onCheckedChange={(isChecked) => set("isConfirmationRequired", isChecked)}
-						aria-label="Confirm new signups"
+						aria-label="Confirmar novas inscrições"
 					/>
 				}
 			>
 				<p className="px-4 py-3 text-sm text-pretty text-muted-foreground">
-					New subscribers get this email and only join once they click its button, so fake and mistyped
-					addresses never reach the list. It&apos;s the only email they get: say what comes next.
+					Os novos subscritores recebem este email e só entram depois de clicarem no botão, por isso endereços falsos ou mal
+					escritos nunca chegam à lista. É o único email que recebem: diz o que vem a seguir.
 				</p>
 				{isConfirmationRequired && (
 					<>
-						<Field label="Subject">
+						<Field label="Assunto">
 							<Input
 								name="confirmationSubject"
 								value={confirmation.subject}
@@ -358,7 +331,7 @@ export default function FormNewsletter({
 								onChange={updateConfirmation("subject")}
 							/>
 						</Field>
-						<Field label="Preview text">
+						<Field label="Texto de pré-visualização">
 							<Input
 								name="confirmationPreviewText"
 								value={confirmation.previewText}
@@ -367,8 +340,8 @@ export default function FormNewsletter({
 							/>
 						</Field>
 						<Field
-							label="Content"
-							hint={`Markdown. Keep the button: its ${CONFIRM_URL_PLACEHOLDER} becomes each subscriber's link.`}
+							label="Conteúdo"
+							hint={`Markdown. Mantém o botão: o seu ${CONFIRM_URL_PLACEHOLDER} torna-se o link de cada subscritor.`}
 						>
 							<Textarea
 								name="confirmationMarkdown"
@@ -391,26 +364,25 @@ export default function FormNewsletter({
 			</Section>
 
 			<Section
-				title="Welcome email"
+				title="Email de boas-vindas"
 				stagger={3}
 				collapsedNote={
 					isConfirmationRequired &&
-					"Not sent while new signups confirm, since the confirmation email replaces it. Its content is kept."
+					"Não é enviado enquanto as novas inscrições tiverem de ser confirmadas, porque o email de confirmação o substitui. O conteúdo fica guardado."
 				}
 				action={
 					<Switch
 						name="welcomeEnabled"
 						checked={isWelcomeEnabled}
 						onCheckedChange={switchWelcome}
-						aria-label="Welcome email"
+						aria-label="Email de boas-vindas"
 					/>
 				}
 			>
-				{welcomePause && isWelcomeEnabled && <NoticeWelcomePaused {...welcomePause} className="px-4 py-3" />}
-				<Field label="Subject">
+				<Field label="Assunto">
 					<Input name="welcomeSubject" value={welcome.subject} onChange={updateWelcome("subject")} />
 				</Field>
-				<Field label="Preview text">
+				<Field label="Texto de pré-visualização">
 					<Input
 						name="welcomePreviewText"
 						value={welcome.previewText}
@@ -418,7 +390,7 @@ export default function FormNewsletter({
 						onChange={updateWelcome("previewText")}
 					/>
 				</Field>
-				<Field label="Content" hint="Markdown">
+				<Field label="Conteúdo" hint="Markdown">
 					<Textarea
 						name="welcomeMarkdown"
 						value={welcome.markdown}
@@ -440,36 +412,36 @@ export default function FormNewsletter({
 				{newsletter && (
 					<div className="flex items-center justify-between gap-3 px-4 py-3">
 						<p className="text-xs wrap-anywhere text-muted-foreground">
-							{isSendingEnabled || !hasPlan ? `Sends the saved version to ${testEmail}` : "Sending is off"}
+							{isSendingEnabled ? `Envia a versão guardada para ${testEmail}` : "O envio está desligado"}
 						</p>
-						<Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={(hasPlan && !isSendingEnabled) || isTesting}>
+						<Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={!isSendingEnabled || isTesting}>
 							{isTesting ? <Loader2 className="animate-spin" /> : <FlaskConical />}
-							Send test
+							Enviar teste
 						</Button>
 					</div>
 				)}
 			</Section>
 
 			<Section
-				title="List cleanup"
+				title="Limpeza da lista"
 				stagger={4}
 				action={
 					<Switch
 						name="cleanupEnabled"
 						checked={isCleanupEnabled}
 						onCheckedChange={(isChecked) => set("isCleanupEnabled", isChecked)}
-						aria-label="List cleanup"
+						aria-label="Limpeza da lista"
 					/>
 				}
 			>
 				<p className="px-4 py-3 text-sm text-pretty text-muted-foreground">
-					Stops sending to contacts who stopped opening, unless they answer a last-chance email. Each time you send an
-					issue, contacts who ignored the last {cleanup.issues || savedCleanup.issues} issues and showed no sign of life
-					for {cleanup.days || savedCleanup.days} days get this email instead. A click
-					on its button keeps them. Anyone who doesn&apos;t answer by a send{" "}
-					{LAST_CHANCE_DAYS} days later becomes dormant: not unsubscribed, not deleted, and back if they sign up again.
+					Deixa de enviar para os contactos que deixaram de abrir, a não ser que respondam a um email de última oportunidade.
+					Sempre que envias uma edição, os contactos que ignoraram as últimas {cleanup.issues || savedCleanup.issues} edições e
+					não deram sinal de vida há {cleanup.days || savedCleanup.days} dias recebem este email em vez dela. Um clique no
+					botão mantém-nos. Quem não responder até um envio {LAST_CHANCE_DAYS} dias depois fica inativo: não cancela a
+					subscrição, não é eliminado, e volta se se inscrever de novo.
 				</p>
-				<Field label="Ignored issues" hint="In a row, counting from the first issue MailCheap sent">
+				<Field label="Edições ignoradas" hint="Seguidas, a contar da primeira edição que o ImpactMail enviou">
 					<Input
 						name="cleanupIssues"
 						type="number"
@@ -481,7 +453,7 @@ export default function FormNewsletter({
 						className="w-28 tabular-nums"
 					/>
 				</Field>
-				<Field label="Quiet for" hint="Days since the last open, click or signup">
+				<Field label="Sem atividade há" hint="Dias desde a última abertura, clique ou inscrição">
 					<span className="flex items-center gap-2">
 						<Input
 							name="cleanupDays"
@@ -493,7 +465,7 @@ export default function FormNewsletter({
 							onChange={updateCleanup("days")}
 							className="w-28 tabular-nums"
 						/>
-						<span className="text-sm text-muted-foreground">days</span>
+						<span className="text-sm text-muted-foreground">dias</span>
 					</span>
 				</Field>
 				{cleanupTotals && <CleanupTotals totals={cleanupTotals} />}
@@ -511,45 +483,34 @@ export default function FormNewsletter({
 			</Section>
 
 			<Section
-				title="Website"
+				title="Site"
 				stagger={5}
 				action={
 					<Switch
 						name="archiveEnabled"
 						checked={isArchiveEnabled}
 						onCheckedChange={(isChecked) => set("isArchiveEnabled", isChecked)}
-						aria-label="Website"
+						aria-label="Site"
 					/>
 				}
 			>
 				<p className="px-4 py-3 text-sm text-pretty text-muted-foreground">
-					Every issue you send gets a page here, with a signup form.
-					{hasArchiveHost && !archiveHost && " Add a domain on the Domains page to put it on your own subdomain."}
+					Cada edição que envias ganha aqui uma página, com um formulário de inscrição.
+					{hasArchiveHost && !archiveHost && " Adiciona um domínio na página Domínios para o pores no teu próprio subdomínio."}
 				</p>
 				<Field
-					label="Address"
+					label="Endereço"
 					as="div"
 					hint={
 						!isArchiveEnabled ? (
-							"Your website is off. Turn it on above to give every issue you send a page."
-						) : !hasPlan ? (
-							<>
-								It goes online once you pick a plan.{" "}
-								<button
-									type="button"
-									onClick={() => paywall.open("website")}
-									className="font-medium text-foreground underline decoration-foreground/30 underline-offset-2 transition-colors duration-150 hover:decoration-foreground"
-								>
-									Pick a plan
-								</button>
-							</>
+							"O teu site está desligado. Liga-o acima para dar uma página a cada edição que envias."
 						) : !newsletter?.archiveEnabled ? (
-							"It goes online when you save."
+							"Fica online quando guardares."
 						) : null
 					}
 				>
 					<span className="flex min-w-0 items-center gap-1.5 sm:min-h-9">
-						{isArchiveEnabled && hasPlan && newsletter?.archiveEnabled ? (
+						{isArchiveEnabled && newsletter?.archiveEnabled ? (
 							<a
 								href={websiteAddress}
 								target="_blank"
@@ -562,38 +523,38 @@ export default function FormNewsletter({
 						) : (
 							<span className="truncate font-mono text-[13px] text-muted-foreground/70">{websiteAddress}</span>
 						)}
-						<ButtonCopy value={websiteAddress} label="Copy address" />
+						<ButtonCopy value={websiteAddress} label="Copiar endereço" />
 					</span>
 				</Field>
-				<Field label="Description" hint="One sentence under the name and in the subscribe popup">
+				<Field label="Descrição" hint="Uma frase por baixo do nome e na janela de inscrição">
 					<Textarea
 						name="description"
 						value={description}
 						rows={2}
 						maxLength={MAX_DESCRIPTION_LENGTH}
-						placeholder="One idea about building things, every Sunday."
+						placeholder="Uma ideia sobre construir coisas, todos os domingos."
 						onChange={update("description")}
 					/>
 				</Field>
-				<Field label="Author bio" hint="Under your name on the author page">
+				<Field label="Biografia do autor" hint="Por baixo do teu nome na página do autor">
 					<Input
 						name="authorBio"
 						value={draft.authorBio}
 						maxLength={MAX_AUTHOR_BIO_LENGTH}
-						placeholder="I write about building small software companies."
+						placeholder="Escrevo sobre como criar pequenas empresas de software."
 						onChange={update("authorBio")}
 					/>
 				</Field>
-				<Field label="Author photo" hint="Square photo on the author page. The newsletter image otherwise.">
+				<Field label="Foto do autor" hint="Foto quadrada na página do autor. Senão, a imagem da newsletter.">
 					<InputImage
 						key={discardCount}
 						name="authorImageUrl"
 						defaultValue={draft.authorImageUrl}
-						label="author photo"
+						label="foto do autor"
 						onChange={(value) => set("authorImageUrl", value)}
 					/>
 				</Field>
-				<Field label="Social links" hint="One link per line">
+				<Field label="Redes sociais" hint="Um link por linha">
 					<Textarea
 						name="socialLinks"
 						value={draft.socialLinks}
@@ -605,7 +566,7 @@ export default function FormNewsletter({
 				</Field>
 			</Section>
 
-			<BarSave isDirty={isDirty} isSaving={isSaving} savedAt={savedAt} onDiscard={discard} label={newsletter ? "Save" : "Create"} />
+			<BarSave isDirty={isDirty} isSaving={isSaving} savedAt={savedAt} onDiscard={discard} label={newsletter ? "Guardar" : "Criar"} />
 		</form>
 	);
 }
@@ -631,9 +592,9 @@ function Section({ title, action, stagger, collapsedNote, children }) {
 
 function CleanupTotals({ totals }) {
 	const stats = [
-		{ label: "Waiting for an answer", value: totals.waiting },
-		{ label: "Kept after the email", value: totals.kept },
-		{ label: "Made dormant", value: totals.dormant },
+		{ label: "À espera de resposta", value: totals.waiting },
+		{ label: "Mantidos depois do email", value: totals.kept },
+		{ label: "Tornados inativos", value: totals.dormant },
 	];
 	return (
 		<dl className="grid grid-cols-3 divide-x divide-border/60">
@@ -648,9 +609,9 @@ function CleanupTotals({ totals }) {
 }
 
 function getFromHint({ isShared, isDomainUnverified, fromDomain, hasDomains }) {
-	if (isShared) return "The shared address follows the slug and needs no setup. Replies go to the reply-to, or to your account email.";
-	if (isDomainUnverified) return `${fromDomain} isn't verified yet. Emails wait until its DNS records are in.`;
-	if (!fromDomain && !hasDomains) return "Add a domain on the Domains page to send from it";
+	if (isShared) return "O endereço partilhado segue o slug e não precisa de configuração. As respostas vão para o endereço de resposta, ou para o email da tua conta.";
+	if (isDomainUnverified) return `${fromDomain} ainda não está verificado. Os emails esperam até os registos DNS estarem no sítio.`;
+	if (!fromDomain && !hasDomains) return "Adiciona um domínio na página Domínios para enviares a partir dele";
 	return null;
 }
 
@@ -702,7 +663,7 @@ function IconSlugCheck({ status }) {
 function ListSlugChanges({ changes }) {
 	return (
 		<span className="flex flex-col gap-1.5 rounded-lg bg-muted/60 px-3 py-2.5 text-xs text-muted-foreground animate-enter">
-			<span className="font-medium text-foreground">Changing the slug</span>
+			<span className="font-medium text-foreground">Ao mudar o slug</span>
 			<ul className="flex list-disc flex-col gap-1 pl-4 text-pretty marker:text-muted-foreground/60">
 				{changes.map((change) => (
 					<li key={change}>{change}</li>
@@ -726,7 +687,7 @@ function useSlugCheck({ slug, savedSlug, newsletterId }) {
 			const problem = getSlugFormatProblem(value);
 			const result = problem
 				? { available: false, ...problem }
-				: await checkSlug(value, newsletterId).catch(() => ({ error: "Couldn't check the slug. Saving checks it again." }));
+				: await checkSlug(value, newsletterId).catch(() => ({ error: "Não foi possível verificar o slug. Ao guardar, é verificado de novo." }));
 			if (isCurrent) setAnswer({ slug: value, ...result });
 		}, SLUG_CHECK_DELAY_MS);
 		return () => {

@@ -34,27 +34,27 @@ test("hard bounces: 5 at least to pause over 2%, 10 at least to block over 5%", 
 	assert.equal(level({ sent: 0, bounced: 10 }), null);
 });
 
-test("each place words its level: a campaign, a first send's slice, the last 7 days", () => {
+test("each place words its level: a campaign, a primeira fatia de um primeiro envio, the last 7 days", () => {
 	assert.deepEqual(getCampaignRateProblem({ sent: 900, bounced: 21 }, { sent: 100, bounced: 4 }), {
 		level: "pause",
 		reason:
-			"Bounce rate of 2.50% on this campaign (limit 2.00%). Check where these contacts came from before you resume: at 5.00% with 10 bounces, the account is blocked.",
+			"Taxa de devoluções de 2,50% nesta campanha (limite 2,00%). Verifica de onde vieram estes contactos antes de retomar: a 5,00% com 10 devoluções, a conta é bloqueada.",
 	});
 	assert.equal(getCampaignRateProblem({ sent: 900, bounced: 6 }, { sent: 100, bounced: 4 }), null, "last-chance emails count too: 1.00% in all");
 	assert.deepEqual(getCampaignRateProblem({ sent: 900, complained: 1 }, { sent: 100, complained: 3 }), {
 		level: "block",
-		reason: "Complaint rate of 0.40% on a campaign (limit 0.30%)",
+		reason: "Taxa de denúncias de 0,40% numa campanha (limite 0,30%)",
 	});
-	assert.match(getCampaignRateProblem({ sent: 1000, complained: 2 }).reason, /^Complaint rate of 0.20% on this campaign \(limit 0.08%\)\. Check that these contacts asked/);
+	assert.match(getCampaignRateProblem({ sent: 1000, complained: 2 }).reason, /^Taxa de denúncias de 0,20% nesta campanha \(limite 0,08%\)\. Verifica se estes contactos pediram/);
 
-	assert.deepEqual(getFirstSendProblem({ sent: 200, bounced: 6 }), { level: "pause", reason: "The first 200 new contacts had a bounce rate of 3.00% (limit 2.00%)" });
-	assert.deepEqual(getFirstSendProblem({ sent: 200, bounced: 12 }), { level: "block", reason: "The first 200 new contacts had a bounce rate of 6.00% (limit 5.00%)" });
+	assert.deepEqual(getFirstSendProblem({ sent: 200, bounced: 6 }), { level: "pause", reason: "Os primeiros 200 contactos novos tiveram uma taxa de devoluções de 3,00% (limite 2,00%)" });
+	assert.deepEqual(getFirstSendProblem({ sent: 200, bounced: 12 }), { level: "block", reason: "Os primeiros 200 contactos novos tiveram uma taxa de devoluções de 6,00% (limite 5,00%)" });
 	assert.equal(getFirstSendProblem({ sent: 200, complained: 1 }), null);
 
 	assert.deepEqual(getAccountRateProblem({ sent: 600, delivered: 580, bounced: 36 }), {
 		level: "block",
-		reason: "Bounce rate of 6.00% over the last 7 days (limit 5.00%)",
+		reason: "Taxa de devoluções de 6,00% nos últimos 7 dias (limite 5,00%)",
 	});
-	assert.match(getAccountRateProblem({ sent: 600, bounced: 13 }).reason, /^Bounce rate of 2.17% over the last 7 days \(limit 2.00%\)\. Nothing is paused/);
+	assert.match(getAccountRateProblem({ sent: 600, bounced: 13 }).reason, /^Taxa de devoluções de 2,17% nos últimos 7 dias \(limite 2,00%\)\. Nada está em pausa/);
 	assert.equal(getAccountRateProblem({ sent: 600, bounced: 13 }).level, "pause");
 });

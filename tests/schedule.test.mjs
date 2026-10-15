@@ -54,9 +54,9 @@ test("no history means no suggestions", () => {
 test("a schedule must be in the future and within a year", () => {
 	assert.equal(getScheduleProblem("2026-10-06T13:00:00Z", NOW), null);
 	assert.equal(getScheduleProblem(new Date(NOW + 2 * 60 * 1000), NOW), null);
-	assert.equal(getScheduleProblem(new Date(NOW + 30 * 1000), NOW), "Pick a time in the future");
-	assert.equal(getScheduleProblem("2026-10-05T13:00:00Z", NOW), "Pick a time in the future");
-	assert.equal(getScheduleProblem("2027-11-01T13:00:00Z", NOW), "Pick a time within a year");
-	assert.equal(getScheduleProblem("tomorrow", NOW), "Pick a date and time");
-	assert.equal(getScheduleProblem(undefined, NOW), "Pick a date and time");
+	assert.equal(getScheduleProblem(new Date(NOW + 30 * 1000), NOW), "Escolhe uma hora no futuro");
+	assert.equal(getScheduleProblem("2026-10-05T13:00:00Z", NOW), "Escolhe uma hora no futuro");
+	assert.equal(getScheduleProblem("2027-11-01T13:00:00Z", NOW), "Escolhe uma hora dentro de um ano");
+	assert.equal(getScheduleProblem("tomorrow", NOW), "Escolhe uma data e uma hora");
+	assert.equal(getScheduleProblem(undefined, NOW), "Escolhe uma data e uma hora");
 });

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FileUp, Loader2, Upload } from "lucide-react";
 import Papa from "papaparse";
 import { importContacts } from "@/app/(app)/contacts/actions";
+import { statusLabel } from "@/components/BadgeStatus";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -23,7 +24,7 @@ import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
 // Into the newsletter the page shows.
-export default function DialogImportContacts({ newsletter, label = "Import", variant = "outline" }) {
+export default function DialogImportContacts({ newsletter, label = "Importar", variant = "outline" }) {
 	const router = useRouter();
 	const [isOpen, setIsOpen] = useState(false);
 	const [mode, setMode] = useState("file");
@@ -79,12 +80,12 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 			complete: ({ data, meta }) => {
 				const columns = mapColumns(meta.fields ?? []);
 				if (!columns.email) {
-					toast.error("No email column found");
+					toast.error("Não foi encontrada uma coluna de email");
 					return reset();
 				}
 				setParsed({ rows: data, columns });
 			},
-			error: () => toast.error("Could not read this file"),
+			error: () => toast.error("Não foi possível ler este ficheiro"),
 		});
 	}
 
@@ -134,11 +135,11 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Import contacts</DialogTitle>
+					<DialogTitle>Importar contactos</DialogTitle>
 					<DialogDescription>
-						Into <span className="font-medium text-foreground">{newsletter?.name}</span>. A CSV with an email column:
-						exports from beehiiv, Substack, Mailchimp, Kit and other platforms work as they are. Existing contacts keep
-						their status.
+						Para <span className="font-medium text-foreground">{newsletter?.name}</span>. Um CSV com uma coluna de email:
+						as exportações do beehiiv, Substack, Mailchimp, Kit e outras plataformas funcionam tal como estão. Os contactos
+						que já existem mantêm o seu estado.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -147,12 +148,12 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 				) : (
 					<div className="flex flex-col gap-3">
 						<Select value={mode} onValueChange={setMode} disabled={isImporting}>
-							<SelectTrigger className="h-9 w-full" aria-label="Status">
+							<SelectTrigger className="h-9 w-full" aria-label="Estado">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="file">Status from file</SelectItem>
-								<SelectItem value="dormant">Import as dormant</SelectItem>
+								<SelectItem value="file">Estado do ficheiro</SelectItem>
+								<SelectItem value="dormant">Importar como inativos</SelectItem>
 							</SelectContent>
 						</Select>
 
@@ -164,11 +165,11 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 						>
 							<FileUp className="size-5 text-muted-foreground" />
 							<span className="max-w-full truncate text-sm font-medium">
-								{file ? file.name : "Choose a CSV file"}
+								{file ? file.name : "Escolher um ficheiro CSV"}
 							</span>
 							{parsed && (
 								<span className="text-xs text-muted-foreground tabular-nums">
-									{formatNumber(rows.length)} unique valid of {formatNumber(parsed.rows.length)} rows
+									{formatNumber(rows.length)} válidos e únicos de {formatNumber(parsed.rows.length)} linhas
 								</span>
 							)}
 							<input type="file" accept=".csv,text/csv" className="sr-only" onChange={onFileChange} />
@@ -181,7 +182,7 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 										key={status}
 										className="inline-flex h-6 items-center gap-1 rounded-full bg-muted px-2 text-xs text-muted-foreground tabular-nums"
 									>
-										{status} <span className="text-foreground">{formatNumber(count)}</span>
+										{statusLabel(status)} <span className="text-foreground">{formatNumber(count)}</span>
 									</span>
 								))}
 							</div>
@@ -198,7 +199,7 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 							<span>
 								{CONSENT_TEXT}
 								<span className="block text-xs text-muted-foreground">
-									Role addresses, throwaway inboxes and addresses that bounced or complained are left out.
+									Ficam de fora endereços genéricos, caixas descartáveis e endereços que foram devolvidos ou denunciaram.
 								</span>
 							</span>
 						</label>
@@ -223,7 +224,7 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 							}}
 							className="min-w-24"
 						>
-							Done
+							Concluir
 						</Button>
 					) : (
 						<Button
@@ -234,7 +235,7 @@ export default function DialogImportContacts({ newsletter, label = "Import", var
 							{isImporting ? (
 								<Loader2 className="animate-spin" />
 							) : (
-								`Import ${rows.length ? formatNumber(rows.length) : ""}`.trim()
+								`Importar ${rows.length ? formatNumber(rows.length) : ""}`.trim()
 							)}
 						</Button>
 					)}
@@ -249,13 +250,13 @@ function SummaryImport({ summary }) {
 	return (
 		<div className="flex flex-col gap-3 text-sm">
 			<p>
-				<span className="font-medium tabular-nums">{formatNumber(summary.created)}</span> added,{" "}
-				<span className="font-medium tabular-nums">{formatNumber(summary.existing)}</span> already there.
+				<span className="font-medium tabular-nums">{formatNumber(summary.created)}</span> adicionados,{" "}
+				<span className="font-medium tabular-nums">{formatNumber(summary.existing)}</span> já existiam.
 			</p>
 			{dropped.length > 0 ? (
 				<div className="rounded-xl px-4 py-3 shadow-border">
 					<p className="mb-2 font-medium">
-						{formatNumber(dropped.reduce((sum, [, count]) => sum + count, 0))} left out
+						{formatNumber(dropped.reduce((sum, [, count]) => sum + count, 0))} ficaram de fora
 					</p>
 					<ul className="flex flex-col gap-1 text-muted-foreground">
 						{dropped.map(([reason, count]) => (
@@ -267,7 +268,7 @@ function SummaryImport({ summary }) {
 					</ul>
 				</div>
 			) : (
-				<p className="text-muted-foreground">Nothing left out.</p>
+				<p className="text-muted-foreground">Nada ficou de fora.</p>
 			)}
 		</div>
 	);

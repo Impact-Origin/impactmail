@@ -21,7 +21,7 @@ export default function ButtonExportContacts({ newsletterId, status, query, isDi
 	return (
 		<Button variant="outline" onClick={download} disabled={isPending || isDisabled}>
 			{isPending ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-			Export
+			Exportar
 		</Button>
 	);
 }

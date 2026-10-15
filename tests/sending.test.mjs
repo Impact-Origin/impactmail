@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { siteExtensions } from "@/lib/site-extensions";
 import { LIMITS } from "../lib/config.js";
 import { UNSUBSCRIBE_PLACEHOLDER } from "../lib/render-email.js";
 import {
@@ -50,7 +49,7 @@ test("recipient emails carry a personal unsubscribe link and one-click headers",
 	assert.ok(!email.html.includes(UNSUBSCRIBE_PLACEHOLDER));
 	assert.ok(!email.text.includes(UNSUBSCRIBE_PLACEHOLDER));
 	assert.ok(email.html.includes(`href="${email.unsubscribeUrl}"`));
-	assert.ok(email.text.includes(`Unsubscribe: ${email.unsubscribeUrl}`));
+	assert.ok(email.text.includes(`Cancelar subscrição: ${email.unsubscribeUrl}`));
 	assert.deepEqual(verifyUnsubscribeToken(token), {
 		contactId: contact._id,
 		newsletterId: newsletter._id,
@@ -81,7 +80,7 @@ test("issues link to their archive page; drafts to the one their subject gives",
 
 	const sent = buildRecipientEmail({ campaign: issue, newsletter: archived, contact });
 	assert.ok(sent.html.includes('href="https://mail.example.com/archive/weekly/p/issue-12-is-out"'));
-	assert.ok(sent.text.startsWith("Read online: https://mail.example.com/archive/weekly/p/issue-12-is-out"));
+	assert.ok(sent.text.startsWith("Ler online: https://mail.example.com/archive/weekly/p/issue-12-is-out"));
 
 	const draft = buildRecipientEmail({ campaign: { ...issue, archiveSlug: undefined }, newsletter: archived, contact });
 	assert.ok(draft.html.includes('href="https://mail.example.com/archive/weekly/p/issue-12"'));
@@ -135,7 +134,7 @@ test("a campaign pauses over the pause level and blocks its account over the blo
 	assert.equal(getCampaignRateProblem({ sent: 100, bounced: 10 }).level, "block");
 	assert.equal(getCampaignRateProblem({ sent: 1000, complained: 1 }), null, "one complaint never pauses");
 	assert.equal(getCampaignRateProblem({ sent: 5000, bounced: 99, complained: 4 }), null);
-	assert.equal(getCampaignRateProblem({ sent: 100, bounced: 10 }).reason, "Bounce rate of 10.00% on a campaign (limit 5.00%)");
+	assert.equal(getCampaignRateProblem({ sent: 100, bounced: 10 }).reason, "Taxa de devoluções de 10,00% numa campanha (limite 5,00%)");
 });
 
 test("SES errors map to retry later, pause the campaign, or fail one message", () => {
@@ -157,29 +156,28 @@ test("SES errors map to retry later, pause the campaign, or fail one message", (
 
 test("send problems block incomplete or oversized emails", () => {
 	assert.equal(getSendProblem({ campaign, newsletter }), null);
-	assert.equal(getSendProblem({ campaign, newsletter: null }), "Newsletter not found");
+	assert.equal(getSendProblem({ campaign, newsletter: null }), "Newsletter não encontrada");
 	assert.equal(
 		getSendProblem({ campaign, newsletter: { ...newsletter, fromEmail: "" } }),
-		"Add a from email to the newsletter"
+		"Adiciona um email de envio à newsletter"
 	);
 	assert.equal(
 		getSendProblem({ campaign, newsletter: { ...newsletter, postalAddress: " ", postalAddressCleared: true } }),
-		"Add a postal address to the newsletter"
+		"Adiciona uma morada postal à newsletter"
 	);
 	assert.equal(
 		getSendProblem({ campaign, newsletter: { ...newsletter, postalAddress: "" } }),
-		siteExtensions.defaultPostalAddress ? null : "Add a postal address to the newsletter",
-		"one never set has the server's default, if it has one"
+		"Adiciona uma morada postal à newsletter"
 	);
-	assert.equal(getSendProblem({ campaign: { ...campaign, subject: "  " }, newsletter }), "Add a subject");
-	assert.equal(getSendProblem({ campaign: { ...campaign, markdown: "" }, newsletter }), "Add content");
+	assert.equal(getSendProblem({ campaign: { ...campaign, subject: "  " }, newsletter }), "Adiciona um assunto");
+	assert.equal(getSendProblem({ campaign: { ...campaign, markdown: "" }, newsletter }), "Adiciona conteúdo");
 	assert.equal(
 		getSendProblem({ campaign: { ...campaign, format: "html", html: " " }, newsletter }),
-		"Add content"
+		"Adiciona conteúdo"
 	);
 
 	const oversized = { ...campaign, markdown: "word ".repeat(30_000) };
-	assert.match(getSendProblem({ campaign: oversized, newsletter }), /Gmail clips emails over 100 KB/);
+	assert.match(getSendProblem({ campaign: oversized, newsletter }), /O Gmail corta emails com mais de 100 KB/);
 });
 
 test("welcome content needs the toggle, a subject, and content", () => {

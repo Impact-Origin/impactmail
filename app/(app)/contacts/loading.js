@@ -16,7 +16,7 @@ const EMAIL_WIDTHS = [62, 48, 70, 54, 44, 66, 58, 50, 72, 46];
 export default function Loading() {
 	return (
 		<>
-			<HeaderPage title="Contacts">
+			<HeaderPage title="Contactos">
 				<Skeleton className="h-9 w-24 rounded-lg" />
 			</HeaderPage>
 			<div aria-hidden="true" className="flex flex-col gap-4">

@@ -122,26 +122,26 @@ afterEach(() => google.state.failures.splice(0));
 after(() => app?.stop());
 
 describe("Feedback-ID", () => {
-	test("the campaign, or the newsletter for signup emails; the account as mc-<accountId>; the kind; and mailcheap", () => {
+	test("the campaign, or the newsletter for signup emails; the account as mc-<accountId>; the kind; and impactmail", () => {
 		const ids = { accountId: ACCOUNT_ID, newsletterId: NEWSLETTER_ID };
-		assert.equal(getFeedbackId({ ...ids, campaignId: CAMPAIGN_ID, kind: "campaign" }), `${CAMPAIGN_ID}:mc-${ACCOUNT_ID}:campaign:mailcheap`);
-		assert.equal(getFeedbackId({ ...ids, campaignId: CAMPAIGN_ID, kind: "last-chance" }), `${CAMPAIGN_ID}:mc-${ACCOUNT_ID}:last-chance:mailcheap`);
-		assert.equal(getFeedbackId({ ...ids, campaignId: CAMPAIGN_ID, kind: "test" }), `${CAMPAIGN_ID}:mc-${ACCOUNT_ID}:test:mailcheap`);
-		assert.equal(getFeedbackId({ ...ids, kind: "welcome" }), `${NEWSLETTER_ID}:mc-${ACCOUNT_ID}:welcome:mailcheap`);
-		assert.equal(getFeedbackId({ ...ids, kind: "confirmation" }), `${NEWSLETTER_ID}:mc-${ACCOUNT_ID}:confirmation:mailcheap`);
-		assert.equal(getFeedbackId({ ...ids, kind: "test" }), `${NEWSLETTER_ID}:mc-${ACCOUNT_ID}:test:mailcheap`, "a welcome email's test");
+		assert.equal(getFeedbackId({ ...ids, campaignId: CAMPAIGN_ID, kind: "campaign" }), `${CAMPAIGN_ID}:mc-${ACCOUNT_ID}:campaign:impactmail`);
+		assert.equal(getFeedbackId({ ...ids, campaignId: CAMPAIGN_ID, kind: "last-chance" }), `${CAMPAIGN_ID}:mc-${ACCOUNT_ID}:last-chance:impactmail`);
+		assert.equal(getFeedbackId({ ...ids, campaignId: CAMPAIGN_ID, kind: "test" }), `${CAMPAIGN_ID}:mc-${ACCOUNT_ID}:test:impactmail`);
+		assert.equal(getFeedbackId({ ...ids, kind: "welcome" }), `${NEWSLETTER_ID}:mc-${ACCOUNT_ID}:welcome:impactmail`);
+		assert.equal(getFeedbackId({ ...ids, kind: "confirmation" }), `${NEWSLETTER_ID}:mc-${ACCOUNT_ID}:confirmation:impactmail`);
+		assert.equal(getFeedbackId({ ...ids, kind: "test" }), `${NEWSLETTER_ID}:mc-${ACCOUNT_ID}:test:impactmail`, "a welcome email's test");
 	});
 
 	test("in Gmail's format: four fields, none repeated, none with a colon, none naming a message or a person", () => {
 		for (const kind of ["campaign", "last-chance", "welcome", "confirmation", "test"]) {
 			const fields = getFeedbackId({ accountId: ACCOUNT_ID, newsletterId: NEWSLETTER_ID, campaignId: kind === "welcome" ? undefined : CAMPAIGN_ID, kind }).split(":");
 			assert.equal(fields.length, 4, kind);
-			assert.equal(fields.at(-1), "mailcheap", "the sender ID Google asks for, 5 to 15 characters, the same on every email");
+			assert.equal(fields.at(-1), "impactmail", "the sender ID Google asks for, 5 to 15 characters, the same on every email");
 			assert.equal(new Set(fields).size, 4, `${kind}: Gmail counts each field on its own`);
 			assert.ok(fields.every((field) => /^[A-Za-z0-9_-]+$/.test(field)), kind);
 			assert.ok(!fields.some((field) => field.includes("@")), "no address");
 		}
-		assert.equal(getFeedbackId({ accountId: "6a00:x", newsletterId: "a b:c", kind: "wel:come" }), "abc:mc-6a00x:welcome:mailcheap", "nothing can add a field");
+		assert.equal(getFeedbackId({ accountId: "6a00:x", newsletterId: "a b:c", kind: "wel:come" }), "abc:mc-6a00x:welcome:impactmail", "nothing can add a field");
 	});
 });
 
@@ -223,7 +223,7 @@ describe("thresholds", () => {
 		assert.equal(judgeGmailRate(0.0029), "pause");
 		assert.equal(judgeGmailRate(0.003), "block", "at the block level, not only over it");
 		assert.equal(judgeGmailRate(0.02), "block");
-		assert.equal(describeGmailRate(0.0042), "Gmail reported a spam rate of 0.42% for your emails (Google Postmaster Tools)");
+		assert.equal(describeGmailRate(0.0042), "O Gmail reportou uma taxa de spam de 0,42% nos teus emails (Google Postmaster Tools)");
 	});
 
 	test("each account is judged on its highest flag; a blocked account, or one unblocked after that day, is left alone", () => {
@@ -286,7 +286,7 @@ describe("connecting Postmaster Tools", () => {
 		await withEnv({ GOOGLE_CLIENT_SECRET: "", CREDENTIALS_ENCRYPTION_KEY: "" }, async () => {
 			assert.equal(await as(admin, () => catchRedirect(m.connectRoute.GET())), "/admin?postmaster=missing");
 			const html = renderToStaticMarkup(await m.CardPostmaster({}));
-			assert.match(html, /Set GOOGLE_CLIENT_SECRET, CREDENTIALS_ENCRYPTION_KEY to read Gmail/);
+			assert.match(html, /Define GOOGLE_CLIENT_SECRET, CREDENTIALS_ENCRYPTION_KEY para ler as taxas de spam do Gmail/);
 		});
 		await withEnv({ POSTMASTER_DOMAIN: "", SHARED_DOMAIN: "" }, async () => {
 			assert.deepEqual(m.postmaster.getPostmasterSetup().missing, ["POSTMASTER_DOMAIN"]);
@@ -298,7 +298,7 @@ describe("connecting Postmaster Tools", () => {
 		const html = renderToStaticMarkup(await m.CardPostmaster({}));
 		assert.match(html, /href="\/api\/admin\/postmaster\/connect"/);
 		assert.match(html, /http:\/\/localhost:3000\/api\/admin\/postmaster\/callback/);
-		assert.match(html, new RegExp(`has ${DOMAIN.replace(".", "\\.")} in Postmaster Tools`));
+		assert.match(html, new RegExp(`tem ${DOMAIN.replace(".", "\\.")} no Postmaster Tools`));
 	});
 
 	test("Connect opens Google's consent screen for Postmaster Tools' read scope, offline, with PKCE and a state only this browser holds", async () => {
@@ -335,7 +335,7 @@ describe("connecting Postmaster Tools", () => {
 		assert.equal(status.connection.refreshToken, undefined, "left out of every read but the check's");
 		const html = renderToStaticMarkup(await m.CardPostmaster({ notice: "connected" }));
 		assert.ok(!html.includes(refreshToken) && !html.includes(stored.refreshToken));
-		assert.match(html, /Connected\. Gmail&#x27;s spam rates are read once a day\./);
+		assert.match(html, /Ligado\. As taxas de spam do Gmail são lidas uma vez por dia\./);
 		assert.match(html, /owner@example\.com/);
 	});
 
@@ -395,9 +395,9 @@ describe("the daily check", () => {
 		const before = { telegram: telegramMessages.length, emails: platformEmails.length };
 		const result = await check();
 		assert.deepEqual(result, { day, spamRate: 0.0013, alerted: true, flagged: [] });
-		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>MailCheap</b> · Gmail spam rate is high"]);
-		assert.match(telegramMessages.at(-1).text, new RegExp(`Google Postmaster Tools, ${day}: ${DOMAIN.replace(".", "\\.")} at 0\\.13%, over 0\\.10%\\.`));
-		assert.deepEqual(toAdmins(platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[MailCheap] Gmail spam rate is high"]);
+		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · A taxa de spam do Gmail está alta"]);
+		assert.match(telegramMessages.at(-1).text, new RegExp(`Google Postmaster Tools, ${day}: ${DOMAIN.replace(".", "\\.")} a 0,13%, acima de 0,10%\\.`));
+		assert.deepEqual(toAdmins(platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[ImpactMail] A taxa de spam do Gmail está alta"]);
 
 		assert.deepEqual(await check(), { skipped: `nothing newer than ${day}` }, "the same day is never acted on twice");
 		assert.equal(telegramMessages.length - before.telegram, 1);
@@ -428,15 +428,15 @@ describe("the daily check", () => {
 		assert.equal(paused.pauseCode, "high_rates", "resuming it accepts the rates, as for a send's own");
 		assert.equal(
 			paused.pauseReason,
-			"Gmail reported a spam rate of 0.15% for your emails (Google Postmaster Tools). Check that your contacts asked for your emails before you resume: at 0.30%, the account is blocked."
+			"O Gmail reportou uma taxa de spam de 0,15% nos teus emails (Google Postmaster Tools). Verifica se os teus contactos pediram os teus emails antes de retomar: a 0,30%, a conta é bloqueada."
 		);
 		assert.equal((await campaignOf(user, 1)).status, "sending", "its owner resumed it from a rates pause already");
 		assert.equal((await accountOf(user)).status, "active", "not blocked");
 
-		assert.deepEqual(to(user, platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[MailCheap] Campaign paused"]);
+		assert.deepEqual(to(user, platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[ImpactMail] Campanha em pausa"]);
 		const [warning] = to(idle, platformEmails.slice(before.emails));
-		assert.equal(warning.subject, "[MailCheap] Gmail reports spam complaints");
-		assert.match(warning.text, /Gmail reported a spam rate of 0\.10% for your emails \(Google Postmaster Tools\)\. Nothing is paused, but at 0\.30% the account is blocked/);
+		assert.equal(warning.subject, "[ImpactMail] O Gmail reporta denúncias de spam");
+		assert.match(warning.text, /O Gmail reportou uma taxa de spam de 0,10% nos teus emails \(Google Postmaster Tools\)\. Nada está em pausa, mas a 0,30% a conta é bloqueada/);
 		assert.equal(telegramMessages.length, before.telegram, "pauses and warnings go to the owners only");
 		assert.equal(to(admin, platformEmails.slice(before.emails)).length, 0);
 	});
@@ -452,13 +452,13 @@ describe("the daily check", () => {
 		const account = await accountOf(user);
 		assert.equal(account.status, "paused");
 		assert.equal(account.pausedBy, "gmail");
-		assert.equal(account.pauseReason, "Gmail reported a spam rate of 0.42% for your emails (Google Postmaster Tools)");
+		assert.equal(account.pauseReason, "O Gmail reportou uma taxa de spam de 0,42% nos teus emails (Google Postmaster Tools)");
 		assert.equal((await campaignOf(user)).pauseCode, "account_blocked");
-		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>MailCheap</b> · Account blocked"]);
-		assert.match(telegramMessages.at(-1).text, /blocked by Gmail's spam rate: Gmail reported a spam rate of 0\.42% for your emails \(Google Postmaster Tools\)/);
-		assert.deepEqual(toAdmins(platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[MailCheap] Account blocked"]);
-		assert.match(toAdmins(platformEmails.slice(before.emails))[0].text, new RegExp(`feedback ID mc-${user.accountId} at 0\\.42%, the block level is 0\\.30%`));
-		assert.deepEqual(to(user, platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[MailCheap] Account blocked"]);
+		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · Conta bloqueada"]);
+		assert.match(telegramMessages.at(-1).text, /bloqueada pela taxa de spam do Gmail: O Gmail reportou uma taxa de spam de 0,42% nos teus emails \(Google Postmaster Tools\)/);
+		assert.deepEqual(toAdmins(platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[ImpactMail] Conta bloqueada"]);
+		assert.match(toAdmins(platformEmails.slice(before.emails))[0].text, new RegExp(`feedback ID mc-${user.accountId} a 0,42%, o nível de bloqueio é 0,30%`));
+		assert.deepEqual(to(user, platformEmails.slice(before.emails)).map(({ subject }) => subject), ["[ImpactMail] Conta bloqueada"]);
 
 		const next = toDay(Date.now() + DAY_MS);
 		google.setDay(DOMAIN, next, { identifiers: { [`mc-${user.accountId}`]: 0.006 } });
@@ -506,8 +506,8 @@ describe("the daily check", () => {
 		assert.equal((await accountOf(byCampaign)).pausedBy, "gmail");
 		assert.equal((await campaignOf(byNewsletter)).status, "paused");
 		assert.equal(alerted, true);
-		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>MailCheap</b> · Account blocked", "<b>MailCheap</b> · Gmail spam rate is high"]);
-		assert.match(telegramMessages.at(-1).text, /feedback ID postshiba at 0\.16%/);
+		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · Conta bloqueada", "<b>ImpactMail</b> · A taxa de spam do Gmail está alta"]);
+		assert.match(telegramMessages.at(-1).text, /feedback ID postshiba a 0,16%/);
 		assert.doesNotMatch(telegramMessages.at(-1).text, new RegExp(gone), "an id of nothing isn't every account's");
 
 		const stored = await connection();
@@ -515,7 +515,7 @@ describe("the daily check", () => {
 		assert.deepEqual(stored.lastRun.flagged.map(({ action }) => action), ["blocked", "paused", "unknown", "wide"]);
 		const html = renderToStaticMarkup(await m.CardPostmaster({}));
 		assert.match(html, /4 feedback IDs/);
-		assert.match(html, /Every account/);
+		assert.match(html, /Todas as contas/);
 	});
 
 	test("Google refusing the token or the domain alerts once until it works again; an outage waits quietly for the next day", async () => {
@@ -528,11 +528,11 @@ describe("the daily check", () => {
 		const refused = await check();
 		assert.match(refused.refused, /Google token refresh: 400 invalid_grant \(Token has been expired or revoked\.\)/);
 		assert.equal(refused.alerted, true);
-		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>MailCheap</b> · Postmaster Tools refused MailCheap"]);
+		assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · O Postmaster Tools recusou o ImpactMail"]);
 		assert.ok(!telegramMessages.at(-1).text.includes("1//refresh-"), "no token in the alert");
 		assert.deepEqual(await check(), { refused: refused.refused });
 		assert.equal(telegramMessages.length - before.telegram, 1, "one note, however many days it stays broken");
-		assert.match(renderToStaticMarkup(await m.CardPostmaster({})), /Postmaster Tools refused: Google token refresh: 400 invalid_grant/);
+		assert.match(renderToStaticMarkup(await m.CardPostmaster({})), /O Postmaster Tools recusou: Google token refresh: 400 invalid_grant/);
 
 		assert.equal(await connect(admin), "/admin?postmaster=connected");
 		assert.equal((await connection()).problem, undefined, "a new connection ends it");

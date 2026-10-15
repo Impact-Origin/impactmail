@@ -24,15 +24,15 @@ export default function TableCampaigns({ campaigns, newsletter, hasActions = fal
 			<Table>
 				<TableHeader>
 					<TableRow className="hover:bg-transparent">
-						<TableHead className="pl-4">Subject</TableHead>
-						<TableHead>Status</TableHead>
-						<TableHead className="hidden text-right md:table-cell">Recipients</TableHead>
-						<TableHead className="hidden text-right md:table-cell">Opens</TableHead>
-						<TableHead className="hidden text-right md:table-cell">Clicks</TableHead>
-						<TableHead className={cn("hidden text-right sm:table-cell", !hasActions && "pr-4")}>Date</TableHead>
+						<TableHead className="pl-4">Assunto</TableHead>
+						<TableHead>Estado</TableHead>
+						<TableHead className="hidden text-right md:table-cell">Destinatários</TableHead>
+						<TableHead className="hidden text-right md:table-cell">Aberturas</TableHead>
+						<TableHead className="hidden text-right md:table-cell">Cliques</TableHead>
+						<TableHead className={cn("hidden text-right sm:table-cell", !hasActions && "pr-4")}>Data</TableHead>
 						{hasActions && (
 							<TableHead className="w-12 pr-2">
-								<span className="sr-only">Actions</span>
+								<span className="sr-only">Ações</span>
 							</TableHead>
 						)}
 					</TableRow>
@@ -52,7 +52,7 @@ export default function TableCampaigns({ campaigns, newsletter, hasActions = fal
 											href={`/campaigns/${id}`}
 											className="min-w-0 truncate font-medium after:absolute after:inset-0"
 										>
-											{campaign.subject || "Untitled"}
+											{campaign.subject || "Sem título"}
 										</Link>
 									</div>
 								</TableCell>

@@ -1,103 +1,52 @@
 import Link from "next/link";
-import { ArrowUpRight, CreditCard, Lock, Send } from "lucide-react";
-import { openBillingPortal } from "@/app/(account)/billing/actions";
+import { Lock, Send } from "lucide-react";
 import AvatarUser from "@/components/AvatarUser";
 import BadgeStatus from "@/components/BadgeStatus";
 import CardSettings, { RowSettings } from "@/components/CardSettings";
-import { getPlanDetails } from "@/components/CardSubscription";
 import DialogDeleteAccount from "@/components/DialogDeleteAccount";
 import FormProfile from "@/components/FormProfile";
 import HeaderPage from "@/components/HeaderPage";
 import LayoutNarrow from "@/components/LayoutNarrow";
-import { Button } from "@/components/ui/button";
 import { DELETION_GRACE_DAYS, getDeletionBlockers } from "@/lib/account-deletion";
-import { getAccountStatus, hasActiveSubscription } from "@/lib/account-state";
 import { hasGoogleSignIn } from "@/lib/accounts";
 import { requireAccount } from "@/lib/auth";
-import { isCloud } from "@/lib/config";
-import { formatDate } from "@/lib/format";
-import { getAccountPlan } from "@/lib/plans";
 import { MAX_NAME_LENGTH } from "@/lib/profile";
 
-export const metadata = { title: "Account" };
+export const metadata = { title: "Conta" };
 
-// The whole account, apart from any newsletter: who signs in, billing, and deleting it.
+// The whole account, apart from any newsletter: who signs in, and deleting it.
 export default async function AccountPage() {
 	const { user, account } = await requireAccount();
 	const [blockers, hasGoogle] = await Promise.all([getDeletionBlockers(account), hasGoogleSignIn(user.id)]);
 
 	return (
 		<LayoutNarrow>
-			<HeaderPage title="Account" icon={<AvatarUser name={user.name} email={user.email} image={user.image} size={32} />} />
+			<HeaderPage title="Conta" icon={<AvatarUser name={user.name} email={user.email} image={user.image} size={32} />} />
 			<div className="flex flex-col gap-4">
 				<FormProfile name={user.name ?? ""} image={user.image ?? ""} maxNameLength={MAX_NAME_LENGTH} />
 				<CardSettings title="Email" stagger={1}>
-					<RowSettings label="Address" hint={hasGoogle ? "You sign in with Google or with a code sent here." : "You sign in with a code sent here."}>
+					<RowSettings label="Endereço" hint={hasGoogle ? "Inicias sessão com o Google ou com um código enviado para aqui." : "Inicias sessão com um código enviado para aqui."}>
 						<span className="flex h-9 items-center justify-between gap-3 rounded-lg bg-muted/60 px-2.5 text-sm">
 							<span className="truncate">{user.email}</span>
-							<Lock aria-label="Can't be changed" className="size-3.5 shrink-0 text-muted-foreground" />
+							<Lock aria-label="Não pode ser alterado" className="size-3.5 shrink-0 text-muted-foreground" />
 						</span>
 					</RowSettings>
 				</CardSettings>
-				{isCloud() && <CardBilling account={account} />}
-				<CardDelete email={user.email} blockers={blockers} cancelAt={account.cancelAt} />
+				<CardDelete email={user.email} blockers={blockers} />
 			</div>
 		</LayoutNarrow>
 	);
 }
 
-function CardBilling({ account }) {
-	const isActive = hasActiveSubscription(account);
-	const details = isActive ? getPlanDetails(account) : [];
-
+function CardDelete({ email, blockers }) {
 	return (
-		<CardSettings
-			title="Billing"
-			stagger={2}
-			action={
-				<Button asChild variant="outline" size="sm">
-					<Link href="/billing">{isActive ? "Manage billing" : "Pick a plan"}</Link>
-				</Button>
-			}
-		>
-			<RowSettings label="Plan">
-				<span className="flex min-h-9 flex-wrap items-center gap-x-2.5 gap-y-1">
-					<span className="text-sm font-medium">{isActive ? (getAccountPlan(account)?.name ?? "Your plan") : "No plan"}</span>
-					{(isActive || account.subscriptionStatus) && <BadgeStatus status={getAccountStatus(account)} />}
-					{details.length > 0 && <span className="text-sm text-muted-foreground tabular-nums">{details.join(" · ")}</span>}
-				</span>
-			</RowSettings>
-		</CardSettings>
-	);
-}
-
-function CardDelete({ email, blockers, cancelAt }) {
-	return (
-		<CardSettings title="Delete account" stagger={3} className="mt-6">
+		<CardSettings title="Eliminar conta" stagger={3} className="mt-6">
 			<p className="px-4 py-3 text-sm text-pretty text-muted-foreground">
-				Your account stops at once. {DELETION_GRACE_DAYS} days later, its newsletters, contacts, campaigns and images are deleted
-				for good. Signing in before then restores it.
+				A tua conta para de imediato. {DELETION_GRACE_DAYS} dias depois, as newsletters, contactos, campanhas e imagens são
+				eliminados de vez. Iniciar sessão antes disso restaura-a.
 			</p>
-			{blockers?.hasPlan && (
-				<RowBlocker
-					icon={CreditCard}
-					title={cancelAt ? `Your plan ends on ${formatDate(cancelAt)}` : "Cancel your plan first"}
-					text={
-						cancelAt
-							? "You can delete your account once it has ended."
-							: "Deleting your account doesn't stop Stripe from billing it. Cancel it in the billing portal."
-					}
-				>
-					<form action={openBillingPortal}>
-						<Button type="submit" variant="outline" size="sm">
-							Billing portal
-							<ArrowUpRight data-icon="inline-end" className="opacity-60" />
-						</Button>
-					</form>
-				</RowBlocker>
-			)}
 			{blockers?.campaigns.length > 0 && (
-				<RowBlocker icon={Send} title="Stop your campaigns first" text="Pause the ones sending, and cancel the scheduled ones.">
+				<RowBlocker icon={Send} title="Para primeiro as tuas campanhas" text="Pausa as que estão a ser enviadas e cancela as agendadas.">
 					<ul className="flex flex-col gap-1">
 						{blockers.campaigns.map((campaign) => (
 							<li key={String(campaign._id)}>
@@ -105,7 +54,7 @@ function CardDelete({ email, blockers, cancelAt }) {
 									href={`/campaigns/${campaign._id}`}
 									className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors duration-150 hover:bg-muted"
 								>
-									<span className="truncate">{campaign.subject || "Untitled"}</span>
+									<span className="truncate">{campaign.subject || "Sem título"}</span>
 									<BadgeStatus status={campaign.status} />
 								</Link>
 							</li>

@@ -1,5 +1,5 @@
 import { scoped } from "@/lib/account-scope";
-import { ERROR_CODES, hasActiveSubscription } from "@/lib/account-state";
+import { ERROR_CODES, isAccountActive } from "@/lib/account-state";
 import { contactSearchFilter } from "@/lib/contacts";
 import { getCsvHeader, toCsvRow } from "@/lib/contacts-csv";
 import { connectDb } from "@/lib/db";
@@ -17,11 +17,11 @@ function fail(status, code, message) {
 // The file behind an export_contacts link: the signed token names the account and the filters.
 export async function GET(request) {
 	const link = verifyExportToken(new URL(request.url).searchParams.get("token"));
-	if (!link) return fail(401, "unauthorized", "This download link is invalid or expired: export again");
+	if (!link) return fail(401, "unauthorized", "Este link de transferência é inválido ou expirou: exporta de novo");
 
 	await connectDb();
 	const account = await Account.findById(link.accountId).lean();
-	if (!hasActiveSubscription(account)) return fail(402, ERROR_CODES.subscriptionRequired, "The account has no active plan");
+	if (!isAccountActive(account)) return fail(409, ERROR_CODES.accountDeleting, "Esta conta está a ser eliminada");
 	const newsletters = new Map(
 		(await Newsletter.find(scoped(account)).select({ slug: 1 }).lean()).map(({ _id, slug }) => [String(_id), slug])
 	);

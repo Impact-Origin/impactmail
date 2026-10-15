@@ -25,30 +25,30 @@ export default function DialogRemoveDomain({ id, domain, hasArchiveHost }) {
 			const result = await removeDomainAction(id);
 			if (result?.error) return void toast.error(result.error);
 			setIsOpen(false);
-			toast.success(`${domain} removed`);
+			toast.success(`${domain} removido`);
 		});
 	}
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
-				<Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${domain}`} className="text-muted-foreground hover:text-foreground">
+				<Button type="button" variant="ghost" size="icon-sm" aria-label={`Remover ${domain}`} className="text-muted-foreground hover:text-foreground">
 					<Trash2 />
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-sm">
 				<DialogHeader>
-					<DialogTitle>Remove {domain}?</DialogTitle>
+					<DialogTitle>Remover {domain}?</DialogTitle>
 					<DialogDescription>
-						Newsletters can&apos;t send from it anymore{hasArchiveHost && ", and its website subdomain stops working"}. You can add it again later.
+						As newsletters deixam de poder enviar a partir dele{hasArchiveHost && ", e o subdomínio do site deixa de funcionar"}. Podes adicioná-lo de novo mais tarde.
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="outline">Cancelar</Button>
 					</DialogClose>
 					<Button variant="destructive" onClick={remove} disabled={isRemoving} className="min-w-20">
-						{isRemoving ? <Loader2 className="animate-spin" /> : "Remove"}
+						{isRemoving ? <Loader2 className="animate-spin" /> : "Remover"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

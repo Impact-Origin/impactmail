@@ -6,7 +6,7 @@ import { getAccountRateProblem } from "../lib/sending-rules.js";
 import { getSesEventPlan } from "../lib/ses-event-mapping.js";
 import { buildSigningString } from "../lib/sns.js";
 import { getTenantEventPlan, getTenantName } from "../lib/tenant-event-rules.js";
-import { activate, as, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
 import { state } from "./stubs/ses.mjs";
 
 const TENANT_ARN = (name) => `arn:aws:ses:us-east-1:111122223333:tenant/${name}/tn-0123`;
@@ -41,7 +41,7 @@ test("the 7-day check holds a send's levels over the account's last 7 days", () 
 	assert.equal(level({ sent: 1000, delivered: 980, bounced: 20, complained: 1 }), null, "exactly 2%, and one complaint");
 	assert.equal(level({ sent: 1000, delivered: 970, bounced: 21 }), "pause");
 	assert.equal(level({ sent: 200, delivered: 200, complained: 2 }), "pause", "2 complaints warn, they don't block");
-	assert.equal(getAccountRateProblem({ sent: 200, complained: 3 }).reason, "Complaint rate of 1.50% over the last 7 days (limit 0.30%)");
+	assert.equal(getAccountRateProblem({ sent: 200, complained: 3 }).reason, "Taxa de denúncias de 1,50% nos últimos 7 dias (limite 0,30%)");
 	assert.equal(level({ sent: 5000, delivered: 4900, complained: 3 }), null, "3 in 5,000 is under both");
 });
 
@@ -79,7 +79,6 @@ describe("per-account events", () => {
 
 	async function customer(email, slug) {
 		const user = await signIn(email);
-		await activate(user);
 		const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St" }))));
 		user.newsletterId = url.split("/").at(-1);
 		await m.tenants.provisionTenant(user.accountId);
@@ -164,9 +163,9 @@ describe("per-account events", () => {
 		assert.equal(warned.health.sent, 600);
 		assert.ok(Math.abs(warned.health.bounceRate - 13 / 600) < 1e-9);
 		const emails = platformEmails.slice(emailsBefore);
-		const warning = emails.find(({ subject }) => subject === "[MailCheap] Bounces or complaints are high");
+		const warning = emails.find(({ subject }) => subject === "[ImpactMail] Devoluções ou denúncias elevadas");
 		assert.deepEqual(warning.to, ["bouncy@example.com"]);
-		assert.match(warning.text, /Bounce rate of 2.17% over the last 7 days \(limit 2.00%\)\. Nothing is paused, but at 5.00% with 10 bounces the account is blocked/);
+		assert.match(warning.text, /Taxa de devoluções de 2,17% nos últimos 7 dias \(limite 2,00%\)\. Nada está em pausa, mas a 5,00% com 10 devoluções a conta é bloqueada/);
 		assert.equal(emails.some(({ to }) => to.includes("admin@example.com")), false, "the admins only hear of blocks");
 
 		await m.Message.updateMany({ accountId: user.accountId, _id: { $in: messages.slice(12, 36).map(({ _id }) => _id) } }, { $set: { bouncedAt: new Date(), status: "bounced" } });
@@ -175,7 +174,7 @@ describe("per-account events", () => {
 		const account = await m.Account.findById(user.accountId).lean();
 		assert.equal(account.status, "paused");
 		assert.equal(account.pausedBy, "rates");
-		assert.equal(account.pauseReason, "Bounce rate of 6.33% over the last 7 days (limit 5.00%)", "38 bounces of 600");
+		assert.equal(account.pauseReason, "Taxa de devoluções de 6,33% nos últimos 7 dias (limite 5,00%)", "38 bounces of 600");
 
 		const admin = await signIn("admin@example.com");
 		assert.deepEqual(await as(admin, () => m.admin.unblockAccountAction(String(user.accountId))), { ok: true });

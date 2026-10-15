@@ -28,7 +28,7 @@ export default function DialogDiscardCampaign({ id, subject, scheduledAt, isOpen
 			const result = await discardCampaign(id);
 			if (result?.error) return void toast.error(result.error);
 			onOpenChange(false);
-			toast.success(isScheduled ? "Campaign discarded, it won't go out" : "Draft discarded");
+			toast.success(isScheduled ? "Campanha descartada, já não vai ser enviada" : "Rascunho descartado");
 			if (redirectTo) router.replace(redirectTo);
 		});
 	}
@@ -37,20 +37,20 @@ export default function DialogDiscardCampaign({ id, subject, scheduledAt, isOpen
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-sm">
 				<DialogHeader>
-					<DialogTitle>{isScheduled ? "Discard this scheduled campaign?" : "Discard this draft?"}</DialogTitle>
+					<DialogTitle>{isScheduled ? "Descartar esta campanha agendada?" : "Descartar este rascunho?"}</DialogTitle>
 					<DialogDescription>
-						<span className="font-medium text-foreground">{subject || "Untitled"}</span>{" "}
+						<span className="font-medium text-foreground">{subject || "Sem título"}</span>{" "}
 						{isScheduled
-							? `won't go out on ${formatSendTime(scheduledAt)} and leaves your campaigns.`
-							: "leaves your campaigns. Nothing is sent."}
+							? `já não vai ser enviada a ${formatSendTime(scheduledAt)} e sai das tuas campanhas.`
+							: "sai das tuas campanhas. Nada é enviado."}
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="outline">Cancelar</Button>
 					</DialogClose>
 					<Button variant="destructive" onClick={discard} disabled={isDiscarding} className="min-w-20">
-						{isDiscarding ? <Loader2 className="animate-spin" /> : "Discard"}
+						{isDiscarding ? <Loader2 className="animate-spin" /> : "Descartar"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

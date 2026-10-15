@@ -12,7 +12,7 @@ export default function ListChecks({ checks, renderFix }) {
 
 	return (
 		<CardSettings
-			title="Checklist"
+			title="Lista de verificação"
 			action={
 				<span className="flex items-center gap-1.5">
 					{blockingCount > 0 && <BadgeCount className="bg-foreground text-background">{blockingCount} to fix</BadgeCount>}
@@ -20,7 +20,7 @@ export default function ListChecks({ checks, renderFix }) {
 					{problems.length === 0 && (
 						<BadgeCount className="text-muted-foreground">
 							<Check className="size-3.5" aria-hidden="true" />
-							All set
+							Tudo pronto
 						</BadgeCount>
 					)}
 				</span>
@@ -34,7 +34,7 @@ export default function ListChecks({ checks, renderFix }) {
 						return (
 							<li key={check.id} className="flex items-center gap-3 px-4 py-3">
 								<Icon
-									aria-label={check.isWarning ? "To check" : "To fix"}
+									aria-label={check.isWarning ? "Para verificar" : "Para corrigir"}
 									className={cn("size-4 shrink-0", check.isWarning ? "text-amber-500" : "text-red-500")}
 								/>
 								<div className="min-w-0 flex-1">
@@ -53,7 +53,7 @@ export default function ListChecks({ checks, renderFix }) {
 				</ul>
 			)}
 			{passed.length > 0 && (
-				<ul aria-label="Passed" className="grid gap-x-6 gap-y-2.5 px-4 py-3.5 sm:grid-cols-2">
+				<ul aria-label="Aprovado" className="grid gap-x-6 gap-y-2.5 px-4 py-3.5 sm:grid-cols-2">
 					{passed.map(({ id, label, detail, icon: Icon = CircleCheck }) => (
 						<li key={id} className="flex min-w-0 items-center gap-2 text-sm">
 							<Icon

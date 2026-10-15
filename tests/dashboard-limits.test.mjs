@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, as, callApi, catchRedirect, form, mockStripe, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 
 // The dashboard counts the API's hourly limits per account on what costs something each call: test emails and
-// sends, imports, uploads, domains and Stripe. Each account counts on its own, and its API keys count against it too.
+// sends, imports, uploads and domains. Each account counts on its own, and its API keys count against it too.
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
 let app;
 let m;
@@ -18,7 +18,6 @@ before(async () => {
 		domains: await import("../app/(app)/domains/actions.js"),
 		newsletters: await import("../app/(app)/newsletters/actions.js"),
 		apiKeys: await import("../app/(app)/api-keys/actions.js"),
-		billing: await import("../app/(account)/billing/actions.js"),
 		uploadsRoute: await import("../app/api/uploads/route.js"),
 		Contact: (await import("../models/Contact.js")).default,
 		Domain: (await import("../models/Domain.js")).default,
@@ -28,10 +27,9 @@ before(async () => {
 
 after(() => app?.stop());
 
-// A paying account with a newsletter that can send, and a welcome email saved but off.
+// An account with a newsletter that can send, and a welcome email saved but off.
 async function customer(email) {
 	const user = await signIn(email);
-	await activate(user);
 	const slug = email.split("@")[0];
 	const settings = { name: slug, slug, postalAddress: "1 Main St, Paris", welcomeSubject: "Welcome", welcomeMarkdown: "Glad you're here." };
 	const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form(settings))));
@@ -59,11 +57,9 @@ test("the dashboard counts the hourly limits of what costs something each call",
 			.sort(),
 		[
 			"add_domain",
-			"change_plan",
 			"check_domain",
 			"check_newsletter_slug",
 			"import_contacts",
-			"open_billing_portal",
 			"resume_campaign",
 			"schedule_campaign",
 			"send_campaign",
@@ -79,7 +75,7 @@ test("the dashboard counts the hourly limits of what costs something each call",
 			.map(({ name }) => name)
 			.sort(),
 		["create_api_key", "create_campaign", "delete_contact", "duplicate_campaign", "export_contacts", "preview_campaign_cleanup"],
-		"drafts, keys, deletes, exports and counts stay inside MailCheap"
+		"drafts, keys, deletes, exports and counts stay inside ImpactMail"
 	);
 	const imports = m.registry.getAction("import_contacts");
 	assert.equal(imports.limitDashboard({}), true, "a file's first chunk counts");
@@ -92,10 +88,10 @@ describe("test emails", () => {
 		const { key } = await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })));
 		const id = await draft(user);
 		await repeat(30, async (index) => assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { ok: true }, String(index)));
-		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { error: "You can send a test email 30 times an hour. Try again later." });
+		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { error: "Atingiste o limite: 30 vezes por hora. Tenta mais tarde." });
 		await repeat(20, async (index) => assert.deepEqual(await as(user, () => m.newsletters.sendWelcomeTest(user.newsletterId)), { ok: true }, String(index)));
 		assert.deepEqual(await as(user, () => m.newsletters.sendWelcomeTest(user.newsletterId)), {
-			error: "You can send a test of the welcome email 20 times an hour. Try again later.",
+			error: "Atingiste o limite: 20 vezes por hora. Tenta mais tarde.",
 		});
 		assert.deepEqual(await m.Message.distinct("email", { accountId: user.accountId, kind: "test" }), ["tester@example.com"]);
 		assert.equal(await m.Message.countDocuments({ accountId: user.accountId, kind: "test" }), 50);
@@ -103,7 +99,7 @@ describe("test emails", () => {
 		const viaKey = await callApi("POST", `/api/v1/campaigns/${id}/test`, { key });
 		assert.deepEqual(
 			[viaKey.status, viaKey.body.error],
-			[429, { code: "rate_limited", message: "Too many send_test_email calls on this account, try again later" }],
+			[429, { code: "rate_limited", message: "Demasiadas chamadas a send_test_email nesta conta, tenta mais tarde" }],
 			"an API key gets what the account has left"
 		);
 		const other = await customer("other-tester@example.com");
@@ -120,7 +116,7 @@ describe("contacts", () => {
 		const { importId } = await importChunk("first@example.org");
 		await repeat(125, async (index) => assert.equal((await importChunk(`chunk${index}@example.org`, importId)).importId, importId, String(index)));
 		await repeat(119, async (index) => assert.ok((await importChunk(`file${index}@example.org`)).importId, String(index)));
-		assert.deepEqual(await importChunk("one-more@example.org"), { error: "You can import contacts 120 times an hour. Try again later." });
+		assert.deepEqual(await importChunk("one-more@example.org"), { error: "Atingiste o limite: 120 vezes por hora. Tenta mais tarde." });
 		assert.equal((await importChunk("last-chunk@example.org", importId)).importId, importId);
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 1 + 125 + 119 + 1);
 	});
@@ -129,13 +125,13 @@ describe("contacts", () => {
 		const user = await customer("by-hand@example.com");
 		const add = (email) => as(user, () => m.contacts.addContact(null, form({ newsletterId: user.newsletterId, email, consent: "on" })));
 		await repeat(600, async (index) => assert.equal((await add(`hand${index}@example.org`)).status, "active", String(index)));
-		assert.deepEqual(await add("one-more@example.org"), { error: "You can add 600 contacts an hour. Try again later." });
+		assert.deepEqual(await add("one-more@example.org"), { error: "Podes adicionar 600 contactos por hora. Tenta mais tarde." });
 		await flushAfter();
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 600);
 	});
 });
 
-describe("images, domains and billing", () => {
+describe("images and domains", () => {
 	test("the editor uploads 60 images an hour per account, and the 61st answers 429 with what its toast says", async () => {
 		const user = await customer("uploader@example.com");
 		const upload = () =>
@@ -147,7 +143,7 @@ describe("images, domains and billing", () => {
 		await repeat(60, async (index) => assert.equal((await upload()).status, 200, String(index)));
 		const limited = await upload();
 		assert.equal(limited.status, 429);
-		assert.deepEqual(await limited.json(), { error: "You can upload an image 60 times an hour. Try again later.", code: "rate_limited" });
+		assert.deepEqual(await limited.json(), { error: "Atingiste o limite: 60 vezes por hora. Tenta mais tarde.", code: "rate_limited" });
 	});
 
 	test("10 domains added and 60 checks an hour per account", async () => {
@@ -157,24 +153,12 @@ describe("images, domains and billing", () => {
 			assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain }))), { ok: true, domain });
 		});
 		assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain: "limit10.dev" }))), {
-			error: "You can add a domain 10 times an hour. Try again later.",
+			error: "Atingiste o limite: 10 vezes por hora. Tenta mais tarde.",
 		});
 		const id = String((await m.Domain.findOne({ accountId: user.accountId }).lean())._id);
 		await repeat(60, async (index) => assert.equal((await as(user, () => m.domains.checkDomainAction(id))).ok, true, String(index)));
 		assert.deepEqual(await as(user, () => m.domains.checkDomainAction(id)), {
-			error: "You can check a domain's DNS records 60 times an hour. Try again later.",
+			error: "Atingiste o limite: 60 vezes por hora. Tenta mais tarde.",
 		});
-	});
-
-	test("past 30 billing portal links an hour, the billing page says so instead of blaming Stripe", async () => {
-		const user = await customer("billing-limit@example.com");
-		const portal = { id: "bps_1", object: "billing_portal.session", url: "https://billing.stripe.com/p/session/bps_1" };
-		mockStripe(({ method, path }) =>
-			method === "POST" && path === "/v1/billing_portal/sessions"
-				? portal
-				: { status: 404, error: { type: "invalid_request_error", message: `No mock for ${method} ${path}` } }
-		);
-		await repeat(30, async (index) => assert.equal(await as(user, () => catchRedirect(m.billing.openBillingPortal())), portal.url, String(index)));
-		assert.equal(await as(user, () => catchRedirect(m.billing.openBillingPortal())), "/billing?error=rate_limited");
 	});
 });

@@ -5,7 +5,7 @@ import { MAX_ACTIVE_API_KEYS } from "@/lib/actions/api-keys";
 import { SLUG_CHANGES } from "@/lib/newsletters";
 import { ACTIONS } from "@/lib/actions/registry";
 import { API_BASE_PATH, REQUESTS_PER_KEY } from "@/lib/api/rest";
-import { getAppUrl, isCloud } from "@/lib/config";
+import { getAppUrl } from "@/lib/config";
 import { getDocsPageMetadata } from "@/lib/docs/llms";
 import { formatWindow } from "@/lib/format";
 
@@ -29,7 +29,7 @@ export default function AuthenticationPage() {
 
 			<Section title="Send the key" stagger={1}>
 				<p>
-					Create keys on the dashboard&apos;s API keys page. They start with <Code>mc_</Code> and are shown once: MailCheap only keeps
+					Create keys on the dashboard&apos;s API keys page. They start with <Code>mc_</Code> and are shown once: ImpactMail only keeps
 					their hash, their first characters and when they were last used. The REST API and the MCP server take the same header. An
 					account has up to {MAX_ACTIVE_API_KEYS} active keys.
 				</p>
@@ -117,22 +117,6 @@ export default function AuthenticationPage() {
 				</div>
 			</Section>
 
-			<Section title="Plans" stagger={5}>
-				{isCloud() ? (
-					<p>
-						Everything but the billing endpoints needs an active plan; without one the answer is <Code>402 subscription_required</Code>.
-						Signups and confirmation emails keep coming in over the plan&apos;s limits. Campaign sends stop with{" "}
-						<Code>plan_limit_emails</Code> or <Code>plan_limit_subscribers</Code>. Welcome emails count toward the month&apos;s emails
-						like issues: once they&apos;re used up, new subscribers get none until the count starts over or the plan grows, and don&apos;t
-						get one later. <Code>usage.welcomeEmailsPaused</Code> in <Code>get_billing</Code> and <Code>get_overview</Code> says so.
-					</p>
-				) : (
-					<p>
-						This server is self-hosted without billing: no plans and no limits on emails or subscribers. The billing endpoints answer{" "}
-						<Code>404 billing_off</Code>.
-					</p>
-				)}
-			</Section>
 		</>
 	);
 }

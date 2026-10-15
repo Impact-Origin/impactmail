@@ -1,19 +1,18 @@
 import assert from "node:assert/strict";
-import { after, before, beforeEach, describe, test } from "node:test";
+import { after, before, describe, test } from "node:test";
 import mongoose from "mongoose";
-import { addVerifiedDomain, as, callApi, catchRedirect, form, jsonRequest, mockStripe, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { addVerifiedDomain, as, callApi, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 import { published } from "./stubs/qstash.mjs";
 
-// A self-hosted server: no MAILCHEAP_CLOUD, no Stripe keys, no shared domain, and sign-in limited to
-// ALLOWED_EMAILS and ADMIN_EMAILS. Google answers in memory.
+// No shared domain, no plans or limits, and sign-in limited to ALLOWED_EMAILS and ADMIN_EMAILS. Google answers in
+// memory.
 const ALLOWED = "owner@example.com, @team.example.org";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
 let app;
 let m;
 let processed = 0;
-let stripeCalls;
 let nextId = 0;
 
 async function runJobs() {
@@ -94,13 +93,10 @@ async function signInWithGoogle({ email, verified = true, sub = email }) {
 
 before(async () => {
 	app = await startTestApp({
-		MAILCHEAP_CLOUD: "",
-		STRIPE_SECRET_KEY: "",
-		STRIPE_WEBHOOK_SECRET: "",
 		SHARED_DOMAIN: "",
 		ALLOWED_EMAILS: ALLOWED,
 		ADMIN_EMAILS: "admin@example.com",
-		EMAIL_FROM: "MailCheap <login@mail.example.com>",
+		EMAIL_FROM: "ImpactMail <login@mail.example.com>",
 		GOOGLE_CLIENT_ID: "google-client",
 		GOOGLE_CLIENT_SECRET: "google-secret",
 		QSTASH_CURRENT_SIGNING_KEY: "sig-current",
@@ -114,9 +110,6 @@ before(async () => {
 		campaigns: await import("../app/(app)/campaigns/actions.js"),
 		contacts: await import("../app/(app)/contacts/actions.js"),
 		apiKeys: await import("../app/(app)/api-keys/actions.js"),
-		billingActions: await import("../app/(account)/billing/actions.js"),
-		checkoutRoute: await import("../app/(account)/billing/checkout/route.js"),
-		stripeWebhook: await import("../app/api/webhooks/stripe/route.js"),
 		sendBatchRoute: await import("../app/api/jobs/send-batch/route.js"),
 		mcpRoute: await import("../app/mcp/route.js"),
 		proxy: (await import("../proxy.js")).proxy,
@@ -131,28 +124,17 @@ before(async () => {
 	};
 });
 
-beforeEach(() => {
-	stripeCalls = [];
-	mockStripe((request) => {
-		stripeCalls.push(request);
-		return { status: 500, error: { type: "api_error", message: "Stripe isn't used on a self-hosted server" } };
-	});
-});
-
 after(() => app?.stop());
 
-describe("billing is off", () => {
-	test("an allowed user gets the dashboard right after signing in: no plan picker, no Stripe", async () => {
+describe("no plans", () => {
+	test("an allowed user gets the dashboard right after signing in", async () => {
 		const user = await signIn("owner@example.com");
 		const { account } = await as(user, () => m.auth.requireAccount());
 		assert.equal(String(account._id), String(user.accountId));
-		assert.equal(account.subscriptionStatus, undefined, "no plan, and none needed");
 		assert.equal(m.accountState.getAccountStatus(account), "active");
-		assert.equal(await as(user, () => catchRedirect(m.checkoutRoute.GET(new Request("http://localhost:3000/billing/checkout?plan=growth")))), "/billing?interval=month");
-		assert.equal(stripeCalls.length, 0);
 	});
 
-	test("a send far past every plan's emails and subscribers goes out in full, and still counts; so do welcome emails", async () => {
+	test("a send of any size goes out in full, and still counts; so do welcome emails", async () => {
 		const user = await signIn("sender@team.example.org");
 		await addVerifiedDomain(user, "self-hosted.dev");
 		const settings = { name: "Notes", slug: "self-notes", fromName: "Jo", fromEmail: "hello@self-hosted.dev", postalAddress: "1 Main St, Paris" };
@@ -175,8 +157,7 @@ describe("billing is off", () => {
 		const key = await createKey(user);
 		const overview = await callApi("GET", "/api/v1/overview", { key });
 		assert.equal(overview.status, 200);
-		assert.deepEqual([overview.body.usage.emailsLimit, overview.body.usage.emailsLeft, overview.body.usage.subscribersLimit], [null, null, null]);
-		assert.equal(overview.body.usage.welcomeEmailsPaused, false);
+		assert.deepEqual(overview.body.usage, { emailsSent: 50_000_003, subscribers: 3 });
 
 		assert.equal((await callApi("POST", "/api/v1/contacts", { key, body: { email: "new@readers.example.org" } })).status, 201);
 		await flushAfter();
@@ -187,7 +168,6 @@ describe("billing is off", () => {
 
 	test("there's no warm-up: a send far over anything sent before goes out at full speed", async () => {
 		const user = await signIn("first-blast@team.example.org");
-		await m.Account.updateOne({ _id: user.accountId }, { $unset: { spreadUntil: 1 } });
 		await addVerifiedDomain(user, "blast.dev");
 		const settings = { name: "Blast", slug: "blast-notes", fromName: "Jo", fromEmail: "hello@blast.dev", postalAddress: "1 Main St, Paris" };
 		const newsletterId = (await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form(settings))))).split("/").at(-1);
@@ -203,34 +183,7 @@ describe("billing is off", () => {
 		assert.equal(batches.length, 6);
 		assert.ok(batches.every(({ notBefore }) => notBefore === undefined));
 		assert.equal((await m.Campaign.findOne({ accountId: user.accountId, _id: id }).lean()).spreadHours, undefined);
-		assert.equal((await m.Account.findById(user.accountId).lean()).spreadUntil, undefined);
 		await runJobs();
-	});
-
-	test("billing says it's off through the dashboard, the REST API and MCP, and the Stripe webhook is closed", async () => {
-		const user = await signIn("billing@team.example.org");
-		const key = await createKey(user);
-		for (const [method, path, body] of [
-			["GET", "/api/v1/billing"],
-			["POST", "/api/v1/billing/change-plan", { plan: "growth" }],
-			["POST", "/api/v1/billing/portal"],
-		]) {
-			const response = await callApi(method, path, { key, body });
-			assert.equal(response.status, 404, path);
-			assert.equal(response.body.error.code, "billing_off", path);
-			assert.match(response.body.error.message, /^Billing is off on this server/);
-		}
-		for (const tool of ["get_billing", "change_plan", "open_billing_portal"]) {
-			const { result } = await callTool(key, tool, tool === "change_plan" ? { plan: "growth" } : {});
-			assert.equal(result.isError, true, tool);
-			assert.equal(JSON.parse(result.content[0].text).error.code, "billing_off", tool);
-		}
-		assert.equal(await as(user, () => catchRedirect(m.billingActions.choosePlan(form({ plan: "growth" })))), "/billing");
-		assert.equal(await as(user, () => catchRedirect(m.billingActions.openBillingPortal())), "/billing");
-
-		const webhook = await m.stripeWebhook.POST(new Request("http://localhost:3000/api/webhooks/stripe", { method: "POST", body: "{}" }));
-		assert.equal(webhook.status, 404);
-		assert.equal(stripeCalls.length, 0);
 	});
 });
 

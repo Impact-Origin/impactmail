@@ -1,12 +1,9 @@
-import { Ban, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { siteExtensions } from "@/lib/site-extensions";
+import { Ban } from "lucide-react";
 
-// Across the top of every dashboard page while the account is blocked (lib/account-blocks.js), instead of
-// BannerPlan: why, and who unblocks it.
+// Across the top of every dashboard page while the account is blocked (lib/account-blocks.js): why, and who
+// unblocks it.
 export default function BannerBlocked({ account }) {
 	const reason = account.pauseReason?.trim().replace(/\.$/, "");
-	const { supportChatPath } = siteExtensions;
 
 	return (
 		<div
@@ -17,19 +14,10 @@ export default function BannerBlocked({ account }) {
 		>
 			<Ban aria-hidden className="size-4 shrink-0" />
 			<p className="line-clamp-2 min-w-0 text-[13px] leading-snug font-medium text-pretty md:truncate md:text-sm" title={reason}>
-				Account blocked{reason && `: ${reason}`}
-				<span className="hidden font-normal text-white/75 xl:inline"> · Nothing is sent until it&apos;s unblocked</span>
+				Conta bloqueada{reason && `: ${reason}`}
+				<span className="hidden font-normal text-white/75 xl:inline"> · Nada é enviado até ser desbloqueada</span>
 			</p>
-			{supportChatPath ? (
-				<Button asChild size="sm" variant="secondary" className="shrink-0">
-					<a href={supportChatPath}>
-						<MessageCircle data-icon="inline-start" />
-						Chat with us
-					</a>
-				</Button>
-			) : (
-				<span className="hidden shrink-0 text-[13px] text-white/75 sm:inline">An admin can unblock it</span>
-			)}
+			<span className="hidden shrink-0 text-[13px] text-white/75 sm:inline">Um administrador pode desbloqueá-la</span>
 		</div>
 	);
 }

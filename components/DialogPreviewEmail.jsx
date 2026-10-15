@@ -19,7 +19,7 @@ export default function DialogPreviewEmail({ isOpen, onOpenChange, onCloseAutoFo
 					onCloseAutoFocus={onCloseAutoFocus}
 					className="fixed inset-0 z-50 outline-none duration-200 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-2 data-closed:animate-out data-closed:fade-out-0"
 				>
-					<DialogTitle className="sr-only">Preview</DialogTitle>
+					<DialogTitle className="sr-only">Pré-visualização</DialogTitle>
 					<Stage {...email} onClose={() => onOpenChange(false)} />
 				</DialogPrimitive.Content>
 			</DialogPortal>
@@ -50,7 +50,7 @@ function Stage({ html, sender, subject, previewText, onClose }) {
 			className="flex h-full flex-col"
 		>
 			<div data-dim className="relative flex h-16 shrink-0 items-center justify-center px-16">
-				<div role="radiogroup" aria-label="Device" className="flex items-center gap-1 rounded-full bg-white/10 p-1">
+				<div role="radiogroup" aria-label="Dispositivo" className="flex items-center gap-1 rounded-full bg-white/10 p-1">
 					{DEVICES.map(({ id, label, icon: Icon }) => (
 						<button
 							key={id}
@@ -71,7 +71,7 @@ function Stage({ html, sender, subject, previewText, onClose }) {
 				<button
 					type="button"
 					onClick={onClose}
-					aria-label="Close preview"
+					aria-label="Fechar pré-visualização"
 					className="absolute top-1/2 right-3 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white outline-none transition-[background-color,scale] duration-150 ease-out hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 active:scale-[0.96] sm:right-5"
 				>
 					<X className="size-4" />
@@ -95,13 +95,13 @@ function Stage({ html, sender, subject, previewText, onClose }) {
 									<span className="text-zinc-500">&lt;{sender.fromEmail}&gt;</span>
 								</p>
 								<p className="truncate">
-									<span className="font-medium">{subject || "No subject"}</span>
+									<span className="font-medium">{subject || "Sem assunto"}</span>
 									{previewText && <span className="text-zinc-500"> — {previewText}</span>}
 								</p>
 							</div>
 						</div>
 						{/* Without allow-scripts nothing in the email runs. */}
-						<iframe title="Email preview" sandbox="" srcDoc={html} className="min-h-0 w-full flex-1 bg-white" />
+						<iframe title="Pré-visualização do email" sandbox="" srcDoc={html} className="min-h-0 w-full flex-1 bg-white" />
 					</div>
 				</div>
 			</div>
@@ -115,6 +115,6 @@ function isDim(target) {
 
 const SMALL_SCREEN = "(max-width: 639px)";
 const DEVICES = [
-	{ id: "desktop", label: "Desktop", icon: Monitor, width: 640 },
-	{ id: "mobile", label: "Mobile", icon: Smartphone, width: 375 },
+	{ id: "desktop", label: "Computador", icon: Monitor, width: 640 },
+	{ id: "mobile", label: "Telemóvel", icon: Smartphone, width: 375 },
 ];

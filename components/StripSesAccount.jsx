@@ -11,25 +11,25 @@ export default async function StripSesAccount() {
 		return (
 			<p className="flex items-center gap-3 rounded-xl px-4 py-4 text-sm text-muted-foreground shadow-border animate-fade-in">
 				<TriangleAlert className="size-4 shrink-0 text-amber-500" />
-				<span className="truncate">SES unreachable: {account.error}</span>
+				<span className="truncate">SES inacessível: {account.error}</span>
 			</p>
 		);
 	}
 
 	const accountLabel = account.productionAccess
-		? "Production"
+		? "Produção"
 		: account.reviewStatus === "PENDING"
-			? "Sandbox, in review"
+			? "Sandbox, em análise"
 			: "Sandbox";
 	const quotaUsed = account.max24HourSend ? Math.min(account.sentLast24Hours / account.max24HourSend, 1) : 0;
 	const items = [
 		{
-			label: "SES account",
+			label: "Conta SES",
 			value: <BadgeStatus status={account.productionAccess ? "active" : "sandbox"} label={accountLabel} />,
 		},
-		{ label: "Health", value: <BadgeStatus status={account.enforcementStatus} /> },
+		{ label: "Saúde", value: <BadgeStatus status={account.enforcementStatus} /> },
 		{
-			label: "Daily quota",
+			label: "Quota diária",
 			value: (
 				<span className="flex w-full flex-col gap-1.5">
 					{formatNumber(account.sentLast24Hours)} / {formatCompact(account.max24HourSend)}
@@ -42,7 +42,7 @@ export default async function StripSesAccount() {
 				</span>
 			),
 		},
-		{ label: "Max rate", value: `${formatNumber(account.maxSendRate)}/s` },
+		{ label: "Ritmo máximo", value: `${formatNumber(account.maxSendRate)}/s` },
 	];
 
 	return (

@@ -112,12 +112,12 @@ export default async function IssuePage({ params }) {
 			{more.length > 0 && (
 				<section className="mx-auto max-w-5xl px-5 pt-20 pb-24">
 					<div className="mb-6 flex items-baseline justify-between gap-4 border-b border-border/60 pb-4">
-						<h2 className="text-sm font-medium text-muted-foreground">Keep reading</h2>
+						<h2 className="text-sm font-medium text-muted-foreground">Continua a ler</h2>
 						<a
 							href={urls.index}
 							className="text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
 						>
-							All issues →
+							Todas as edições →
 						</a>
 					</div>
 					<ol className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">

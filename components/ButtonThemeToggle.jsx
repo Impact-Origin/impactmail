@@ -20,13 +20,13 @@ export default function ButtonThemeToggle() {
 			<Tooltip>
 				<TooltipTrigger asChild>
 					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="icon" aria-label="Theme">
+						<Button variant="ghost" size="icon" aria-label="Tema">
 							<Sun className="animate-icon-in dark:hidden" />
 							<Moon className="hidden animate-icon-in dark:block" />
 						</Button>
 					</DropdownMenuTrigger>
 				</TooltipTrigger>
-				<TooltipContent>Theme</TooltipContent>
+				<TooltipContent>Tema</TooltipContent>
 			</Tooltip>
 			<DropdownMenuContent align="end" className="w-36">
 				<RadioGroupTheme />
@@ -52,7 +52,7 @@ export function RadioGroupTheme() {
 }
 
 const THEMES = [
-	{ value: "light", label: "Light", icon: Sun },
-	{ value: "dark", label: "Dark", icon: Moon },
-	{ value: "system", label: "System", icon: Monitor },
+	{ value: "light", label: "Claro", icon: Sun },
+	{ value: "dark", label: "Escuro", icon: Moon },
+	{ value: "system", label: "Sistema", icon: Monitor },
 ];

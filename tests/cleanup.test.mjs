@@ -74,7 +74,7 @@ test("after the last-chance email: skip while waiting, dormant at a send 14 or m
 	assert.equal(getCleanupAction(warned(LAST_CHANCE_DAYS), ON, NOW), "dormant");
 	assert.equal(getCleanupAction(warned(90), ON, NOW), "dormant");
 
-	// "Yes, keep sending it", a click, an open: the count starts over and they get issues again.
+	// "Sim, continuem a enviar", a click, an open: the count starts over and they get issues again.
 	assert.equal(getCleanupAction(warned(20, { ignoredIssues: 0, lastEngagedAt: daysAgo(19) }), ON, NOW), "issue");
 	assert.equal(getCleanupAction(warned(20, { ignoredIssues: 0, lastOpenAt: daysAgo(2) }), ON, NOW), "issue");
 	// Months later they can go cold again, and get a new last-chance email.

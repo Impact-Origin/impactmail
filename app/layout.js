@@ -17,7 +17,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
 	return (
-		<html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
+		<html lang="pt" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
 			<body className="min-h-dvh bg-background text-foreground">
 				<ProviderTheme>
 					<TooltipProvider delayDuration={200}>{children}</TooltipProvider>

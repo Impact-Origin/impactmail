@@ -29,7 +29,7 @@ export default function FrameIssue({ html, className }) {
 		<div style={{ height }} className={cn("overflow-hidden rounded-xl bg-white", className)}>
 			<iframe
 				ref={frameRef}
-				title="Issue"
+				title="Edição"
 				srcDoc={html}
 				// Same origin lets the page read the issue's height; without allow-scripts nothing in it runs.
 				sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"

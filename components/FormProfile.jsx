@@ -15,12 +15,12 @@ export default function FormProfile({ name, image, maxNameLength }) {
 
 	return (
 		<form action={action}>
-			<CardSettings title="Profile">
-				<RowSettings label="Photo" hint="Square, 128×128 or larger" isLabel>
-					<InputImage name="image" defaultValue={image} label="photo" isRound />
+			<CardSettings title="Perfil">
+				<RowSettings label="Foto" hint="Quadrada, 128×128 ou maior" isLabel>
+					<InputImage name="image" defaultValue={image} label="foto" isRound />
 				</RowSettings>
-				<RowSettings label="Name" isLabel>
-					<Input name="name" defaultValue={name} maxLength={maxNameLength} placeholder="Jane Doe" autoComplete="name" />
+				<RowSettings label="Nome" isLabel>
+					<Input name="name" defaultValue={name} maxLength={maxNameLength} placeholder="Joana Silva" autoComplete="name" />
 				</RowSettings>
 				<div className="flex items-center justify-end gap-3 px-4 py-3">
 					{state?.error && (
@@ -30,7 +30,7 @@ export default function FormProfile({ name, image, maxNameLength }) {
 					)}
 					<StatusSaved savedAt={isPending ? null : state?.savedAt} />
 					<Button type="submit" disabled={isPending} className="min-w-20">
-						{isPending ? <Loader2 className="animate-spin" /> : "Save"}
+						{isPending ? <Loader2 className="animate-spin" /> : "Guardar"}
 					</Button>
 				</div>
 			</CardSettings>

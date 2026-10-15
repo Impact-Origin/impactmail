@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import mongoose from "mongoose";
-import { activate, addVerifiedDomain, anonymous, as, catchRedirect, form, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { addVerifiedDomain, anonymous, as, catchRedirect, form, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 
 // The dashboard's get-started panel: each step is done from what the account has, nothing another account has
 // counts, the list finishes for good once every step but the optional domain is done, and dismissing it hides
@@ -27,9 +27,8 @@ before(async () => {
 
 after(() => app?.stop());
 
-async function customer(email, { hasPlan = false } = {}) {
+async function customer(email) {
 	const user = await signIn(email);
-	if (hasPlan) await activate(user);
 	const slug = email.split("@")[0];
 	const url = await as(user, () =>
 		catchRedirect(
@@ -118,17 +117,15 @@ describe("the steps", () => {
 		assert.equal((await check(user)).draftId, older);
 	});
 
-	test("subscribers: any contact, which an account adds once it has a plan", async () => {
+	test("subscribers: any contact", async () => {
 		const user = await customer("gs-readers@example.com");
-		assert.equal((await addReader(user)).code, "subscription_required");
 		assert.deepEqual(await doneSteps(user), []);
-		await activate(user);
 		await addReader(user);
 		assert.deepEqual(await doneSteps(user), ["subscribers"]);
 	});
 
 	test("an AI agent: a full access key that isn't revoked, or an app connected with OAuth", async () => {
-		const user = await customer("gs-agent@example.com", { hasPlan: true });
+		const user = await customer("gs-agent@example.com");
 		await createKey(user, "signups");
 		assert.deepEqual(await doneSteps(user), [], "a signups only key can't run an agent");
 		await createKey(user, "full");
@@ -143,8 +140,8 @@ describe("the steps", () => {
 		assert.deepEqual(await doneSteps(user), [], "another account's app doesn't count");
 	});
 
-	test("an own domain: once it's verified; optional with a shared domain, needed without one", async () => {
-		const user = await customer("gs-domain@example.com", { hasPlan: true });
+	test("an own domain: depois de verificado; optional with a shared domain, needed without one", async () => {
+		const user = await customer("gs-domain@example.com");
 		assert.equal((await as(user, () => m.domains.addDomainAction(null, form({ domain: "gs-pending.dev" })))).ok, true);
 		assert.deepEqual(await doneSteps(user), [], "not until it's verified");
 		await addVerifiedDomain(user, "gs-domain.dev");
@@ -156,7 +153,7 @@ describe("the steps", () => {
 	});
 
 	test("sending: a campaign scheduled or sent; unscheduling takes it back", async () => {
-		const user = await customer("gs-send@example.com", { hasPlan: true });
+		const user = await customer("gs-send@example.com");
 		await addReader(user);
 		const id = await draft(user);
 		assert.deepEqual(await as(user, () => m.campaigns.scheduleCampaign(id, { scheduledAt: tomorrow() })), { ok: true });
@@ -170,7 +167,7 @@ describe("the steps", () => {
 
 describe("the list", () => {
 	test("finishes once every step but the optional domain is done, and stays finished", async () => {
-		const user = await customer("gs-finish@example.com", { hasPlan: true });
+		const user = await customer("gs-finish@example.com");
 		await addReader(user);
 		await createKey(user, "full");
 		const id = await draft(user);

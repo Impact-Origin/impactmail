@@ -22,9 +22,9 @@ export default function ChartSubscribers({ current, previous }) {
 			x: xOf(index),
 			title: formatDateKey(day.key, { weekday: "short", month: "short", day: "numeric" }),
 			rows: [
-				{ label: "Subscribers", value: formatNumber(day.total), swatch: "line" },
-				{ label: "Joined", value: formatNumber(day.joined) },
-				{ label: "Left", value: formatNumber(day.left) },
+				{ label: "Subscritores", value: formatNumber(day.total), swatch: "line" },
+				{ label: "Entraram", value: formatNumber(day.joined) },
+				{ label: "Saíram", value: formatNumber(day.left) },
 				before && { label: formatDateKey(before.key), value: formatNumber(before.total), swatch: "dashed" },
 			].filter(Boolean),
 			dots: [
@@ -48,7 +48,7 @@ export default function ChartSubscribers({ current, previous }) {
 		<ChartFrame scale={scale} xLabels={xLabels} className="h-52 sm:h-64">
 			<div
 				role="img"
-				aria-label={`Subscribers from ${formatDateKey(current[0].key)} to ${formatDateKey(last.key)}: ${formatNumber(current[0].total)} to ${formatNumber(last.total)}`}
+				aria-label={`Subscritores de ${formatDateKey(current[0].key)} a ${formatDateKey(last.key)}: de ${formatNumber(current[0].total)} para ${formatNumber(last.total)}`}
 				className="absolute inset-0"
 			>
 				<svg

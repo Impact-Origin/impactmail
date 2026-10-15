@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { formatNumber } from "@/lib/format";
 
 // Warm-up: a limit sends to the most engaged contacts first.
-export default function InputAudienceLimit({ value, onChange, audienceCount, label = "Limit" }) {
+export default function InputAudienceLimit({ value, onChange, audienceCount, label = "Limite" }) {
 	return (
 		<label className="flex flex-col gap-1.5">
 			<span className="text-sm text-muted-foreground">{label}</span>
@@ -11,7 +11,7 @@ export default function InputAudienceLimit({ value, onChange, audienceCount, lab
 				min={1}
 				inputMode="numeric"
 				value={value}
-				placeholder={`All ${formatNumber(audienceCount)}`}
+				placeholder={`Todos os ${formatNumber(audienceCount)}`}
 				onChange={(event) => onChange(event.target.value)}
 			/>
 		</label>

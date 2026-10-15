@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, anonymous, as, callApi, catchRedirect, form, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchRedirect, form, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
 import { sent, state } from "./stubs/ses.mjs";
 import { dnsRecords } from "./stubs/dns-broker.mjs";
 
-// MailCheap Cloud shares its own domain: the dashboard on mailcheap.ai, MailCheap's subdomains next to it (www, r,
+// A server that shares its own domain: the dashboard on mailcheap.ai, ImpactMail's subdomains next to it (www, r,
 // cdn...), and each newsletter's archive and shared address on <slug>.mailcheap.ai, the same site.
 const APP_URL = "https://mailcheap.ai";
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
@@ -41,7 +41,6 @@ async function callTool(key, name, args) {
 
 async function customer(email, slug) {
 	const user = await signIn(email);
-	await activate(user);
 	const url = await as(user, () =>
 		catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" })))
 	);
@@ -71,7 +70,6 @@ before(async () => {
 		proxy: (await import("../proxy.js")).proxy,
 		NextRequest: (await import("next/server")).NextRequest,
 		archiveHosts: await import("../lib/archive-hosts.js"),
-		siteExtensions: (await import("@/lib/site-extensions")).siteExtensions,
 		hostRouting: await import("../lib/host-routing.js"),
 		sharedSender: await import("../lib/shared-sender.js"),
 		auth: await import("../lib/auth.js"),
@@ -89,7 +87,7 @@ before(async () => {
 after(() => app?.stop());
 
 describe("hosts", () => {
-	test("mailcheap.ai, www and MailCheap's other subdomains are the app; <slug>.mailcheap.ai is the newsletter's archive", async () => {
+	test("mailcheap.ai, www and ImpactMail's other subdomains are the app; <slug>.mailcheap.ai is the newsletter's archive", async () => {
 		const resolve = m.hostRouting.resolveArchiveHost;
 		const appHosts = [
 			"mailcheap.ai",
@@ -111,10 +109,9 @@ describe("hosts", () => {
 	});
 
 	test("the app answers on its own hosts, and an archive host only opens the archive and its links", async () => {
-		// Signed out, / is the marketing site's landing page where MailCheap Cloud has one, else sign-in.
-		const { landingPath } = m.siteExtensions;
+		// Signed out, / is sign-in.
 		for (const url of [`${APP_URL}/`, "https://www.mailcheap.ai/", "https://api.mailcheap.ai/"]) {
-			assert.deepEqual(outcome(await visit(url)), landingPath ? { rewrite: landingPath } : { status: 307 }, url);
+			assert.deepEqual(outcome(await visit(url)), { status: 307 }, url);
 		}
 		assert.deepEqual(outcome(await visit(`${APP_URL}/signin`)), { next: true });
 
@@ -129,9 +126,9 @@ describe("hosts", () => {
 });
 
 describe("reserved slugs", () => {
-	test("the dashboard, the REST API and MCP refuse a slug MailCheap keeps, on create and on update", async () => {
+	test("the dashboard, the REST API and MCP refuse a slug ImpactMail keeps, on create and on update", async () => {
 		const user = await customer("reserved@example.com", "reserved-news");
-		const refused = (slug) => ({ code: "validation_failed", message: `${slug} is reserved for MailCheap, pick another slug` });
+		const refused = (slug) => ({ code: "validation_failed", message: `${slug} está reservado para o ImpactMail, escolhe outro slug` });
 		const save = (fields) => as(user, () => m.newsletters.saveNewsletter(null, form({ name: "Notes", postalAddress: "1 Main St, Paris", ...fields })));
 
 		assert.deepEqual(await save({ slug: "www" }), { error: refused("www").message });
@@ -150,10 +147,9 @@ describe("reserved slugs", () => {
 		for (const slug of ["www", "cdn", "r", "api", "mail"]) assert.equal(hasRecordsFor(`${slug}.mailcheap.ai`), false, slug);
 	});
 
-	test("a slug made from the name skips the ones MailCheap keeps", async () => {
+	test("a slug made from the name skips the ones ImpactMail keeps", async () => {
 		const user = await signIn("blog@example.com");
 		assert.equal(await as(user, () => catchRedirect(m.welcome.completeOnboarding(null, form({ name: "Blog" })))), "/");
-		await activate(user);
 		assert.equal(await as(user, () => catchRedirect(m.newsletters.createNewsletter(null, form({ name: "Support" })))), "/newsletters");
 		user.key = (await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })))).key;
 		assert.equal((await callApi("POST", "/api/v1/newsletters", { key: user.key, body: { name: "Status" } })).status, 201);
@@ -185,10 +181,10 @@ describe("shared addresses", () => {
 		assert.equal(email.from, "hello@weekly.mailcheap.ai");
 		assert.match(email.html, /https:\/\/weekly\.mailcheap\.ai\/c\//);
 		assert.match(email.headers["List-Unsubscribe"], /^<https:\/\/weekly\.mailcheap\.ai\/api\/unsubscribe\?token=/);
-		assert.equal(email.headers["Feedback-ID"], `${id}:mc-${user.accountId}:test:mailcheap`, "SES sends MailCheap's own as it is");
+		assert.equal(email.headers["Feedback-ID"], `${id}:mc-${user.accountId}:test:impactmail`, "SES sends ImpactMail's own as it is");
 	});
 
-	test("a slug saved before MailCheap kept it gets no sending subdomain, and the one of its old slug goes", async () => {
+	test("a slug saved before ImpactMail kept it gets no sending subdomain, and the one of its old slug goes", async () => {
 		const user = await customer("legacy@example.com", "legacy-news");
 		const { sharedSender: old } = await m.Newsletter.findOne({ accountId: user.accountId }).lean();
 		await m.Newsletter.updateOne({ accountId: user.accountId, _id: user.newsletterId }, { $set: { slug: "r", fromEmail: "hello@r.mailcheap.ai" } });
@@ -218,7 +214,7 @@ describe("shared addresses", () => {
 		assert.equal(state.identities.has(old.domain), false);
 		assert.equal(hasRecordsFor(old.domain), false);
 		assert.ok(
-			platformEmails.some(({ subject, text }) => subject === "[MailCheap] Shared address not set up" && text.includes("refused-new.mailcheap.ai")),
+			platformEmails.some(({ subject, text }) => subject === "[ImpactMail] Endereço partilhado não configurado" && text.includes("refused-new.mailcheap.ai")),
 			"the admins hear of it"
 		);
 

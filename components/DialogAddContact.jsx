@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { addContact } from "@/app/(app)/contacts/actions";
+import { statusLabel } from "@/components/BadgeStatus";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -14,9 +15,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ERROR_CODES } from "@/lib/account-state";
 import { toast } from "@/lib/toast";
-import { usePaywall } from "@/lib/use-paywall";
 
 // Into the newsletter the page shows.
 export default function DialogAddContact({ newsletter, variant = "outline", size }) {
@@ -33,7 +32,7 @@ export default function DialogAddContact({ newsletter, variant = "outline", size
 			<DialogTrigger asChild>
 				<Button variant={variant} size={size} disabled={!newsletter}>
 					<Plus data-icon="inline-start" />
-					Add contact
+					Adicionar contacto
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
@@ -44,15 +43,11 @@ export default function DialogAddContact({ newsletter, variant = "outline", size
 }
 
 function FormContact({ newsletter, onClose }) {
-	const paywall = usePaywall();
 	const [email, setEmail] = useState("");
 	const [hasConsent, setHasConsent] = useState(false);
 	const [state, action, isPending] = useActionState(async (previous, formData) => {
 		const result = await addContact(previous, formData);
-		if (result?.code === ERROR_CODES.subscriptionRequired && paywall) {
-			onClose();
-			paywall.open("contact");
-		} else if (!result?.error) {
+		if (!result?.error) {
 			onClose();
 			toast.success(getAddedMessage(result));
 		}
@@ -62,10 +57,10 @@ function FormContact({ newsletter, onClose }) {
 	return (
 		<form action={action} className="flex flex-col gap-4">
 			<DialogHeader>
-				<DialogTitle>Add a contact</DialogTitle>
+				<DialogTitle>Adicionar um contacto</DialogTitle>
 				<DialogDescription>
-					They join <span className="font-medium text-foreground">{newsletter?.name}</span> right away, with no confirmation
-					email.
+					Entra em <span className="font-medium text-foreground">{newsletter?.name}</span> de imediato, sem email de
+					confirmação.
 				</DialogDescription>
 			</DialogHeader>
 			<input type="hidden" name="newsletterId" value={newsletter?.id ?? ""} />
@@ -74,7 +69,7 @@ function FormContact({ newsletter, onClose }) {
 				name="email"
 				value={email}
 				onChange={(event) => setEmail(event.target.value)}
-				placeholder="Email, e.g. jane@example.com"
+				placeholder="Email, por exemplo joana@example.com"
 				aria-label="Email"
 				required
 				autoFocus
@@ -91,12 +86,12 @@ function FormContact({ newsletter, onClose }) {
 					required
 					className="mt-0.5 size-4 shrink-0 accent-foreground"
 				/>
-				This person agreed to get my emails
+				Esta pessoa aceitou receber os meus emails
 			</label>
 			{state?.error && <p className="text-sm text-destructive">{state.error}</p>}
 			<DialogFooter>
 				<Button type="submit" disabled={!hasConsent || isPending} className="min-w-20">
-					{isPending ? <Loader2 className="animate-spin" /> : "Add"}
+					{isPending ? <Loader2 className="animate-spin" /> : "Adicionar"}
 				</Button>
 			</DialogFooter>
 		</form>
@@ -105,5 +100,5 @@ function FormContact({ newsletter, onClose }) {
 
 // A suppressed address joins as bounced, complained or unsubscribed.
 function getAddedMessage({ email, status }) {
-	return status === "active" ? `${email} added` : `${email} added as ${status}`;
+	return status === "active" ? `${email} adicionado` : `${email} adicionado como ${statusLabel(status).toLowerCase()}`;
 }

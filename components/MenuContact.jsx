@@ -25,9 +25,9 @@ import { toast } from "@/lib/toast";
 const SUBSCRIBED_STATUSES = ["active", "dormant"];
 // Deleted, they leave their status behind (lib/contacts.js).
 const AFTER_DELETE = {
-	unsubscribed: "They unsubscribed, so adding them again won't email them.",
-	bounced: "Their address bounced, so adding it again won't email it.",
-	complained: "They marked an email as spam, so adding them again won't email them.",
+	unsubscribed: "Cancelou a subscrição, por isso adicioná-lo de novo não lhe envia emails.",
+	bounced: "O endereço foi devolvido, por isso adicioná-lo de novo não lhe envia emails.",
+	complained: "Marcou um email como spam, por isso adicioná-lo de novo não lhe envia emails.",
 };
 
 export default function MenuContact({ id, email, status }) {
@@ -49,7 +49,7 @@ export default function MenuContact({ id, email, status }) {
 					<Button
 						variant="ghost"
 						size="icon-sm"
-						aria-label={`Actions for ${email}`}
+						aria-label={`Ações para ${email}`}
 						disabled={isPending}
 						className="text-muted-foreground hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground"
 					>
@@ -60,21 +60,21 @@ export default function MenuContact({ id, email, status }) {
 					{status === "dormant" && (
 						<DropdownMenuItem onSelect={() => update("active")}>
 							<UserCheck />
-							Reactivate
+							Reativar
 						</DropdownMenuItem>
 					)}
 					{isSubscribed && (
 						<>
 							<DropdownMenuItem variant="destructive" onSelect={() => update("unsubscribed")}>
 								<UserX />
-								Unsubscribe
+								Cancelar subscrição
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
 						</>
 					)}
 					<DropdownMenuItem variant="destructive" onSelect={() => setIsDeleteOpen(true)}>
 						<Trash2 />
-						Delete contact
+						Eliminar contacto
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -91,7 +91,7 @@ function DialogDeleteContact({ id, email, status, isOpen, onOpenChange }) {
 			const result = await deleteContact(id);
 			if (result?.error) return void toast.error(result.error);
 			onOpenChange(false);
-			toast.success("Contact deleted");
+			toast.success("Contacto eliminado");
 		});
 	}
 
@@ -99,18 +99,18 @@ function DialogDeleteContact({ id, email, status, isOpen, onOpenChange }) {
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-sm">
 				<DialogHeader>
-					<DialogTitle>Delete this contact?</DialogTitle>
+					<DialogTitle>Eliminar este contacto?</DialogTitle>
 					<DialogDescription>
-						<span className="font-medium wrap-anywhere text-foreground">{email}</span> leaves your contacts.{" "}
-						{AFTER_DELETE[status] ?? "They can be added again later."}
+						<span className="font-medium wrap-anywhere text-foreground">{email}</span> sai dos teus contactos.{" "}
+						{AFTER_DELETE[status] ?? "Pode ser adicionado de novo mais tarde."}
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="outline">Cancelar</Button>
 					</DialogClose>
 					<Button variant="destructive" onClick={remove} disabled={isDeleting} className="min-w-20">
-						{isDeleting ? <Loader2 className="animate-spin" /> : "Delete"}
+						{isDeleting ? <Loader2 className="animate-spin" /> : "Eliminar"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

@@ -23,11 +23,11 @@ export default function ButtonSignout({ children, className }) {
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Button type="submit" variant="ghost" size="icon" aria-label="Sign out" onClick={confirmSignout}>
+				<Button type="submit" variant="ghost" size="icon" aria-label="Terminar sessão" onClick={confirmSignout}>
 					<LogOut />
 				</Button>
 			</TooltipTrigger>
-			<TooltipContent>Sign out</TooltipContent>
+			<TooltipContent>Terminar sessão</TooltipContent>
 		</Tooltip>
 	);
 }

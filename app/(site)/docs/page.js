@@ -20,7 +20,7 @@ export default function DocsPage() {
 		<div className="relative isolate">
 			<div aria-hidden="true" className="pointer-events-none absolute inset-x-0 -top-10 -z-10 h-80 bg-dots" />
 			<HeaderDocs kicker="REST API and MCP" title="Everything the dashboard does, from code or an AI assistant">
-				The REST API and the MCP server run the same {endpointCount} actions as the dashboard, with the same checks: plan limits, sender
+				The REST API and the MCP server run the same {endpointCount} actions as the dashboard, with the same checks: sender
 				rules, pre-send checks, campaigns paused for their bounce or complaint rates or Gmail&apos;s spam rate, blocked accounts and first
 				sends in steps.
 			</HeaderDocs>
@@ -45,7 +45,7 @@ export default function DocsPage() {
 					<BlockCode
 						title="Terminal"
 						className="mt-4"
-						code={`curl ${appUrl}${API_BASE_PATH}/newsletters \\\n  -H "Authorization: Bearer $MAILCHEAP_API_KEY"`}
+						code={`curl ${appUrl}${API_BASE_PATH}/newsletters \\\n  -H "Authorization: Bearer $IMPACTMAIL_API_KEY"`}
 					/>
 				</Step>
 				<Step number="3" title="Or connect an AI assistant" isLast>

@@ -19,7 +19,7 @@ export default function FormAddDomain({ fromLocalPart, hasArchiveHost }) {
 		const result = await addDomainAction(previous, formData);
 		if (result?.error) toast.error(result.error);
 		else {
-			toast.success(`${result.domain} added. Add its DNS records next.`);
+			toast.success(`${result.domain} adicionado. A seguir, adiciona os registos DNS.`);
 			setDomainInput("");
 			setArchiveInput("");
 		}
@@ -41,14 +41,14 @@ export default function FormAddDomain({ fromLocalPart, hasArchiveHost }) {
 		<form action={action} className="overflow-hidden rounded-xl bg-card shadow-border animate-enter">
 			<div className="flex flex-col gap-4 p-4 sm:p-5">
 				<div>
-					<h2 className="font-semibold tracking-tight">Add your domain</h2>
+					<h2 className="font-semibold tracking-tight">Adiciona o teu domínio</h2>
 					<p className="mt-1 text-sm text-muted-foreground">
-						{hasArchiveHost ? "Send from an address at your domain, with your website and links on it." : "Send from an address at your domain."}
+						{hasArchiveHost ? "Envia a partir de um endereço do teu domínio, com o teu site e os links nele." : "Envia a partir de um endereço do teu domínio."}
 					</p>
 				</div>
 				<div className="flex flex-col gap-2">
 					<label htmlFor={`${id}-domain`} className="text-sm font-medium">
-						Domain
+						Domínio
 					</label>
 					<div className="flex flex-col gap-2 sm:flex-row">
 						<Input
@@ -68,26 +68,26 @@ export default function FormAddDomain({ fromLocalPart, hasArchiveHost }) {
 						/>
 						<Button type="submit" disabled={isPending} className="h-10 sm:min-w-32">
 							{isPending ? <Loader2 className="animate-spin" /> : <Plus data-icon="inline-start" />}
-							Add domain
+							Adicionar domínio
 						</Button>
 					</div>
 				</div>
 			</div>
 			<div className="flex flex-col gap-3 border-t border-border/60 bg-muted/40 px-4 py-3.5 text-sm sm:px-5">
-				<RowPreview label="Sends from">
+				<RowPreview label="Envia a partir de">
 					<span className="min-w-0 truncate font-mono text-base sm:text-[13px]">
 						{fromLocalPart}@<TextDomain domain={domain} />
 					</span>
 				</RowPreview>
 				{hasArchiveHost && (
-					<RowPreview label="Website and links" htmlFor={`${id}-archive`}>
+					<RowPreview label="Site e links" htmlFor={`${id}-archive`}>
 						<label className="flex h-9 max-w-full min-w-0 cursor-text items-center rounded-lg border border-input bg-background px-2.5 font-mono text-base transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 sm:h-8 sm:text-[13px] dark:bg-input/30">
 							<input
 								id={`${id}-archive`}
-								aria-label="Website and links"
+								aria-label="Site e links"
 								value={archiveInput}
 								style={{ width: `${Math.max(archiveInput.length, 4)}ch` }}
-								placeholder="news"
+								placeholder="novidades"
 								autoComplete="off"
 								autoCapitalize="none"
 								spellCheck={false}

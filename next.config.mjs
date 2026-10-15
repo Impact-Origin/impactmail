@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs";
-
 // No script-src: Next.js's inline scripts would need per-request nonces, which archive pages can't have
 // while they're cached (ISR). script-src-attr still blocks inline event handlers everywhere.
 const CONTENT_SECURITY_POLICY = [
@@ -19,22 +17,14 @@ const SECURITY_HEADERS = [
 	{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
 	{ key: "X-Frame-Options", value: "DENY" },
 	{ key: "X-Content-Type-Options", value: "nosniff" },
-	// The origin only, MailCheap's own pages included: a URL like a contacts search can hold a subscriber's email,
+	// The origin only, ImpactMail's own pages included: a URL like a contacts search can hold a subscriber's email,
 	// and the page it leads to can send its referrer to analytics.
 	{ key: "Referrer-Policy", value: "strict-origin" },
 ];
 
-// MailCheap Cloud's marketing site extends the shared pages through these two modules. Where its files exist they
-// take the defaults' place; the open source has none of them (tests/setup/hooks.mjs resolves the same way).
-const SITE_EXTENSIONS = Object.entries({
-	"@/lib/site-extensions": "./lib/marketing/site-extensions.js",
-	"@/components/SiteExtensions": "./components/marketing/SiteExtensions.jsx",
-}).filter(([, target]) => existsSync(new URL(target, import.meta.url)));
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	poweredByHeader: false,
-	turbopack: { resolveAlias: Object.fromEntries(SITE_EXTENSIONS) },
 	images: {
 		remotePatterns: [
 			{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" },

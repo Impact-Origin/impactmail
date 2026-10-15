@@ -8,12 +8,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { toast as hotToast } from "react-hot-toast";
 import Toaster from "../components/Toaster.jsx";
 import { toast } from "../lib/toast.js";
-import { PaywallContext } from "../lib/use-paywall.js";
 import { useToastError } from "../lib/use-toast-error.js";
 
 // The app's toasts: react-hot-toast through lib/toast.js only, shown top center by components/Toaster.jsx, with a
-// description and an action button where a toast has one. An error for a missing plan opens the paywall instead, and
-// a plan limit's error links to billing.
+// description and an action button where a toast has one.
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 
 beforeEach(() => hotToast.remove());
@@ -52,9 +50,9 @@ describe("toasts", () => {
 
 	test("a toast shows its message, its description and its action's button", () => {
 		toast.success("Draft saved", { description: "It goes out on Monday at 9:00", action: { label: "View", onClick() {} } });
-		toast.error("Could not read this file");
+		toast.error("Não foi possível ler este ficheiro");
 		assert.deepEqual(readToasts(), [
-			{ text: "Could not read this file", action: null },
+			{ text: "Não foi possível ler este ficheiro", action: null },
 			{ text: "Draft saved It goes out on Monday at 9:00", action: "View" },
 		]);
 	});
@@ -74,35 +72,18 @@ describe("toasts", () => {
 });
 
 describe("errors", () => {
-	// As a dashboard component shows a failed action's result, inside ProviderPaywall's context when there's one.
-	function showError(result, paywall = null) {
+	// As a dashboard component shows a failed action's result.
+	function showError(result) {
 		function Probe() {
 			useToastError()(result);
 			return null;
 		}
-		renderToStaticMarkup(createElement(PaywallContext, { value: paywall }, createElement(Probe)));
+		renderToStaticMarkup(createElement(Probe));
 	}
 
-	test("without a plan, the paywall opens instead of a toast", () => {
-		let opened = 0;
-		showError({ error: "Pick a plan to send", code: "subscription_required" }, { hasPlan: false, open: () => opened++ });
-		assert.equal(opened, 1);
-		assert.deepEqual(readToasts(), []);
-	});
-
-	test("a plan limit's error has an Upgrade button, other errors none", () => {
-		const paywall = { hasPlan: true, open: () => assert.fail("the paywall opened") };
-		const limit = "This send needs 1,200 emails and your plan has 300 left this month. Upgrade to send.";
-		showError({ error: limit, code: "plan_limit_emails" }, paywall);
-		showError({ error: "Sending is paused", code: "account_blocked" }, paywall);
-		assert.deepEqual(readToasts(), [
-			{ text: "Sending is paused", action: null },
-			{ text: limit, action: "Upgrade" },
-		]);
-	});
-
-	test("outside the dashboard, a missing plan is a plain error", () => {
-		showError({ error: "Pick a plan to send", code: "subscription_required" });
-		assert.deepEqual(readToasts(), [{ text: "Pick a plan to send", action: null }]);
+	test("a failed action's error is a plain toast", () => {
+		showError({ error: "Sending is paused", code: "account_blocked" });
+		assert.deepEqual(readToasts(), [{ text: "Sending is paused", action: null }]);
 	});
 });
+

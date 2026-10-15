@@ -9,7 +9,7 @@ import { ADD_NEWSLETTER_PATH } from "@/lib/newsletters";
 import { toast } from "@/lib/toast";
 
 // A new draft in the open newsletter.
-export default function ButtonNewCampaign({ newsletterId, label = "New", size }) {
+export default function ButtonNewCampaign({ newsletterId, label = "Nova", size }) {
 	const [isPending, startTransition] = useTransition();
 
 	if (!newsletterId) {

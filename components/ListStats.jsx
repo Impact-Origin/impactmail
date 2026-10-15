@@ -20,7 +20,7 @@ export default function ListStats({ current, previous }) {
 
 	const stats = [
 		{
-			label: "Sent",
+			label: "Enviados",
 			value: formatCompact(current.sent),
 			title: formatNumber(current.sent),
 			previousValue: formatNumber(previous.sent),
@@ -28,16 +28,16 @@ export default function ListStats({ current, previous }) {
 			digits: 0,
 			isCount: true,
 		},
-		{ label: "Delivered", ...rate("delivered", current.sent, previous.sent), higherIsBetter: true },
-		{ label: "Opened", ...rate("opened", reached, previousReached), higherIsBetter: true },
-		{ label: "Clicked", ...rate("clicked", reached, previousReached), higherIsBetter: true },
+		{ label: "Entregues", ...rate("delivered", current.sent, previous.sent), higherIsBetter: true },
+		{ label: "Abertos", ...rate("opened", reached, previousReached), higherIsBetter: true },
+		{ label: "Clicados", ...rate("clicked", reached, previousReached), higherIsBetter: true },
 		{
-			label: "Bounced",
+			label: "Devolvidos",
 			...rate("bounced", current.sent, previous.sent, 2),
 			tone: rateTone(current.bounced, current.sent, LIMITS.pause.bounceRate),
 		},
 		{
-			label: "Complaints",
+			label: "Denúncias",
 			...rate("complained", current.sent, previous.sent, 3),
 			tone: rateTone(current.complained, current.sent, LIMITS.pause.complaintRate),
 		},
@@ -47,7 +47,7 @@ export default function ListStats({ current, previous }) {
 		<dl className="grid grid-cols-3 gap-px bg-border/60 lg:grid-cols-6">
 			{stats.map(({ label, value, title, previousValue, change, digits, isCount, higherIsBetter, tone = "default" }) => {
 				const text = formatChange(change, { digits });
-				const previousLabel = `${previousValue} in the previous ${PERIOD_DAYS} days`;
+				const previousLabel = `${previousValue} nos ${PERIOD_DAYS} dias anteriores`;
 				return (
 					<div key={label} className="flex min-w-0 flex-col gap-1 bg-card px-4 py-3.5 sm:px-5">
 						<dt className="text-xs text-muted-foreground">{label}</dt>
@@ -64,7 +64,7 @@ export default function ListStats({ current, previous }) {
 									<span className="sr-only"> ({previousLabel})</span>
 								</TooltipChange>
 							) : (
-								<TextEmpty label="No earlier data" />
+								<TextEmpty label="Sem dados anteriores" />
 							)}
 						</dd>
 					</div>

@@ -16,10 +16,46 @@ export default function BadgeStatus({ status, label, className }) {
 	);
 }
 
-function statusLabel(status) {
+export function statusLabel(status) {
+	if (STATUS_LABELS[status]) return STATUS_LABELS[status];
 	const text = status.replaceAll("_", " ");
 	return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+const STATUS_LABELS = {
+	active: "Ativo",
+	sent: "Enviado",
+	delivered: "Entregue",
+	success: "Sucesso",
+	verified: "Verificado",
+	healthy: "Saudável",
+	scheduled: "Agendado",
+	sending: "A enviar",
+	queued: "Em fila",
+	paused: "Em pausa",
+	pending: "Pendente",
+	temporary_failure: "Falha temporária",
+	probation: "Em observação",
+	sandbox: "Sandbox",
+	bounced: "Devolvido",
+	complained: "Denunciado",
+	failed: "Falhou",
+	shutdown: "Desativado",
+	deleting: "A eliminar",
+	blocked: "Bloqueado",
+	draft: "Rascunho",
+	canceled: "Cancelado",
+	unsubscribed: "Saiu",
+	dormant: "Inativo",
+	held: "Retido",
+	suppressed: "Suprimido",
+	skipped: "Ignorado",
+	opened: "Aberto",
+	clicked: "Clicado",
+	revoked: "Revogado",
+	failure: "Falha",
+	not_started: "Não iniciado",
+};
 
 const DOT_TONES = {
 	green: "bg-emerald-500",

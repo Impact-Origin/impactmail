@@ -12,7 +12,7 @@ export default function FormSwitchToDomain({ newsletterId, newsletterName, domai
 	const [, action, isPending] = useActionState(async (previous, formData) => {
 		const result = await switchToDomainAction(previous, formData);
 		if (result?.error) toast.error(result.error);
-		else toast.success(`${newsletterName} sends from ${result.fromEmail}`);
+		else toast.success(`${newsletterName} envia a partir de ${result.fromEmail}`);
 		return result;
 	}, null);
 
@@ -25,7 +25,7 @@ export default function FormSwitchToDomain({ newsletterId, newsletterName, domai
 			<input type="hidden" name="domainId" value={domainId} />
 			<div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
 				<label htmlFor={`${id}-local`} className="shrink-0 text-muted-foreground">
-					Send <span className="font-medium text-foreground">{newsletterName}</span> from
+					Enviar <span className="font-medium text-foreground">{newsletterName}</span> a partir de
 				</label>
 				<label className="flex h-9 max-w-full min-w-0 cursor-text items-center rounded-lg border border-input bg-background px-2.5 font-mono text-base transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 sm:h-8 sm:text-[13px] dark:bg-input/30">
 					<input
@@ -34,7 +34,7 @@ export default function FormSwitchToDomain({ newsletterId, newsletterName, domai
 						value={localPart}
 						required
 						style={{ width: `${Math.max(localPart.length, 2)}ch` }}
-						placeholder="hi"
+						placeholder="ola"
 						autoComplete="off"
 						autoCapitalize="none"
 						spellCheck={false}
@@ -45,7 +45,7 @@ export default function FormSwitchToDomain({ newsletterId, newsletterName, domai
 				</label>
 			</div>
 			<Button type="submit" disabled={isPending} className="sm:h-8 sm:min-w-32">
-				{isPending ? <Loader2 className="animate-spin" /> : "Use this address"}
+				{isPending ? <Loader2 className="animate-spin" /> : "Usar este endereço"}
 			</Button>
 		</form>
 	);

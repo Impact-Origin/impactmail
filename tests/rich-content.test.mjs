@@ -87,7 +87,7 @@ test("an empty editor document is not content", () => {
 		postalAddress: "1 Main St, Paris",
 	};
 	const campaign = { format: "rich", subject: "Issue", html: "<p></p>" };
-	assert.equal(getSendProblem({ campaign, newsletter }), "Add content");
+	assert.equal(getSendProblem({ campaign, newsletter }), "Adiciona conteúdo");
 	assert.equal(getSendProblem({ campaign: { ...campaign, html: "<p>Hello</p>" }, newsletter }), null);
 });
 

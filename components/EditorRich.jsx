@@ -39,7 +39,7 @@ export default function EditorRich({ content, onChange }) {
 			}),
 			Callout,
 			Placeholder.configure({
-				placeholder: ({ node }) => (node.type.name === "heading" ? "Heading" : "Write, or press / for commands"),
+				placeholder: ({ node }) => (node.type.name === "heading" ? "Título" : "Escreve, ou carrega em / para ver os comandos"),
 			}),
 			FileHandler.configure({
 				allowedMimeTypes: IMAGE_TYPES,
@@ -50,7 +50,7 @@ export default function EditorRich({ content, onChange }) {
 			SlashCommand.configure({ onPickImage: () => setIsPickingImage(true) }),
 		],
 		editorProps: {
-			attributes: { class: `prose-issue ${MIN_HEIGHT} px-5 py-5 outline-none`, "aria-label": "Content" },
+			attributes: { class: `prose-issue ${MIN_HEIGHT} px-5 py-5 outline-none`, "aria-label": "Conteúdo" },
 			handleKeyDown: (view, event) => {
 				const isLinkShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
 				if (!isLinkShortcut || view.state.selection.empty) return false;

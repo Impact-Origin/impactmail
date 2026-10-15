@@ -61,12 +61,12 @@ test("path parameters and key levels", () => {
 
 test("errors keep known codes and hide the rest", () => {
 	assert.deepEqual(toActionError(actionError("conflict", "Already sending")), { code: "conflict", message: "Already sending" });
-	assert.deepEqual(toActionError(Object.assign(new Error("Over"), { code: "plan_limit_emails" })), { code: "plan_limit_emails", message: "Over" });
+	assert.deepEqual(toActionError(Object.assign(new Error("Blocked"), { code: "account_blocked" })), { code: "account_blocked", message: "Blocked" });
 	assert.equal(toActionError(Object.assign(new Error("E11000 duplicate key"), { code: 11000 })).code, "internal_error");
 	assert.doesNotMatch(toActionError(new Error("connection string mongodb://secret")).message, /mongodb/);
-	assert.equal(getErrorStatus("plan_limit_subscribers"), 402);
+	assert.equal(getErrorStatus("account_blocked"), 403);
 	assert.equal(getErrorStatus("nonsense"), 500);
-	for (const code of ["unauthorized", "forbidden", "not_found", "validation_failed", "conflict", "rate_limited", "plan_limit_emails", "plan_limit_subscribers", "account_blocked"]) {
+	for (const code of ["unauthorized", "forbidden", "not_found", "validation_failed", "conflict", "rate_limited", "account_blocked", "account_deleting"]) {
 		assert.ok(ERRORS[code], code);
 	}
 	const issues = z.object({ subject: z.string().max(2), nested: z.object({ count: z.number() }) }).safeParse({ subject: "long", nested: { count: "1" } }).error.issues;
@@ -86,14 +86,14 @@ test("newsletter changes land on the saved settings, and the shared address foll
 	assert.equal(applySharedAddress({ ...merged, fromEmail: "hello@weekly.mailcheapmail.com" }, "mailcheapmail.com").fromEmail, "hello@letters.mailcheapmail.com");
 	assert.equal(applySharedAddress({ ...merged, fromEmail: "hi@own.dev" }, "mailcheapmail.com").fromEmail, "hi@own.dev");
 	assert.equal(getNewsletterProblem(applySharedAddress(merged, "mailcheapmail.com")), null);
-	assert.equal(getNewsletterProblem({ ...merged, cleanup: { issues: 1 } }), "Ignored issues should be a whole number from 2 to 100");
-	assert.equal(getNewsletterProblem({ ...merged, socialLinks: ["http://x.com/me"] }), "http://x.com/me is not an https:// link");
+	assert.equal(getNewsletterProblem({ ...merged, cleanup: { issues: 1 } }), "As edições ignoradas têm de ser um número inteiro de 2 a 100");
+	assert.equal(getNewsletterProblem({ ...merged, socialLinks: ["http://x.com/me"] }), "http://x.com/me não é um link https://");
 });
 
-test("a slug can't be a subdomain MailCheap uses or keeps", () => {
+test("a slug can't be a subdomain ImpactMail uses or keeps", () => {
 	const settings = (slug) => applySharedAddress(mergeNewsletterSettings(toNewsletterSettings(null), { name: "Mine", slug }), "mailcheap.ai");
 	for (const slug of ["www", "r", "rp", "send", "rsend", "cdn", "api", "app", "mail", "docs", "admin", "status", "blog", "help", "support", "bounce", "mcp"]) {
-		assert.equal(getNewsletterProblem(settings(slug)), `${slug} is reserved for MailCheap, pick another slug`, slug);
+		assert.equal(getNewsletterProblem(settings(slug)), `${slug} está reservado para o ImpactMail, escolhe outro slug`, slug);
 	}
 	for (const slug of ["weekly", "the-hens", "www2", "api-notes", "r2"]) assert.equal(getNewsletterProblem(settings(slug)), null, slug);
 });
@@ -103,7 +103,7 @@ test("new newsletters start with confirmed opt-in and the built-in confirmation 
 	assert.equal(created.requireConfirmation, true);
 	assert.equal(getNewsletterProblem(created), null, "no confirmation email of its own: the built-in one");
 	assert.equal(toNewsletterSettings({ name: "Old", slug: "old" }).requireConfirmation, false, "saved newsletters keep theirs");
-	assert.equal(getNewsletterProblem({ ...created, confirmation: { subject: "", previewText: "", markdown: "Click here" } }), "Confirmation email needs a subject");
+	assert.equal(getNewsletterProblem({ ...created, confirmation: { subject: "", previewText: "", markdown: "Click here" } }), "O email de confirmação precisa de um assunto");
 });
 
 test("new newsletters start with list cleanup on and the default numbers, unless they say false; saved ones keep theirs", () => {

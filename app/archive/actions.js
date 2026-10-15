@@ -22,10 +22,10 @@ export async function subscribe(_state, formData) {
 	if (formData.get("website")) return { ok: true };
 
 	const email = normalizeEmail(formData.get("email"));
-	if (!email) return { error: "Enter a valid email" };
+	if (!email) return { error: "Introduz um email válido" };
 
 	if (await isRateLimited({ ...PER_IP, key: getClientIp(await headers()) })) {
-		return { error: "Too many signups from your network. Try again in a few minutes." };
+		return { error: "Demasiadas inscrições a partir da tua rede. Tenta de novo daqui a alguns minutos." };
 	}
 	const emailProblem = await getSignupProblem(email);
 	if (emailProblem) return { error: emailProblem };
@@ -35,15 +35,15 @@ export async function subscribe(_state, formData) {
 		slug: String(formData.get("newsletter") ?? ""),
 		archiveEnabled: true,
 	});
-	if (!newsletter) return { error: "This newsletter is not taking signups" };
+	if (!newsletter) return { error: "Esta newsletter não está a aceitar inscrições" };
 
 	if (await isRateLimited({ ...PER_NEWSLETTER, key: newsletter.slug })) {
 		after(() =>
 			sendAlert({
 				accountId: newsletter.accountId,
 				key: `signup-flood:${newsletter.slug}`,
-				title: "Website signup flood",
-				detail: `Over ${PER_NEWSLETTER.limit} signups to ${newsletter.name} in 10 minutes. They still go through (${PER_IP.limit} per visitor per 10 minutes); check new contacts for junk.`,
+				title: "Vaga de inscrições no site",
+				detail: `Mais de ${PER_NEWSLETTER.limit} inscrições em ${newsletter.name} em 10 minutos. Continuam a entrar (${PER_IP.limit} por visitante a cada 10 minutos); verifica se há lixo nos novos contactos.`,
 				path: "/contacts",
 			})
 		);

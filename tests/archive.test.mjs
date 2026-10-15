@@ -72,9 +72,9 @@ test("social links are one https link per line", () => {
 	assert.deepEqual(parseSocialLinks(" https://x.com/example\n\nhttps://x.com/example https://youtube.com/@example "), {
 		links: ["https://x.com/example", "https://youtube.com/@example"],
 	});
-	assert.match(parseSocialLinks("http://x.com/example").error, /not an https/);
-	assert.match(parseSocialLinks("javascript:alert(1)").error, /not an https/);
-	assert.match(parseSocialLinks(Array.from({ length: 9 }, (_, i) => `https://a${i}.com`).join("\n")).error, /at most 8/);
+	assert.match(parseSocialLinks("http://x.com/example").error, /não é um link https/);
+	assert.match(parseSocialLinks("javascript:alert(1)").error, /não é um link https/);
+	assert.match(parseSocialLinks(Array.from({ length: 9 }, (_, i) => `https://a${i}.com`).join("\n")).error, /no máximo 8/);
 });
 
 test("share links carry the issue URL", () => {

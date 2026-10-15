@@ -2,20 +2,17 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import LogoWordmark from "@/components/LogoWordmark";
 import { Button } from "@/components/ui/button";
-import { isCloud } from "@/lib/config";
-import { siteExtensions } from "@/lib/site-extensions";
 
 // Public pages are static, so the header can't tell who's signed in: signing in leads signed-in users on to the dashboard.
 // On phones the links sit in a popover, which needs no client code. They're plain links there: the header outlives a
 // client-side navigation, and the popover would stay open over the next page.
 export default function HeaderSite() {
-	const { headerLinks, headerAction } = isCloud() ? siteExtensions : { headerLinks: [], headerAction: null };
-	const links = [...headerLinks, ...LINKS];
+	const links = LINKS;
 
 	return (
 		<header className="sticky top-0 z-30 border-b border-border/60 bg-site/80 backdrop-blur-md">
 			<div className="mx-auto flex h-14 max-w-(--site-width) items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-				<LogoWordmark href="/" canFly className="-ml-1 rounded-lg px-1 py-1" />
+				<LogoWordmark href="/" className="-ml-1 rounded-lg px-1 py-1" />
 				<nav aria-label="Main" className="flex items-center gap-1">
 					<span className="hidden items-center gap-1 sm:flex">
 						{links.map(({ href, label }) => (
@@ -24,11 +21,6 @@ export default function HeaderSite() {
 							</Button>
 						))}
 					</span>
-					{headerAction && (
-						<Button asChild size="sm" className="ml-1.5">
-							<Link href={headerAction.href}>{headerAction.label}</Link>
-						</Button>
-					)}
 					<Button variant="ghost" size="icon-sm" popoverTarget="site-menu" aria-label="Menu" className="sm:hidden">
 						<Menu />
 					</Button>
@@ -54,6 +46,6 @@ export default function HeaderSite() {
 }
 
 const LINKS = [
-	{ href: "/docs", label: "Docs" },
-	{ href: "/signin", label: "Sign in" },
+	{ href: "/docs", label: "Documentação" },
+	{ href: "/signin", label: "Iniciar sessão" },
 ];

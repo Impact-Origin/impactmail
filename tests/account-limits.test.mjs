@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 import { dnsRecords } from "./stubs/dns-broker.mjs";
 import { state } from "./stubs/ses.mjs";
 
@@ -27,7 +27,6 @@ after(() => app?.stop());
 // A paying account with a newsletter on the shared address, named after the email, and a full access key.
 async function customer(email) {
 	const user = await signIn(email);
-	await activate(user);
 	const slug = email.split("@")[0];
 	const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris" }))));
 	user.newsletterId = url.split("/").at(-1);
@@ -77,13 +76,13 @@ describe("keys", () => {
 		await repeat(4, async (index) => assert.equal((await callTool(second, "send_test_email", { id })).sentTo, "two-keys@example.com", `MCP ${index}`));
 		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { ok: true }, "the 30th, from the dashboard");
 
-		const onAccount = { code: "rate_limited", message: "Too many send_test_email calls on this account, try again later" };
+		const onAccount = { code: "rate_limited", message: "Demasiadas chamadas a send_test_email nesta conta, tenta mais tarde" };
 		assert.deepEqual((await testEmail(user.key)).body.error, onAccount);
 		assert.deepEqual((await testEmail(second)).body.error, onAccount);
 		assert.deepEqual(await callTool(second, "send_test_email", { id }), { error: onAccount });
 		const another = await callApi("POST", "/api/v1/api-keys", { key: second, body: { name: "And another", level: "full" } });
 		assert.deepEqual((await testEmail(another.body.key)).body.error, onAccount, "a new key gets nothing more");
-		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { error: "You can send a test email 30 times an hour. Try again later." });
+		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { error: "Atingiste o limite: 30 vezes por hora. Tenta mais tarde." });
 	});
 
 	test("a key alone still stops at its own limit, and each account counts on its own", async () => {
@@ -91,7 +90,7 @@ describe("keys", () => {
 		const id = await draft(user);
 		await repeat(30, async (index) => assert.equal((await callApi("POST", `/api/v1/campaigns/${id}/test`, { key: user.key })).status, 200, String(index)));
 		const limited = await callApi("POST", `/api/v1/campaigns/${id}/test`, { key: user.key });
-		assert.deepEqual([limited.status, limited.body.error.message], [429, "Too many send_test_email calls, try again later"]);
+		assert.deepEqual([limited.status, limited.body.error.message], [429, "Demasiadas chamadas a send_test_email, tenta mais tarde"]);
 
 		const other = await customer("next-door@example.com");
 		const otherId = await draft(other);
@@ -103,7 +102,7 @@ describe("keys", () => {
 		await repeat(19, async (index) => {
 			assert.ok((await as(user, () => m.apiKeys.createApiKey(null, form({ name: `Key ${index}`, level: "signups" })))).key, String(index));
 		});
-		const capped = "An account has up to 20 active API keys. Revoke one to create another.";
+		const capped = "Uma conta pode ter até 20 chaves de API ativas. Revoga uma para criares outra.";
 		assert.deepEqual(await as(user, () => m.apiKeys.createApiKey(null, form({ name: "One too many", level: "full" }))), { error: capped });
 		const viaApi = await callApi("POST", "/api/v1/api-keys", { key: user.key, body: { name: "One too many", level: "full" } });
 		assert.deepEqual([viaApi.status, viaApi.body.error], [409, { code: "conflict", message: capped }]);
@@ -125,12 +124,12 @@ describe("slugs", () => {
 			as(user, () => m.newsletters.saveNewsletter(null, form({ id: user.newsletterId, name: "Slugs", postalAddress: "1 Main St, Paris", ...fields })));
 		const patch = (body) => callApi("PATCH", `/api/v1/newsletters/${user.newsletterId}`, { key: user.key, body });
 
-		assert.deepEqual(await save({ slug: "slug-taken" }), { error: "This slug is already used" }, "a slug another newsletter has doesn't count");
+		assert.deepEqual(await save({ slug: "slug-taken" }), { error: "Este slug já está a ser usado" }, "a slug another newsletter has doesn't count");
 		assert.equal((await save({ slug: "slug-b" })).ok, true, "1, the dashboard");
 		assert.equal((await patch({ slug: "slug-c" })).status, 200, "2, the REST API");
 		assert.equal((await callTool(user.key, "update_newsletter", { id: user.newsletterId, slug: "slug-d" })).slug, "slug-d", "3, MCP");
 
-		const limited = "You can change slugs 3 times a day. Try again later.";
+		const limited = "Podes mudar o slug 3 vezes por dia. Tenta mais tarde.";
 		assert.deepEqual(await save({ slug: "slug-e" }), { error: limited });
 		const refused = await patch({ slug: "slug-e" });
 		assert.deepEqual([refused.status, refused.body.error], [429, { code: "rate_limited", message: limited }]);

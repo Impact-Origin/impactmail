@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { after, before, describe, test } from "node:test";
 import { SignJWT, exportJWK, generateKeyPair } from "jose";
 import mongoose from "mongoose";
-import { activate, anonymous, as, catchRedirect, form, platformEmails, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, catchRedirect, form, platformEmails, startTestApp } from "./helpers/app.mjs";
 import { metadataDocuments } from "./stubs/cimd-node.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 
@@ -15,7 +15,7 @@ const APP_URL = "http://localhost:3000";
 const MCP_URL = `${APP_URL}/mcp`;
 const TOKEN_URL = `${APP_URL}/api/auth/oauth2/token`;
 const REGISTER_URL = `${APP_URL}/api/auth/oauth2/register`;
-const MCP_SCOPE = "mailcheap:full";
+const MCP_SCOPE = "impactmail:full";
 
 const AGENT = {
 	clientId: "https://agent.example.test/oauth/client.json",
@@ -134,14 +134,13 @@ async function customer(email, { slug } = {}) {
 	const stored = await mongoose.connection.db.collection("users").findOne({ email });
 	user.userId = stored._id;
 	user.accountId = (await m.Account.findOne({ ownerId: stored._id }).lean())._id;
-	await activate(user);
 	if (slug) {
 		await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: `${slug} news`, slug, postalAddress: "1 Main St, Paris" }))));
 	}
 	return user;
 }
 
-// What the browser does between the app and MailCheap: open the authorization URL, answer the consent page
+// What the browser does between the app and ImpactMail: open the authorization URL, answer the consent page
 // when it shows, and land on the app's redirect URI.
 async function authorizeInBrowser(user, authorizationUrl, { decision = "allow" } = {}) {
 	const response = await as(user, () => m.authRoute.GET(new Request(authorizationUrl, { headers: { cookie: cookieOf(user) } })));
@@ -388,7 +387,7 @@ describe("connecting with the official MCP client", () => {
 		assert.equal(claims.sub, String(users.owner.userId));
 		assert.equal(claims.azp, AGENT.clientId);
 		assert.equal(claims.exp - claims.iat, 3600);
-		assert.deepEqual(claims.scope.split(" ").sort(), ["mailcheap:full", "offline_access"]);
+		assert.deepEqual(claims.scope.split(" ").sort(), ["impactmail:full", "offline_access"]);
 
 		const { tools } = await client.listTools();
 		assert.equal(tools.length, m.registry.ACTIONS.length, "full access: every tool");
@@ -460,10 +459,8 @@ describe("connecting with the official MCP client", () => {
 			resource: MCP_URL,
 		});
 		assert.equal(token.status, 200, JSON.stringify(token.body));
-		const billing = await callTool(token.body.access_token, "get_billing");
-		assert.equal(billing.structuredContent.status, "no_plan", "billing tools work before a plan, so the app can open checkout");
 		const contacts = await callTool(token.body.access_token, "list_contacts");
-		assert.equal(toolError(contacts).code, "subscription_required", "the rest answers what an API key would without a plan");
+		assert.deepEqual(contacts.structuredContent.contacts, [], "the app reads what an API key would");
 
 		const google = { jar: new Map(), ip: `198.51.100.${++visitor}` };
 		const googleStart = await as(google, () => m.authRoute.GET(new Request(authorizationUrl(AGENT, { challenge }))));
@@ -495,7 +492,7 @@ describe("connecting with the official MCP client", () => {
 		const tampered = new URL(start.headers.get("location"), APP_URL).search.slice(1).replace("state-123", "state-999");
 		await as(user, () => m.signin.sendSigninCode(null, form({ email })));
 		const result = await as(user, () => m.signin.verifySigninCode(null, form({ email, code: signInCode(email), oauth_query: tampered })));
-		assert.equal(result.error, "This sign-in link expired. Go back to the app and connect MailCheap again.");
+		assert.equal(result.error, "Este link de início de sessão expirou. Volta à app e liga de novo o ImpactMail.");
 		assert.equal(user.jar.size, 0, "no session");
 	});
 
@@ -740,7 +737,7 @@ describe("registering, as Grok Bot does", () => {
 });
 
 describe("tokens", () => {
-	test("a token without the mailcheap:full scope gets a 403 asking for it", async () => {
+	test("a token without the impactmail:full scope gets a 403 asking for it", async () => {
 		const { challenge, verifier } = pkce();
 		const callback = await authorizeInBrowser(users.owner, authorizationUrl(AGENT, { challenge, scope: "offline_access" }));
 		const token = await postToken({
@@ -753,7 +750,7 @@ describe("tokens", () => {
 		});
 		const { status, headers, body } = await mcpRequest(token.body.access_token);
 		assert.equal(status, 403);
-		assert.match(headers.get("www-authenticate"), /^Bearer error="insufficient_scope", scope="mailcheap:full", resource_metadata="[^"]+\/mcp"/);
+		assert.match(headers.get("www-authenticate"), /^Bearer error="insufficient_scope", scope="impactmail:full", resource_metadata="[^"]+\/mcp"/);
 		assert.equal(body.error.code, "forbidden");
 	});
 
@@ -805,7 +802,7 @@ describe("tokens", () => {
 		await strangerApp.close();
 	});
 
-	test("blocked and canceled accounts answer an app exactly as they answer a full access key", async () => {
+	test("blocked accounts answer an app exactly as they answer a full access key", async () => {
 		const user = await customer("oauth-states@example.com", { slug: "oauth-states" });
 		const { key } = await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })));
 		const provider = createProvider();
@@ -821,11 +818,6 @@ describe("tokens", () => {
 		assert.deepEqual(byApp, byKey);
 		assert.equal(toolError(await callTool(token, "add_contact", { email: "new-reader@example.org" })).code, "account_blocked");
 		assert.equal((await callTool(token, "list_contacts")).structuredContent.contacts.length, 1, "reads still work");
-
-		await m.Account.updateOne({ _id: user.accountId }, { $set: { status: "active", subscriptionStatus: "canceled" } });
-		const canceledByKey = toolError(await callTool(key, "list_contacts"));
-		assert.equal(canceledByKey.code, "subscription_required");
-		assert.deepEqual(toolError(await callTool(token, "list_contacts")), canceledByKey);
 	});
 
 	test("an app's signups count against its account with its keys and contacts added by hand: 600 an hour, and the owner hears of it", async () => {
@@ -841,13 +833,13 @@ describe("tokens", () => {
 		assert.equal((await callTool(token, "add_contact", { email: "from-the-app@example.org" })).structuredContent.created, true);
 		assert.equal((await callTool(key, "add_contact", { email: "from-the-site@example.org" })).structuredContent.created, true, "the 600th");
 
-		const refused = { code: "rate_limited", message: "Too many signups on this account, try again later" };
+		const refused = { code: "rate_limited", message: "Demasiadas inscrições nesta conta, tenta mais tarde" };
 		assert.deepEqual(toolError(await callTool(token, "add_contact", { email: "app-again@example.org" })), refused);
 		assert.deepEqual(toolError(await callTool(key, "add_contact", { email: "site-again@example.org" })), refused);
-		assert.deepEqual(await byHand("hand-again@example.org"), { error: "You can add 600 contacts an hour. Try again later." });
+		assert.deepEqual(await byHand("hand-again@example.org"), { error: "Podes adicionar 600 contactos por hora. Tenta mais tarde." });
 		await flushAfter();
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 600);
-		assert.equal(platformEmails.filter(({ to, subject }) => to.includes(user.email) && subject === "[MailCheap] Signups paused").length, 1);
+		assert.equal(platformEmails.filter(({ to, subject }) => to.includes(user.email) && subject === "[ImpactMail] Inscrições em pausa").length, 1);
 	});
 });
 
@@ -897,7 +889,7 @@ describe("connected apps", () => {
 		const [own] = (await callTool(token, "list_connected_apps")).structuredContent.connectedApps;
 
 		const strangerTry = await as(users.stranger, () => m.apiKeys.revokeConnectedApp(own.id));
-		assert.equal(strangerTry.error, "App not found");
+		assert.equal(strangerTry.error, "App não encontrada");
 		const revoked = await callTool(token, "revoke_connected_app", { id: own.id });
 		assert.deepEqual(revoked.structuredContent, { id: own.id, revoked: true });
 		assert.equal((await mcpRequest(token)).status, 401);
@@ -913,7 +905,7 @@ describe("API keys", () => {
 		assert.deepEqual((await mcpRequest(signupKey)).body.result.tools.map(({ name }) => name), ["add_contact"]);
 		const revoked = await mcpRequest(`mc_${"y".repeat(43)}`);
 		assert.equal(revoked.status, 401);
-		assert.equal(revoked.body.error.message, "Send a valid API key: Authorization: Bearer <key>");
+		assert.equal(revoked.body.error.message, "Envia uma chave de API válida: Authorization: Bearer <chave>");
 	});
 });
 

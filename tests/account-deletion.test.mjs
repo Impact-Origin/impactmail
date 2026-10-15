@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import mongoose from "mongoose";
-import { activate, addVerifiedDomain, as, callApi, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { addVerifiedDomain, as, callApi, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 import { POSTSHIBA_ENV, createFakePostshiba } from "./helpers/postshiba.mjs";
 import { invalidations, refusedDistributions } from "./stubs/cloudfront.mjs";
 import { RedirectError } from "./stubs/next-navigation.mjs";
@@ -21,9 +21,9 @@ const S3 = {
 	IMAGES_CDN_URL: "https://cdn.example.com",
 	IMAGES_CLOUDFRONT_DISTRIBUTION_ID: "E2TESTDISTRIBUTION",
 };
-const DELETION_SUBJECT = /^(\d{6}) is your code to delete your MailCheap account$/;
-const BLOCKED = { error: "Your account can't be deleted yet. This page says what to do first." };
-const WRONG_CODE = { error: "This code is wrong or expired" };
+const DELETION_SUBJECT = /^(\d{6}) é o teu código para eliminar a tua conta ImpactMail$/;
+const BLOCKED = { error: "A tua conta ainda não pode ser eliminada. Esta página diz o que tens de fazer primeiro." };
+const WRONG_CODE = { error: "Este código está errado ou expirou" };
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 const OAUTH_COLLECTIONS = ["oauthConsent", "oauthAccessToken", "oauthRefreshToken"];
@@ -69,11 +69,6 @@ async function purgeNow(user) {
 	return runPurgeJob({ accountId: String(user.accountId), purgeAt: purgeAt.toISOString() });
 }
 
-// What Stripe's webhook writes once the plan is canceled in the billing portal.
-function cancelPlan(user) {
-	return m.Account.updateOne({ _id: user.accountId }, { $set: { subscriptionStatus: "canceled" } });
-}
-
 async function createNewsletter(user, slug) {
 	const url = await as(user, () =>
 		catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" })))
@@ -100,7 +95,7 @@ async function uploadImage(user) {
 function connectApp(user, clientId = "app-client") {
 	const owned = { clientId, userId: user.userId, createdAt: new Date() };
 	return Promise.all([
-		collection("oauthConsent").insertOne({ ...owned, scopes: ["mailcheap:full"] }),
+		collection("oauthConsent").insertOne({ ...owned, scopes: ["impactmail:full"] }),
 		collection("oauthAccessToken").insertOne({ ...owned, token: `at-${clientId}-${user.userId}` }),
 		collection("oauthRefreshToken").insertOne({ ...owned, token: `rt-${clientId}-${user.userId}` }),
 	]);
@@ -112,7 +107,6 @@ function connectApp(user, clientId = "app-client") {
 async function customer(email, slug) {
 	const user = await signIn(email);
 	await collection("auth_accounts").insertOne({ userId: user.userId, providerId: "google", accountId: `google-${slug}`, createdAt: new Date(), updatedAt: new Date() });
-	await activate(user);
 	await createNewsletter(user, slug);
 	await as(user, () =>
 		m.contacts.importContacts({
@@ -171,7 +165,7 @@ before(async () => {
 		auth: await import("../lib/auth.js"),
 		deletion: await import("../lib/account-deletion.js"),
 		state: await import("../lib/account-state.js"),
-		billing: await import("../lib/billing.js"),
+		tenants: await import("../lib/tenants.js"),
 		archive: await import("../lib/archive-data.js"),
 		publicNewsletters: await import("../lib/public-newsletters.js"),
 		sending: await import("../lib/sending.js"),
@@ -196,25 +190,6 @@ before(async () => {
 after(() => app?.stop());
 
 describe("what blocks a deletion", () => {
-	test("a plan that's active, trialing or past due: no code goes out, and a code from before doesn't delete either", async () => {
-		const user = await signIn("paying@example.com");
-		const codeBeforePlan = await sendCode(user);
-		for (const subscriptionStatus of ["active", "trialing", "past_due"]) {
-			await activate(user, { subscriptionStatus });
-			const blockers = await m.deletion.getDeletionBlockers(user.account);
-			assert.deepEqual({ hasPlan: blockers.hasPlan, campaigns: blockers.campaigns.length }, { hasPlan: true, campaigns: 0 }, subscriptionStatus);
-			const emails = platformEmails.length;
-			assert.deepEqual(await as(user, () => m.account.sendDeletionCode()), BLOCKED, subscriptionStatus);
-			assert.equal(platformEmails.length, emails, "no code sent");
-			assert.deepEqual(await deleteWith(user, { code: codeBeforePlan }), BLOCKED, subscriptionStatus);
-		}
-		assert.equal((await m.Account.findById(user.accountId).lean()).deletion, undefined);
-
-		await cancelPlan(user);
-		assert.equal(await m.deletion.getDeletionBlockers(await m.Account.findById(user.accountId).lean()), null);
-		assert.deepEqual(await deleteWith(user, { code: codeBeforePlan }), { redirect: "/signin?deleted=1" }, "the code wasn't used up while blocked");
-	});
-
 	test("a campaign sending or scheduled, until it's paused or unscheduled; drafts, paused and sent ones don't block", async () => {
 		const user = await signIn("campaigns@example.com");
 		await createNewsletter(user, "campaign-news");
@@ -227,14 +202,11 @@ describe("what blocks a deletion", () => {
 		await m.Campaign.updateOne({ accountId: user.accountId, _id: others[2] }, { $set: { status: "sent", sentAt: new Date() } });
 
 		const blockers = await m.deletion.getDeletionBlockers(user.account);
-		assert.equal(blockers.hasPlan, false);
 		assert.deepEqual(blockers.campaigns.map(({ subject, status }) => `${subject}: ${status}`).sort(), ["Going out: sending", "Next week: scheduled"]);
 		assert.deepEqual(await as(user, () => m.account.sendDeletionCode()), BLOCKED);
 
-		await activate(user);
 		assert.deepEqual(await as(user, () => m.campaigns.pauseCampaign(sending)), { ok: true });
 		assert.deepEqual(await as(user, () => m.campaigns.unscheduleCampaign(scheduled)), { ok: true });
-		await cancelPlan(user);
 		assert.equal(await m.deletion.getDeletionBlockers(await m.Account.findById(user.accountId).lean()), null);
 		await deleteAccount(user);
 	});
@@ -254,12 +226,12 @@ describe("the confirmation", () => {
 		const code = await sendCode(user);
 		const email = platformEmails.at(-1);
 		assert.deepEqual(email.to, [user.email]);
-		assert.match(email.text, /If you didn't ask for it, don't share it/);
+		assert.match(email.text, /Se não o pediste, não o partilhes/);
 		const stored = await collection("verifications").findOne({ identifier: `email-verification-otp-${user.email}` });
 		assert.equal(stored.value.includes(code), false, "stored hashed");
 
-		assert.deepEqual(await deleteWith(user, { code, email: "code@example.org" }), { error: "Type your email address to confirm" });
-		assert.deepEqual(await deleteWith(user, { code: "12345" }), { error: "Enter the 6-digit code" });
+		assert.deepEqual(await deleteWith(user, { code, email: "code@example.org" }), { error: "Escreve o teu endereço de email para confirmar" });
+		assert.deepEqual(await deleteWith(user, { code: "12345" }), { error: "Introduz o código de 6 dígitos" });
 		await collection("verifications").updateOne({ _id: stored._id }, { $set: { expiresAt: new Date(Date.now() - 1000) } });
 		assert.deepEqual(await deleteWith(user, { code }), WRONG_CODE, "expired after 5 minutes");
 		assert.equal((await m.Account.findById(user.accountId).lean()).deletion, undefined);
@@ -279,7 +251,7 @@ describe("the confirmation", () => {
 		assert.deepEqual(await deleteWith(user, { code }), WRONG_CODE, "dead after 3 wrong tries");
 		await sendCode(user);
 		await sendCode(user);
-		assert.deepEqual(await as(user, () => m.account.sendDeletionCode()), { error: "Too many codes. Try again in 15 minutes." });
+		assert.deepEqual(await as(user, () => m.account.sendDeletionCode()), { error: "Demasiados códigos. Tenta de novo daqui a 15 minutos." });
 	});
 
 	test("isn't an action, so no API key or connected app can delete an account or change its profile", () => {
@@ -288,16 +260,14 @@ describe("the confirmation", () => {
 });
 
 describe("a deleted account", () => {
-	test("stops at once: every session, its API keys, its connected apps, its signups and archive, even where there's no billing", async () => {
+	test("stops at once: every session, its API keys, its connected apps, its signups and archive, ", async () => {
 		const user = await signIn("stopped@example.com");
 		const otherDevice = await signIn("stopped@example.com");
 		const bystander = await signIn("bystander@example.com");
-		await activate(user);
 		await createNewsletter(user, "stopped-news");
 		const { key } = await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Site", level: "full" })));
 		await connectApp(user);
 		await connectApp(bystander);
-		await cancelPlan(user);
 		const newsletter = await m.Newsletter.findOne({ accountId: user.accountId, _id: user.newsletterId }).lean();
 		assert.ok(await withEnv({ MAILCHEAP_CLOUD: "" }, () => m.publicNewsletters.findOpenNewsletter({ slug: user.slug })), "open before");
 
@@ -318,12 +288,12 @@ describe("a deleted account", () => {
 		assert.equal(m.state.getAccountStatus(account), "deleting");
 		for (const cloud of ["true", ""]) {
 			await withEnv({ MAILCHEAP_CLOUD: cloud }, async () => {
-				assert.equal(m.state.hasActiveSubscription(account), false, `MAILCHEAP_CLOUD=${cloud}`);
+				assert.equal(m.state.isAccountActive(account), false, `MAILCHEAP_CLOUD=${cloud}`);
 				assert.equal(await m.publicNewsletters.findOpenNewsletter({ slug: user.slug }), null, "no more signups");
 				assert.equal(await m.archive.getArchiveNewsletter(user.slug), null, "the archive is offline");
 				const contact = await m.Contact.create({ accountId: user.accountId, newsletterId: user.newsletterId, email: `late-${cloud || "self"}@example.org` });
 				const welcome = { ...newsletter, welcome: { enabled: true, subject: "Hi", markdown: "Welcome" } };
-				assert.deepEqual(await m.sending.queueWelcomeEmail({ newsletter: welcome, contact }), { skipped: "no active plan" });
+				assert.deepEqual(await m.sending.queueWelcomeEmail({ newsletter: welcome, contact }), { skipped: "account is being deleted" });
 			});
 		}
 
@@ -365,7 +335,7 @@ describe("a deleted account", () => {
 		await deleteAccount(user);
 		await m.Account.updateOne({ _id: user.accountId }, { $set: { "deletion.purgeStartedAt": new Date() } });
 		const again = await signIn(user.email);
-		assert.deepEqual(await as(again, () => m.restore.restoreDeletedAccount()), { error: "Your account is being deleted, so it can't be restored anymore." });
+		assert.deepEqual(await as(again, () => m.restore.restoreDeletedAccount()), { error: "A tua conta está a ser eliminada, por isso já não pode ser restaurada." });
 		assert.equal(await as(again, () => catchRedirect(m.auth.requireAccount())), "/restore");
 	});
 });
@@ -383,7 +353,6 @@ describe("the purge", () => {
 		assert.deepEqual(Object.keys(keptCounts).filter((name) => keptCounts[name] === 0), [], "one of everything");
 		assert.ok(doomedNewsletter.sharedSender.dnsRecordIds.length > 0 && objects.some(({ Key }) => Key === doomedUpload.pathname));
 
-		await cancelPlan(doomed);
 		await deleteAccount(doomed);
 		const invalidationCount = invalidations.length;
 		assert.deepEqual(await purgeNow(doomed), { purged: true });
@@ -425,21 +394,14 @@ describe("the purge", () => {
 		const returning = await signIn(doomed.email);
 		assert.notEqual(String(returning.accountId), String(doomed.accountId), "signing in again opens a new account");
 		assert.ok(
-			platformEmails.slice(admins).some(({ to, subject }) => to.includes("admin@example.com") && subject === "[MailCheap] A deleted account's email signed up again"),
+			platformEmails.slice(admins).some(({ to, subject }) => to.includes("admin@example.com") && subject === "[ImpactMail] O email de uma conta eliminada voltou a registar-se"),
 			"and the admins hear of it"
 		);
 	});
 
-	test("waits while a plan is active again, and a step that fails is tried again the next day", async () => {
+	test("a step that fails is tried again the next day", async () => {
 		const user = await customer("stuck@example.com", "stuck-news");
-		await cancelPlan(user);
 		await deleteAccount(user);
-
-		await activate(user);
-		const held = await purgeNow(user);
-		assert.match(held.postponed, /plan is active again/);
-		assert.equal((await countData(user)).Contact, 2, "nothing deleted");
-		await cancelPlan(user);
 
 		const upload = await m.Upload.findOne({ accountId: user.accountId }).lean();
 		refusedDeletes.add(upload.pathname);
@@ -450,7 +412,7 @@ describe("the purge", () => {
 		assert.equal(await m.Upload.countDocuments({ accountId: user.accountId }), 1, "kept, so the next try deletes the file");
 		assert.equal((await countData(user)).user, 0, "the rest went ahead");
 		assert.ok(
-			platformEmails.some(({ to, subject }) => to.includes("admin@example.com") && subject === "[MailCheap] Account purge postponed"),
+			platformEmails.some(({ to, subject }) => to.includes("admin@example.com") && subject === "[ImpactMail] Limpeza da conta adiada"),
 			"the admins hear of it"
 		);
 
@@ -502,18 +464,12 @@ describe("the purge", () => {
 		try {
 			await withEnv(POSTSHIBA_ENV, async () => {
 				const user = await signIn("ps-delete@example.com");
-				await m.billing.applySubscription(user.account, {
-					id: "sub_ps_delete",
-					status: "active",
-					customer: "cus_ps_delete",
-					items: { data: [{ price: { lookup_key: "starter_month" }, current_period_start: 1_790_000_000, current_period_end: 1_792_600_000 }] },
-				});
+				await m.tenants.ensureTenant(user.account);
 				await createNewsletter(user, "ps-delete-news");
 				assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain: "ps-delete.dev" }))), { ok: true, domain: "ps-delete.dev" });
 				const { tenantId } = (await m.Account.findById(user.accountId).lean()).postshiba;
 				const tenantDomains = () => [...fake.state.domains.values()].filter((domain) => domain.tenant_id === tenantId).map(({ name }) => name).sort();
 				assert.deepEqual(tenantDomains(), ["ps-delete-news.mailcheapmail.com", "ps-delete.dev"]);
-				await cancelPlan(user);
 
 				await deleteAccount(user);
 				assert.equal(fake.state.tenants.get(tenantId).suspended, true, "PostShiba refuses its mail at once");

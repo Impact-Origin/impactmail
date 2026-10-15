@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import mongoose from "mongoose";
-import { activate, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 
 // A newsletter's slug, as the settings form shows it: checked while it's typed (check_newsletter_slug), unique down to
 // the database, and what saving a new one does to the old subdomain.
@@ -11,7 +11,6 @@ let m;
 
 async function customer(email, slug) {
 	const user = await signIn(email);
-	await activate(user);
 	const url = await as(user, () =>
 		catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" })))
 	);
@@ -63,29 +62,29 @@ describe("checking a slug", () => {
 		const free = (slug) => ({ slug, available: true, reason: null, message: null });
 		assert.deepEqual(await check(jane, "fresh-notes"), free("fresh-notes"));
 		assert.deepEqual(await check(jane, "jane-notes"), free("jane-notes"), "its own slug");
-		assert.deepEqual(await check(jane, "john-notes"), { slug: "john-notes", available: false, reason: "taken", message: "This slug is already used" });
+		assert.deepEqual(await check(jane, "john-notes"), { slug: "john-notes", available: false, reason: "taken", message: "Este slug já está a ser usado" });
 		assert.deepEqual(await check(jane, "WWW"), {
 			slug: "www",
 			available: false,
 			reason: "reserved",
-			message: "www is reserved for MailCheap, pick another slug",
+			message: "www está reservado para o ImpactMail, escolhe outro slug",
 		});
 		assert.deepEqual(await check(jane, "notes!"), {
 			slug: "notes!",
 			available: false,
 			reason: "invalid",
-			message: "Slug can only use lowercase letters, numbers and dashes",
+			message: "O slug só pode ter letras minúsculas, números e hífenes",
 		});
 
-		assert.deepEqual(await saveSlug(jane, "john-notes"), { error: "This slug is already used" });
-		assert.deepEqual(await saveSlug(jane, "www"), { error: "www is reserved for MailCheap, pick another slug" });
+		assert.deepEqual(await saveSlug(jane, "john-notes"), { error: "Este slug já está a ser usado" });
+		assert.deepEqual(await saveSlug(jane, "www"), { error: "www está reservado para o ImpactMail, escolhe outro slug" });
 	});
 
 	test("from the API too; checking counts toward its own limit, never toward the slug changes", async () => {
 		const user = await customer("slug-api@example.com", "api-notes");
 		const response = await callApi("GET", `/api/v1/newsletters/slugs/jane-notes?id=${user.newsletterId}`, { key: user.key });
 		assert.equal(response.status, 200);
-		assert.deepEqual(response.body, { slug: "jane-notes", available: false, reason: "taken", message: "This slug is already used" });
+		assert.deepEqual(response.body, { slug: "jane-notes", available: false, reason: "taken", message: "Este slug já está a ser usado" });
 
 		const { rateLimit, limitDashboard, readOnly } = m.registry.getAction("check_newsletter_slug");
 		assert.deepEqual([rateLimit, limitDashboard, readOnly], [{ limit: 300, window: "1 h" }, true, true]);

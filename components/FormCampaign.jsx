@@ -24,7 +24,6 @@ import CardSettings from "@/components/CardSettings";
 import DialogDiscardCampaign from "@/components/DialogDiscardCampaign";
 import DialogPreviewEmail from "@/components/DialogPreviewEmail";
 import EditorRich from "@/components/EditorRich";
-import IconWarmup from "@/components/IconWarmup";
 import ListChecks from "@/components/ListChecks";
 import NavSteps from "@/components/NavSteps";
 import PanelSend from "@/components/PanelSend";
@@ -41,16 +40,14 @@ import { formatCount, formatSendTime } from "@/lib/format";
 import { markdownToHtml } from "@/lib/markdown";
 import { getPresendChecks } from "@/lib/presend-checks";
 import { UNSUBSCRIBE_PLACEHOLDER, renderEmail, withResponsiveImages } from "@/lib/render-email";
-import { getPaceHours } from "@/lib/send-spread";
 import { toast } from "@/lib/toast";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { usePaywall } from "@/lib/use-paywall";
 import { useSendCampaign } from "@/lib/use-send-campaign";
 import { useToastError } from "@/lib/use-toast-error";
 import { useAutosave } from "@/lib/use-autosave";
 import { cn } from "@/lib/utils";
 
-const UPLOADING_MESSAGE = "Wait for images to finish uploading";
+const UPLOADING_MESSAGE = "Espera que as imagens acabem de carregar";
 // Below lg, as the step bar's classes.
 const COMPACT_SCREEN = "(width < 64rem)";
 
@@ -63,9 +60,7 @@ export default function FormCampaign({
 	testEmail,
 	sendTimes,
 	archiveUrlBase,
-	planProblem,
-	emailsLeft,
-	pace,
+	accountProblem,
 	newContacts,
 }) {
 	const isHtml = campaign.format === "html";
@@ -86,8 +81,6 @@ export default function FormCampaign({
 	const [isTesting, startTesting] = useTransition();
 	const [isWorking, startWorking] = useTransition();
 	const toastError = useToastError();
-	const paywall = usePaywall();
-	const hasPlan = paywall?.hasPlan ?? true;
 	const deferredValues = useDeferredValue(values);
 	const isUploading = values.body.includes('src="blob:');
 	const scheduledAt = campaign.status === "scheduled" ? campaign.scheduledAt : null;
@@ -100,7 +93,7 @@ export default function FormCampaign({
 
 	async function persist() {
 		if (await flush()) return true;
-		toast.error("Couldn't save the draft");
+		toast.error("Não foi possível guardar o rascunho");
 		return false;
 	}
 
@@ -125,34 +118,29 @@ export default function FormCampaign({
 		rendered,
 		senderProblem,
 		isSendingEnabled,
-		planProblem,
+		accountProblem,
 	});
-	// Without a plan, Send and Schedule open the paywall first; the checks wait until there's one.
-	const blockingMessage = !hasPlan ? null : isUploading ? UPLOADING_MESSAGE : blocking[0]?.message;
+	const blockingMessage = isUploading ? UPLOADING_MESSAGE : blocking[0]?.message;
 	const reviewChecks = checks.map((check) => ({ ...check, fix: getCheckFix(check, { newsletterId: newsletter._id }) }));
-	const warmupCheck = getWarmupCheck(pace, { emails: audienceCount, newContacts });
 	const sending = useSendCampaign({
 		campaignId: campaign._id,
 		audienceCount,
 		audienceLimit: campaign.audienceLimit,
-		emailsLeft,
 		scheduledAt,
 		isCleanupEnabled: Boolean(newsletter.cleanup?.enabled),
 		sendTimes,
 		blockingMessage,
-		hasPlan,
 		onBeforeSend: persist,
 	});
-	const isTestDisabled = hasPlan && !isSendingEnabled;
+	const isTestDisabled = !isSendingEnabled;
 
 	function sendTest() {
-		if (!hasPlan) return paywall.open("test");
 		startTesting(async () => {
 			if (isUploading) return void toast.error(UPLOADING_MESSAGE);
 			if (!(await persist())) return;
 			const result = await sendTestCampaign(campaign._id);
 			if (result?.error) toastError(result);
-			else toast.success(`Test sent to ${testEmail}`);
+			else toast.success(`Teste enviado para ${testEmail}`);
 		});
 	}
 
@@ -179,7 +167,7 @@ export default function FormCampaign({
 				? subjectRef.current
 				: field === "previewText"
 					? previewTextRef.current
-					: rootRef.current?.querySelector('[aria-label="Content"]');
+					: rootRef.current?.querySelector('[aria-label="Conteúdo"]');
 		target?.focus({ preventScroll: true });
 		target?.scrollIntoView({ block: "center" });
 	}
@@ -224,15 +212,15 @@ export default function FormCampaign({
 
 	const sendAction =
 		sending.choice === "now"
-			? { label: "Send now", icon: Send, reason: "send", run: () => sending.setIsConfirmOpen(true) }
-			: { label: "Schedule", icon: CalendarClock, reason: "schedule", run: sending.schedule };
+			? { label: "Enviar já", icon: Send, run: () => sending.setIsConfirmOpen(true) }
+			: { label: "Agendar", icon: CalendarClock, run: sending.schedule };
 	const action = {
-		write: { label: "Next: review", icon: ArrowRight, isIconAfter: true, onClick: () => goToStep("review") },
-		review: { label: "Next: send", icon: ArrowRight, isIconAfter: true, onClick: () => goToStep("send"), problem: blockingMessage },
+		write: { label: "Seguinte: rever", icon: ArrowRight, isIconAfter: true, onClick: () => goToStep("review") },
+		review: { label: "Seguinte: enviar", icon: ArrowRight, isIconAfter: true, onClick: () => goToStep("send"), problem: blockingMessage },
 		send: {
 			label: sendAction.label,
 			icon: sendAction.icon,
-			onClick: () => (hasPlan ? sendAction.run() : paywall.open(sendAction.reason)),
+			onClick: sendAction.run,
 			problem: sending.problem,
 			isPending: sending.isPending,
 		},
@@ -245,9 +233,9 @@ export default function FormCampaign({
 			return (
 				<>
 					<StatusSave isSaving={isDirty || isSaving} error={null} onRetry={flush} />
-					<Button variant="ghost" size="sm" onClick={openPreview} aria-label="Preview" className="text-muted-foreground max-sm:px-2">
+					<Button variant="ghost" size="sm" onClick={openPreview} aria-label="Pré-visualizar" className="text-muted-foreground max-sm:px-2">
 						<Eye data-icon="inline-start" />
-						<span className="max-sm:sr-only">Preview</span>
+						<span className="max-sm:sr-only">Pré-visualizar</span>
 					</Button>
 				</>
 			);
@@ -256,7 +244,7 @@ export default function FormCampaign({
 		return (
 			<span className="truncate text-sm text-muted-foreground tabular-nums">
 				{sending.choice === "now"
-					? `To ${formatCount(sending.sendRecipients, "contact")}`
+					? `Para ${formatCount(sending.sendRecipients, "contacto")}`
 					: sending.sendAt && formatSendTime(sending.sendAt)}
 			</span>
 		);
@@ -288,27 +276,27 @@ export default function FormCampaign({
 			</header>
 
 			<div className="mx-auto w-full max-w-2xl">
-				<section aria-label="Write" hidden={step !== "write"}>
+				<section aria-label="Escrever" hidden={step !== "write"}>
 					<div className="overflow-hidden rounded-xl bg-card shadow-border animate-enter">
 						<div className="divide-y divide-border/60 border-b border-border/60">
-							<RowCampaign label="Subject">
+							<RowCampaign label="Assunto">
 								<input
 									ref={subjectRef}
 									value={values.subject}
 									onChange={update("subject")}
-									placeholder="Subject"
-									aria-label="Subject"
+									placeholder="Assunto"
+									aria-label="Assunto"
 									maxLength={200}
 									className="h-11 w-full min-w-0 bg-transparent text-sm font-medium outline-none placeholder:font-normal placeholder:text-muted-foreground"
 								/>
 							</RowCampaign>
-							<RowCampaign label="Preview text">
+							<RowCampaign label="Texto de pré-visualização">
 								<input
 									ref={previewTextRef}
 									value={values.previewText}
 									onChange={update("previewText")}
-									placeholder="Shown after the subject in inboxes"
-									aria-label="Preview text"
+									placeholder="Aparece depois do assunto na caixa de entrada"
+									aria-label="Texto de pré-visualização"
 									maxLength={300}
 									className="h-11 w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 								/>
@@ -322,7 +310,7 @@ export default function FormCampaign({
 									onChange={update("body")}
 									placeholder="<html>"
 									spellCheck={false}
-									aria-label="Content"
+									aria-label="Conteúdo"
 									className="block min-h-[560px] w-full resize-none bg-transparent px-4 py-4 font-mono text-[13px] leading-6 outline-none [field-sizing:content] placeholder:text-muted-foreground"
 								/>
 							</div>
@@ -332,9 +320,9 @@ export default function FormCampaign({
 					</div>
 				</section>
 
-				<section aria-label="Review" hidden={step !== "review"} className="flex flex-col gap-6">
+				<section aria-label="Rever" hidden={step !== "review"} className="flex flex-col gap-6">
 					<ListChecks
-						checks={warmupCheck ? [...reviewChecks, warmupCheck] : reviewChecks}
+						checks={reviewChecks}
 						renderFix={({ fix }) =>
 							fix && (
 								<ButtonFix
@@ -347,33 +335,31 @@ export default function FormCampaign({
 							)
 						}
 					/>
-					<CardSettings title="Test and preview" stagger={1}>
+					<CardSettings title="Testar e pré-visualizar" stagger={1}>
 						<ButtonRow
 							icon={FlaskConical}
-							title="Send a test email"
-							description={isTestDisabled ? "Sending is off" : `Goes to ${testEmail}`}
+							title="Enviar um email de teste"
+							description={isTestDisabled ? "O envio está desligado" : `Vai para ${testEmail}`}
 							onClick={sendTest}
 							isDisabled={isTestDisabled}
 							isPending={isTesting}
 						/>
 						<ButtonRow
 							icon={Eye}
-							title="Preview"
-							description="On desktop and mobile, at their real width"
+							title="Pré-visualizar"
+							description="Em computador e telemóvel, na largura real"
 							onClick={openPreview}
 						/>
 					</CardSettings>
 				</section>
 
-				<section aria-label="Send" hidden={step !== "send"}>
+				<section aria-label="Enviar" hidden={step !== "send"}>
 					<PanelSend
 						sending={sending}
 						campaign={campaign}
 						newsletter={newsletter}
 						subject={values.subject}
 						audienceCount={audienceCount}
-						emailsLeft={emailsLeft}
-						pace={pace}
 						newContacts={newContacts}
 						archiveUrlBase={archiveUrlBase}
 					/>
@@ -414,33 +400,18 @@ export default function FormCampaign({
 	);
 }
 
-// The checklist's warm-up row, for a send to everyone: while the account warms up, or when the send would go out over
-// hours (lib/send-spread.js). It never blocks and isn't counted.
-function getWarmupCheck(pace, { emails, newContacts }) {
-	const hours = getPaceHours(pace, { emails, newContacts });
-	if (!hours && !pace?.warmup) return null;
-	const { warmup } = pace;
-	return {
-		id: "warmup",
-		label: hours ? `Goes out over ${formatCount(hours, "hour")}` : "Sends now",
-		detail: warmup ? (warmup.hasStarted ? `Warm-up day ${warmup.day} of ${warmup.days}` : "Starts the warm-up") : null,
-		isOk: true,
-		icon: IconWarmup,
-	};
-}
-
 function TitleCampaign({ title, newsletter, status }) {
 	return (
 		<div className="flex min-w-0 flex-1 items-center gap-2">
 			<Link
 				href="/campaigns"
-				aria-label="Back"
+				aria-label="Voltar"
 				className="-ml-2 grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
 			>
 				<ChevronLeft className="size-5" />
 			</Link>
 			<AvatarNewsletter newsletter={newsletter} size={24} />
-			<h1 className="truncate text-lg font-semibold tracking-tight lg:text-base">{title || "Untitled"}</h1>
+			<h1 className="truncate text-lg font-semibold tracking-tight lg:text-base">{title || "Sem título"}</h1>
 			<BadgeStatus status={status} />
 		</div>
 	);
@@ -450,18 +421,18 @@ function MenuMore({ isWorking, onDuplicate, onDiscard }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon" aria-label="More" disabled={isWorking}>
+				<Button variant="ghost" size="icon" aria-label="Mais" disabled={isWorking}>
 					<MoreHorizontal />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem onSelect={onDuplicate}>
 					<Copy />
-					Duplicate
+					Duplicar
 				</DropdownMenuItem>
 				<DropdownMenuItem variant="destructive" onSelect={onDiscard}>
 					<Trash2 />
-					Discard
+					Descartar
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
@@ -568,18 +539,18 @@ function StatusSave({ isSaving, error, onRetry }) {
 				className="flex items-center gap-1.5 text-xs text-destructive hover:underline"
 			>
 				<CircleAlert className="size-3.5" />
-				Not saved, retry
+				Não guardado, tentar de novo
 			</button>
 		);
 	}
 	return (
 		<span aria-live="polite" className="flex min-w-16 items-center gap-1.5 text-xs text-muted-foreground lg:justify-end">
 			{isSaving ? (
-				"Saving…"
+				"A guardar…"
 			) : (
 				<>
 					<Check className="size-3.5" />
-					Saved
+					Guardado
 				</>
 			)}
 		</span>

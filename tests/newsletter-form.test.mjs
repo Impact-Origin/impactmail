@@ -55,31 +55,28 @@ test("the shared address follows the slug; an own domain keeps its address", () 
 	assert.equal(getDraftFromEmail(removed, sharedDomain), "hello@field-notes.mailcheapmail.com", "a domain the account removed falls back to the shared address");
 });
 
-test("the postal address starts as the one emails print: the newsletter's own, else the default, unless it was cleared", () => {
-	const defaultPostalAddress = "Example Company, 1 Example Way";
-	const draft = (fields) => getNewsletterDraft({ newsletter: { ...newsletter, ...fields }, domains: [], sharedDomain, defaultPostalAddress });
+test("the postal address starts as the newsletter's own", () => {
+	const draft = (fields) => getNewsletterDraft({ newsletter: { ...newsletter, ...fields }, domains: [], sharedDomain });
 	assert.equal(draft({}).postalAddress, "1 Main St, Paris");
-	assert.equal(draft({ postalAddress: undefined }).postalAddress, defaultPostalAddress);
-	assert.equal(draft({ postalAddress: "" }).postalAddress, defaultPostalAddress, "saved before there was a default");
-	assert.equal(draft({ postalAddress: "", postalAddressCleared: true }).postalAddress, "");
-	assert.equal(getNewsletterDraft({ newsletter: { ...newsletter, postalAddress: "" }, domains: [], sharedDomain }).postalAddress, "");
+	assert.equal(draft({ postalAddress: undefined }).postalAddress, "");
+	assert.equal(draft({ postalAddress: "  " }).postalAddress, "");
 });
 
 test("a new slug says what it moves: the shared address and the website, whose old pages go while sent links stay", () => {
 	const changes = (fields) => getSlugChanges({ slug: "notes", savedSlug: "field-notes", isShared: true, sharedDomain, appUrl: "https://app.example.com", ...fields });
 	assert.deepEqual(changes(), [
-		"Sends from hello@notes.mailcheapmail.com",
-		"Your website moves to https://notes.mailcheapmail.com",
-		"Pages at https://field-notes.mailcheapmail.com stop working, Read online links in sent issues included. Unsubscribe and tracked links in sent emails keep working.",
-		"You can change the slug 3 times a day",
+		"Envia a partir de hello@notes.mailcheapmail.com",
+		"O teu site passa para https://notes.mailcheapmail.com",
+		"As páginas em https://field-notes.mailcheapmail.com deixam de funcionar, incluindo os links Ler online das edições enviadas. Os links para cancelar a subscrição e os links rastreados dos emails enviados continuam a funcionar.",
+		"Podes mudar o slug 3 vezes por dia",
 	]);
 	assert.equal(changes({ isShared: false }).length, 3, "an own sending domain keeps its address");
 	assert.deepEqual(changes({ isShared: false, archiveHost: "news.example.com" }), [
-		"Your website and its links stay on news.example.com",
-		"You can change the slug 3 times a day",
+		"O teu site e os seus links ficam em news.example.com",
+		"Podes mudar o slug 3 vezes por dia",
 	]);
 	assert.deepEqual(changes({ isShared: false, sharedDomain: null }).slice(0, 2), [
-		"Your website moves to https://app.example.com/archive/notes",
-		"Pages at https://app.example.com/archive/field-notes stop working, Read online links in sent issues included. Unsubscribe and tracked links in sent emails keep working.",
+		"O teu site passa para https://app.example.com/archive/notes",
+		"As páginas em https://app.example.com/archive/field-notes deixam de funcionar, incluindo os links Ler online das edições enviadas. Os links para cancelar a subscrição e os links rastreados dos emails enviados continuam a funcionar.",
 	]);
 });

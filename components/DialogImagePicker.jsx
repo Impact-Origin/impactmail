@@ -60,8 +60,8 @@ function PickerImage({ currentUrl, onSelect }) {
 	return (
 		<div {...dropProps} onPaste={paste} className="flex min-w-0 flex-col">
 			<DialogHeader className="px-4 pt-4 pb-3">
-				<DialogTitle>Choose an image</DialogTitle>
-				<DialogDescription>Upload one, or use an image you uploaded before.</DialogDescription>
+				<DialogTitle>Escolher uma imagem</DialogTitle>
+				<DialogDescription>Carrega uma, ou usa uma imagem que carregaste antes.</DialogDescription>
 			</DialogHeader>
 			<div className="px-4">
 				<ZoneUpload upload={upload} isDragging={isDragging} onFile={uploadFile} />
@@ -88,7 +88,7 @@ function ZoneUpload({ upload, isDragging, onFile }) {
 						<Image src={upload.previewUrl} alt="" fill unoptimized sizes="544px" className="object-contain p-3 opacity-30" />
 					)}
 					<Loader2 className="relative size-5 animate-spin" />
-					<span className="relative text-sm font-medium">Uploading…</span>
+					<span className="relative text-sm font-medium">A carregar…</span>
 				</>
 			) : (
 				<>
@@ -100,8 +100,8 @@ function ZoneUpload({ upload, isDragging, onFile }) {
 					>
 						<ImageUp className="size-4.5" />
 					</span>
-					<span className="text-sm font-medium">{isDragging ? "Drop to upload" : "Drop an image here or click to upload"}</span>
-					<span className="text-xs text-pretty text-muted-foreground">PNG, JPEG, GIF or WebP under 4 MB. Pasting works too.</span>
+					<span className="text-sm font-medium">{isDragging ? "Larga para carregar" : "Larga aqui uma imagem ou clica para carregar"}</span>
+					<span className="text-xs text-pretty text-muted-foreground">PNG, JPEG, GIF ou WebP com menos de 4 MB. Também podes colar.</span>
 				</>
 			)}
 			<input
@@ -145,14 +145,14 @@ function GridLibrary({ request, currentUrl, isDisabled, onSelect }) {
 		onSelect({ url: image.url, ...size });
 	}
 
-	if (firstPage.error) return <NoteLibrary title="Couldn't load your images" text={firstPage.error} />;
+	if (firstPage.error) return <NoteLibrary title="Não foi possível carregar as tuas imagens" text={firstPage.error} />;
 	if (images.length === 0) {
-		return <NoteLibrary title="No images yet" text="The images you upload show here, ready to use again." />;
+		return <NoteLibrary title="Ainda não há imagens" text="As imagens que carregares aparecem aqui, prontas a usar de novo." />;
 	}
 
 	return (
 		<section className="mt-4 border-t border-border/60 animate-fade-in">
-			<h3 className="px-4 pt-3 text-xs font-medium text-muted-foreground">Uploaded before</h3>
+			<h3 className="px-4 pt-3 text-xs font-medium text-muted-foreground">Carregadas antes</h3>
 			<div className="max-h-[min(20rem,45dvh)] overflow-y-auto overscroll-contain">
 				<ul className={GRID}>
 					{images.map((image) => {
@@ -163,7 +163,7 @@ function GridLibrary({ request, currentUrl, isDisabled, onSelect }) {
 									type="button"
 									disabled={isDisabled}
 									aria-current={isCurrent || undefined}
-									aria-label={`Image uploaded ${formatDate(image.createdAt)}`}
+									aria-label={`Imagem carregada a ${formatDate(image.createdAt)}`}
 									onClick={(event) => pick(event, image)}
 									style={CHECKERBOARD}
 									className={cn(
@@ -194,7 +194,7 @@ function GridLibrary({ request, currentUrl, isDisabled, onSelect }) {
 					<div className="flex justify-center pb-4">
 						<Button type="button" variant="ghost" size="sm" onClick={loadMore} disabled={isLoadingMore}>
 							{isLoadingMore && <Loader2 data-icon="inline-start" className="animate-spin" />}
-							Show more
+							Mostrar mais
 						</Button>
 					</div>
 				)}

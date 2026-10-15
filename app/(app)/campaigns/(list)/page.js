@@ -7,7 +7,7 @@ import { getIssuePageUrl } from "@/lib/archive-data";
 import { listNewsletterCampaigns } from "@/lib/campaign-queries";
 import { getSelectedNewsletter } from "@/lib/selected-newsletter";
 
-export const metadata = { title: "Campaigns" };
+export const metadata = { title: "Campanhas" };
 
 export default async function CampaignsPage() {
 	const { account, selected } = await getSelectedNewsletter();
@@ -20,12 +20,12 @@ export default async function CampaignsPage() {
 
 	return (
 		<>
-			<HeaderPage title="Campaigns">
+			<HeaderPage title="Campanhas">
 				<ButtonNewCampaign newsletterId={selected ? String(selected._id) : null} />
 			</HeaderPage>
 
 			{campaigns.length === 0 ? (
-				<StateEmpty icon={Send} title="No campaigns yet" />
+				<StateEmpty icon={Send} title="Ainda não há campanhas" />
 			) : (
 				<div className="animate-enter">
 					<TableCampaigns campaigns={campaigns} newsletter={selected} hasActions pageUrls={pageUrls} />

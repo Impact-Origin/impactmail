@@ -11,14 +11,14 @@ export default function FormRestore() {
 	return (
 		<form action={action} className="mt-8 flex flex-col gap-3">
 			<Button type="submit" size="lg" disabled={isPending} className="h-11">
-				{isPending ? <Loader2 className="animate-spin" /> : "Restore account"}
+				{isPending ? <Loader2 className="animate-spin" /> : "Restaurar conta"}
 			</Button>
 			{state?.error && (
 				<p role="alert" className="text-sm text-pretty text-destructive">
 					{state.error}
 				</p>
 			)}
-			<p className="text-xs text-pretty text-muted-foreground">Your API keys and connected apps stay off. Create new ones once it&apos;s back.</p>
+			<p className="text-xs text-pretty text-muted-foreground">As tuas chaves de API e apps ligadas continuam desligadas. Cria novas quando a conta voltar.</p>
 		</form>
 	);
 }

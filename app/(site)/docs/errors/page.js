@@ -15,7 +15,7 @@ export default function ErrorsPage() {
 			<div style={{ "--stagger": 1 }} className="grid max-w-3xl gap-4 animate-enter">
 				<BlockCode
 					title="409 Conflict"
-					code={JSON.stringify({ error: { code: "conflict", message: "This campaign is already sending" } }, null, 2)}
+					code={JSON.stringify({ error: { code: "conflict", message: "Esta campanha já está a ser enviada" } }, null, 2)}
 				/>
 				<p className="text-[15px] leading-7 text-pretty text-foreground/80">
 					The message names the field when the input is wrong, and says what to do when a rule stops the action. MCP tools answer the

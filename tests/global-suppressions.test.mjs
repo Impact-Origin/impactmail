@@ -6,7 +6,7 @@ import { getDeliveryEmail } from "../lib/email-aliases.js";
 import { getEventPlan } from "../lib/email-event-rules.js";
 import { normalizePostshibaEvent } from "../lib/email-provider/postshiba-events.js";
 import { getSesEventPlan } from "../lib/ses-event-mapping.js";
-import { activate, anonymous, as, callApi, catchNotFound, catchRedirect, form, jsonRequest, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchNotFound, catchRedirect, form, jsonRequest, signIn, startTestApp } from "./helpers/app.mjs";
 import { POSTSHIBA } from "./helpers/postshiba.mjs";
 import { runWithRequest } from "./stubs/next-headers.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
@@ -15,7 +15,7 @@ import { sent as sesEmails } from "./stubs/ses.mjs";
 
 // The never-email list every account shares: what a provider says doesn't exist, and spam traps, kept as keyed hashes
 // and skipped by every account's imports, signups and sends. Complaints and soft bounces stay the account's own.
-const UNDELIVERABLE = "This address can't receive email";
+const UNDELIVERABLE = "Este endereço não pode receber email";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function postshibaBounce(fields) {
@@ -103,7 +103,6 @@ describe("the never-email list", () => {
 	// A paying customer with a newsletter, a full access key and a PostShiba tenant its events name.
 	async function customer(email) {
 		const user = await signIn(email);
-		await activate(user);
 		user.slug = email.split("@")[0];
 		const url = await as(user, () =>
 			catchRedirect(m.newsletters.saveNewsletter(null, form({ name: `${user.slug} news`, slug: user.slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" })))
@@ -270,7 +269,7 @@ describe("the never-email list", () => {
 		assert.equal(await m.Suppression.countDocuments({ accountId: bob.accountId }), 0, "Bob's own suppression list stays his");
 
 		const page = await as(bob, () => m.contactsPage.default({ searchParams: Promise.resolve({ status: "bounced" }) }));
-		assert.match(renderToStaticMarkup(page), /Undeliverable/);
+		assert.match(renderToStaticMarkup(page), /Não entregável/);
 	});
 
 	test("soft bounces, complaints and an address the email didn't go to stay with their account", async () => {
@@ -340,7 +339,7 @@ describe("the never-email list", () => {
 		assert.equal(found.email, "wrong@example.org");
 		assert.deepEqual([found.entry.reason, found.entry.detail], ["bounce", "bounce/5.1.1"]);
 		assert.ok(new Date(found.entry.expiresAt) > new Date(found.entry.listedAt));
-		assert.deepEqual(await as(admin, () => m.admin.findUndeliverableAddress("nope")), { error: "Enter a valid email" });
+		assert.deepEqual(await as(admin, () => m.admin.findUndeliverableAddress("nope")), { error: "Introduz um email válido" });
 
 		assert.deepEqual(await as(admin, () => m.admin.removeUndeliverableAddress("wrong@example.org")), { ok: true, restored: 1 });
 		const restored = await findContact(bob, "wrong@example.org");
@@ -348,7 +347,7 @@ describe("the never-email list", () => {
 		assert.equal((await findContact(alice, "wrong@example.org")).status, "bounced", "Alice's own bounce stays hers");
 		assert.ok(await m.Suppression.exists({ accountId: alice.accountId, email: "wrong@example.org" }));
 		assert.deepEqual(await as(admin, () => m.admin.findUndeliverableAddress("wrong@example.org")), { email: "wrong@example.org", entry: null });
-		assert.deepEqual(await as(admin, () => m.admin.removeUndeliverableAddress("wrong@example.org")), { error: "Not on the list" });
+		assert.deepEqual(await as(admin, () => m.admin.removeUndeliverableAddress("wrong@example.org")), { error: "Não está na lista" });
 		assert.deepEqual((await sendIssue(bob, "After the fix")).to, ["fine@example.org", "wrong@example.org"]);
 	});
 });

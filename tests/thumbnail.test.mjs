@@ -36,7 +36,7 @@ test("the first real image of an issue becomes its thumbnail", () => {
 
 test("rates with a missing count are empty instead of NaN", () => {
 	assert.equal(formatRate(undefined, 1297, 2), null);
-	assert.equal(formatRate(0, 1297, 2), "0.00%");
-	assert.equal(formatRate(6, 1297, 2), "0.46%");
+	assert.equal(formatRate(0, 1297, 2), "0,00%");
+	assert.equal(formatRate(6, 1297, 2), "0,46%");
 	assert.equal(formatRate(1, 0), null);
 });

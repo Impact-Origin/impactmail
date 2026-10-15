@@ -47,7 +47,7 @@ export default function MenuSlash({ items, command, ref }) {
 	return (
 		<div
 			role="listbox"
-			aria-label="Insert"
+			aria-label="Inserir"
 			className="max-h-80 w-56 origin-top-left overflow-y-auto rounded-xl border bg-popover p-1 text-popover-foreground shadow-lg animate-in duration-150 fade-in-0 zoom-in-95"
 		>
 			{items.map((item, itemIndex) => {
@@ -132,18 +132,18 @@ function scrollIntoView(element) {
 }
 
 const SLASH_ITEMS = [
-	{ title: "Text", keywords: "paragraph", icon: Pilcrow, run: (chain) => chain.setParagraph() },
-	{ title: "Heading 1", keywords: "title h1 big", icon: Heading1, run: (chain) => chain.setHeading({ level: 1 }) },
-	{ title: "Heading 2", keywords: "subtitle h2", icon: Heading2, run: (chain) => chain.setHeading({ level: 2 }) },
-	{ title: "Heading 3", keywords: "h3 small", icon: Heading3, run: (chain) => chain.setHeading({ level: 3 }) },
-	{ title: "Bulleted list", keywords: "ul unordered", icon: List, run: (chain) => chain.toggleBulletList() },
-	{ title: "Numbered list", keywords: "ol ordered", icon: ListOrdered, run: (chain) => chain.toggleOrderedList() },
-	{ title: "Image", keywords: "picture photo upload library", icon: ImagePlus, run: (chain) => chain, isImage: true },
-	{ title: "Quote", keywords: "blockquote", icon: TextQuote, run: (chain) => chain.setBlockquote() },
-	{ title: "Divider", keywords: "hr separator line", icon: Minus, run: (chain) => chain.setHorizontalRule() },
+	{ title: "Texto", keywords: "paragraph parágrafo texto", icon: Pilcrow, run: (chain) => chain.setParagraph() },
+	{ title: "Título 1", keywords: "title h1 big título grande", icon: Heading1, run: (chain) => chain.setHeading({ level: 1 }) },
+	{ title: "Título 2", keywords: "subtitle h2 subtítulo", icon: Heading2, run: (chain) => chain.setHeading({ level: 2 }) },
+	{ title: "Título 3", keywords: "h3 small pequeno", icon: Heading3, run: (chain) => chain.setHeading({ level: 3 }) },
+	{ title: "Lista com marcas", keywords: "ul unordered lista marcas", icon: List, run: (chain) => chain.toggleBulletList() },
+	{ title: "Lista numerada", keywords: "ol ordered lista números", icon: ListOrdered, run: (chain) => chain.toggleOrderedList() },
+	{ title: "Imagem", keywords: "picture photo upload library imagem foto carregar", icon: ImagePlus, run: (chain) => chain, isImage: true },
+	{ title: "Citação", keywords: "blockquote citação", icon: TextQuote, run: (chain) => chain.setBlockquote() },
+	{ title: "Separador", keywords: "hr separator line separador linha", icon: Minus, run: (chain) => chain.setHorizontalRule() },
 	{
-		title: "Box",
-		keywords: "callout container update promo",
+		title: "Caixa",
+		keywords: "callout container update promo caixa destaque",
 		icon: RectangleHorizontal,
 		run: (chain) => chain.wrapIn("callout"),
 	},

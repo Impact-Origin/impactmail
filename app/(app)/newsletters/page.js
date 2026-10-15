@@ -3,35 +3,31 @@ import FormNewsletter from "@/components/FormNewsletter";
 import HeaderPage from "@/components/HeaderPage";
 import LayoutNarrow from "@/components/LayoutNarrow";
 import { scoped } from "@/lib/account-scope";
-import { getWelcomePauseNotice } from "@/lib/account-state";
 import { cleanupTotalsPipeline } from "@/lib/cleanup";
 import { getAppUrl, getArchiveCnameTarget, getSharedDomain, isSendingEnabled } from "@/lib/config";
 import { ADD_NEWSLETTER_PATH } from "@/lib/newsletters";
 import { findAccountDomains } from "@/lib/sender";
 import { getSelectedNewsletter } from "@/lib/selected-newsletter";
 import { serialize } from "@/lib/serialize";
-import { siteExtensions } from "@/lib/site-extensions";
-import { getUsage } from "@/lib/usage";
 import Contact from "@/models/Contact";
 import Newsletter from "@/models/Newsletter";
 
-export const metadata = { title: "Settings" };
+export const metadata = { title: "Definições" };
 
 // The open newsletter's settings; /newsletters/<id> opens another one first. The form starts over for each
 // newsletter: its fields keep what they were given when it first rendered.
 export default async function SettingsPage() {
 	const { user, account, selected } = await getSelectedNewsletter();
 	if (!selected) redirect(ADD_NEWSLETTER_PATH);
-	const [newsletter, domains, cleanupTotals, usage] = await Promise.all([
+	const [newsletter, domains, cleanupTotals] = await Promise.all([
 		Newsletter.findOne(scoped(account, { _id: selected._id })).lean(),
 		findAccountDomains(account._id),
 		getCleanupTotals(account, selected._id),
-		getUsage(account),
 	]);
 
 	return (
 		<LayoutNarrow>
-			<HeaderPage title="Settings" />
+			<HeaderPage title="Definições" />
 			<FormNewsletter
 				key={String(newsletter._id)}
 				newsletter={serialize(newsletter)}
@@ -39,11 +35,9 @@ export default async function SettingsPage() {
 				sharedDomain={getSharedDomain()}
 				appUrl={getAppUrl()}
 				hasArchiveHost={Boolean(getArchiveCnameTarget())}
-				defaultPostalAddress={siteExtensions.defaultPostalAddress}
 				isSendingEnabled={isSendingEnabled()}
 				testEmail={user.email}
 				cleanupTotals={cleanupTotals}
-				welcomePause={usage.welcomeEmailsPaused ? getWelcomePauseNotice(usage) : null}
 			/>
 		</LayoutNarrow>
 	);

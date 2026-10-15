@@ -55,34 +55,34 @@ export default function MenuFormat({ editor, isEditingLink, onEditLink }) {
 							inputMode="url"
 							autoFocus
 							defaultValue={state.href}
-							placeholder="Paste a link"
+							placeholder="Cola um link"
 							aria-label="Link"
 							onKeyDown={(event) => event.key === "Escape" && closeLink()}
 							className="h-8 w-60 bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground"
 						/>
 						{state.isLink && (
-							<ButtonFormat label="Remove link" onClick={removeLink}>
+							<ButtonFormat label="Remover link" onClick={removeLink}>
 								<Unlink />
 							</ButtonFormat>
 						)}
-						<ButtonFormat label="Apply link" type="submit">
+						<ButtonFormat label="Aplicar link" type="submit">
 							<CornerDownLeft />
 						</ButtonFormat>
 					</form>
 				) : (
 					<>
-						<ButtonFormat label="Bold" isActive={state.isBold} onClick={() => editor.chain().focus().toggleBold().run()}>
+						<ButtonFormat label="Negrito" isActive={state.isBold} onClick={() => editor.chain().focus().toggleBold().run()}>
 							<Bold />
 						</ButtonFormat>
 						<ButtonFormat
-							label="Italic"
+							label="Itálico"
 							isActive={state.isItalic}
 							onClick={() => editor.chain().focus().toggleItalic().run()}
 						>
 							<Italic />
 						</ButtonFormat>
 						<ButtonFormat
-							label="Strikethrough"
+							label="Riscado"
 							isActive={state.isStrike}
 							onClick={() => editor.chain().focus().toggleStrike().run()}
 						>
@@ -93,21 +93,21 @@ export default function MenuFormat({ editor, isEditingLink, onEditLink }) {
 						</ButtonFormat>
 						<span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
 						<ButtonFormat
-							label="Heading 1"
+							label="Título 1"
 							isActive={state.isTitle}
 							onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
 						>
 							<Heading1 />
 						</ButtonFormat>
 						<ButtonFormat
-							label="Heading 2"
+							label="Título 2"
 							isActive={state.isHeading}
 							onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
 						>
 							<Heading2 />
 						</ButtonFormat>
 						<ButtonFormat
-							label="Quote"
+							label="Citação"
 							isActive={state.isQuote}
 							onClick={() => editor.chain().focus().toggleBlockquote().run()}
 						>

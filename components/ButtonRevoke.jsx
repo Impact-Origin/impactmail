@@ -26,7 +26,7 @@ export default function ButtonRevoke({ id, revoke, confirmMessage, successMessag
 			disabled={isPending}
 			className="text-muted-foreground hover:text-destructive"
 		>
-			{isPending ? <Loader2 className="animate-spin" /> : "Revoke"}
+			{isPending ? <Loader2 className="animate-spin" /> : "Revogar"}
 		</Button>
 	);
 }
