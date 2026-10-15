@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { getAdminEmails, getConfigProblems, isEmailAllowed } from "../lib/config.js";
+import { getAdminEmails, getAppUrl, getConfigProblems, isEmailAllowed } from "../lib/config.js";
+import { getScheduledJobs } from "../lib/scheduler.js";
 import { register } from "../instrumentation.js";
 
 const STRONG = { BETTER_AUTH_SECRET: "s".repeat(32), SUPPRESSION_HASH_KEY: "k".repeat(32) };
@@ -35,6 +36,24 @@ test("the server doesn't start with a short secret or hash key", () =>
 		process.env.BETTER_AUTH_SECRET = "short";
 		assert.throws(register, /ImpactMail can't start\. BETTER_AUTH_SECRET must be at least 32 characters/);
 	}));
+
+test("APP_URL wins, then Railway's public domain, then localhost", () => {
+	assert.equal(getAppUrl({ APP_URL: "https://mail.example.com/", RAILWAY_PUBLIC_DOMAIN: "app.up.railway.app" }), "https://mail.example.com");
+	assert.equal(getAppUrl({ RAILWAY_PUBLIC_DOMAIN: "app.up.railway.app" }), "https://app.up.railway.app");
+	assert.equal(getAppUrl({}), "http://localhost:3000");
+});
+
+test("the server calls its own cron routes once CRON_SECRET is set, unless SCHEDULER is off", () => {
+	assert.deepEqual(getScheduledJobs({}), []);
+	assert.deepEqual(getScheduledJobs({ CRON_SECRET: "c", SCHEDULER: "off" }), []);
+	assert.deepEqual(
+		getScheduledJobs({ CRON_SECRET: "c", PORT: "8080" }).map(({ url, everyMs }) => [url, everyMs / 3_600_000]),
+		[
+			["http://127.0.0.1:8080/api/cron/hourly", 1],
+			["http://127.0.0.1:8080/api/cron/postmaster", 24],
+		]
+	);
+});
 
 test("the health check answers ok, or fails with the reason and never a value", async () => {
 	const { GET } = await import("../app/api/health/route.js");

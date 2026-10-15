@@ -396,6 +396,7 @@ describe("hosts", () => {
 		assert.deepEqual(await resolve("unknown.example.net"), { isArchiveHost: true, slug: null });
 		assert.deepEqual(await resolve("localhost:3000"), { isArchiveHost: false, slug: null });
 		assert.deepEqual(await resolve("mailcheap-git-main.vercel.app"), { isArchiveHost: false, slug: null });
+		assert.deepEqual(await resolve("impactmail-production.up.railway.app"), { isArchiveHost: false, slug: null });
 
 	});
 });

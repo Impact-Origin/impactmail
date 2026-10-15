@@ -4,4 +4,5 @@ import { getConfigProblems } from "./lib/config.js";
 export function register() {
 	const problems = getConfigProblems();
 	if (problems.length > 0) throw new Error(`ImpactMail can't start. ${problems.join(" ")}`);
+	if (process.env.NEXT_RUNTIME === "nodejs") import("./lib/scheduler.js").then(({ startScheduler }) => startScheduler());
 }
