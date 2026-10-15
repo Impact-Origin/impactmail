@@ -50,7 +50,7 @@ export default function DialogSendMore({ campaignId, sentCount, remainingCount, 
 			if (result?.error) return toastError(result);
 			setIsOpen(false);
 			setMore("");
-			toast.success("Next step started");
+			toast.success("Passo seguinte iniciado");
 			router.refresh();
 		});
 	}
@@ -60,25 +60,25 @@ export default function DialogSendMore({ campaignId, sentCount, remainingCount, 
 			<DialogTrigger asChild>
 				<Button>
 					<Send data-icon="inline-start" />
-					Send to more
+					Enviar a mais
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-sm">
 				<DialogHeader>
-					<DialogTitle className="tabular-nums">Send to {formatCount(recipients, "more contact")}?</DialogTitle>
+					<DialogTitle className="tabular-nums">Enviar para mais {formatCount(recipients, "contacto")}?</DialogTitle>
 					<DialogDescription className="tabular-nums">
-						{formatNumber(sentCount)} got it so far. The next most engaged contacts get it, and nobody receives it twice.
+						{formatNumber(sentCount)} já a receberam. Recebem-na os contactos mais envolvidos que se seguem, e ninguém a recebe duas vezes.
 					</DialogDescription>
 				</DialogHeader>
 				{newContacts > FIRST_SEND.minSlice && <NoticeFirstSend count={newContacts} />}
-				<InputAudienceLimit label="How many more" value={more} onChange={setMore} audienceCount={remaining} />
+				<InputAudienceLimit label="Quantos mais" value={more} onChange={setMore} audienceCount={remaining} />
 				{isCleanupEnabled && <ListCleanupPreview summary={summary} isCounting={isCounting} error={preview?.error} />}
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="outline">Cancelar</Button>
 					</DialogClose>
 					<Button onClick={send} disabled={isSending || emails === 0} className="min-w-20">
-						{isSending ? <Loader2 className="animate-spin" /> : "Send"}
+						{isSending ? <Loader2 className="animate-spin" /> : "Enviar"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

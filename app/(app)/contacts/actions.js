@@ -25,7 +25,7 @@ export async function addContact(_state, formData) {
 	});
 	if (failure) return toFormError(failure);
 	revalidatePath("/contacts");
-	if (!output.created) return { error: `${output.email} is already a contact` };
+	if (!output.created) return { error: `${output.email} já é um contacto` };
 	return { email: output.email, status: output.status };
 }
 

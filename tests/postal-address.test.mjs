@@ -49,7 +49,7 @@ describe("clearing it", () => {
 		assert.equal((await m.Newsletter.findOne({ accountId: user.accountId }).lean()).postalAddressCleared, true);
 
 		const campaign = await draft(user, newsletterId);
-		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(campaign)), { error: "Add a postal address to the newsletter" });
+		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(campaign)), { error: "Adiciona uma morada postal à newsletter" });
 		const key = (await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })))).key;
 		assert.equal((await callApi("GET", `/api/v1/newsletters/${newsletterId}`, { key })).body.postalAddress, "");
 
@@ -61,6 +61,6 @@ describe("clearing it", () => {
 		const patched = await callApi("PATCH", `/api/v1/newsletters/${newsletterId}`, { key, body: { fromName: "Jane" } });
 		assert.equal(patched.body.postalAddress, "2 Main St, Paris", "a change that leaves it out keeps it");
 		assert.equal((await callApi("PATCH", `/api/v1/newsletters/${newsletterId}`, { key, body: { postalAddress: "" } })).body.postalAddress, "");
-		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(campaign)), { error: "Add a postal address to the newsletter" });
+		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(campaign)), { error: "Adiciona uma morada postal à newsletter" });
 	});
 });

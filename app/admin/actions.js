@@ -12,23 +12,23 @@ const MAX_REASON_LENGTH = 200;
 // reason: what the account's owner reads on their dashboard.
 export async function blockAccountAction(accountId, reason) {
 	const admin = await requireAdmin();
-	if (!isValidObjectId(accountId)) return { error: "Account not found" };
+	if (!isValidObjectId(accountId)) return { error: "Conta não encontrada" };
 	const text = String(reason ?? "").trim().slice(0, MAX_REASON_LENGTH);
-	const isBlocked = await blockAccount(accountId, { reason: text, by: "admin", detail: `Blocked by ${admin.email}` });
+	const isBlocked = await blockAccount(accountId, { reason: text, by: "admin", detail: `Bloqueada por ${admin.email}` });
 	console.info(`[admin] ${admin.email} blocked account ${accountId}`);
 	revalidatePath("/admin");
-	return isBlocked ? { ok: true } : { error: "Already blocked" };
+	return isBlocked ? { ok: true } : { error: "Já está bloqueada" };
 }
 
 // The only way a block ends. Its campaigns stay paused until their owner resumes them.
 export async function unblockAccountAction(accountId) {
 	const admin = await requireAdmin();
-	if (!isValidObjectId(accountId)) return { error: "Account not found" };
+	if (!isValidObjectId(accountId)) return { error: "Conta não encontrada" };
 	try {
-		if (!(await unblockAccount(accountId))) return { error: "Not blocked" };
+		if (!(await unblockAccount(accountId))) return { error: "Não está bloqueada" };
 	} catch (error) {
 		console.error(`[admin] The provider didn't resume account ${accountId}:`, error);
-		return { error: `Still blocked, the tenant wasn't resumed: ${error.message}` };
+		return { error: `Continua bloqueada, o tenant não foi retomado: ${error.message}` };
 	}
 	console.info(`[admin] ${admin.email} unblocked account ${accountId}`);
 	revalidatePath("/admin");
@@ -39,7 +39,7 @@ export async function unblockAccountAction(accountId) {
 export async function findUndeliverableAddress(email) {
 	await requireAdmin();
 	const address = normalizeEmail(email);
-	if (!address) return { error: "Enter a valid email" };
+	if (!address) return { error: "Introduz um email válido" };
 	const entry = await getGlobalSuppression(address);
 	if (!entry) return { email: address, entry: null };
 	const { reason, detail, createdAt, expiresAt } = entry;
@@ -50,9 +50,9 @@ export async function findUndeliverableAddress(email) {
 export async function removeUndeliverableAddress(email) {
 	const admin = await requireAdmin();
 	const address = normalizeEmail(email);
-	if (!address) return { error: "Enter a valid email" };
+	if (!address) return { error: "Introduz um email válido" };
 	const removed = await removeGlobalSuppression(address);
-	if (!removed) return { error: "Not on the list" };
+	if (!removed) return { error: "Não está na lista" };
 	console.info(`[admin] ${admin.email} took an address off the never-email list: ${removed.restored} contacts active again`);
 	revalidatePath("/admin");
 	return { ok: true, restored: removed.restored };

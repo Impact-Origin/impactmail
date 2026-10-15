@@ -252,7 +252,7 @@ describe("errors", () => {
 		const notJson = await callApi("POST", "/api/v1/campaigns", { key: user.key, headers: { "content-type": "application/json" } });
 		assert.equal(notJson.status, 201, "an empty body is an empty object");
 		for (const body of [[1, 2], "text"]) {
-			assert.equal(assertError(await api(user.key, "POST", "/campaigns", body), 400, "validation_failed"), "Send a JSON object");
+			assert.equal(assertError(await api(user.key, "POST", "/campaigns", body), 400, "validation_failed"), "Envia um objeto JSON");
 		}
 	});
 
@@ -277,10 +277,10 @@ describe("errors", () => {
 			assert.equal((await api(user.key, "POST", "/api-keys", { name: `Key ${index}`, level: "signups" })).status, 201);
 		}
 		const limited = await api(user.key, "POST", "/api-keys", { name: "One too many", level: "signups" });
-		assert.equal(assertError(limited, 429, "rate_limited"), "Too many create_api_key calls, try again later");
+		assert.equal(assertError(limited, 429, "rate_limited"), "Demasiadas chamadas a create_api_key, tenta mais tarde");
 		const otherKey = await createKey(user, "full", "Another full key");
 		const viaOtherKey = await api(otherKey, "POST", "/api-keys", { name: "Other key's", level: "signups" });
-		assert.equal(assertError(viaOtherKey, 429, "rate_limited"), "Too many create_api_key calls on this account, try again later");
+		assert.equal(assertError(viaOtherKey, 429, "rate_limited"), "Demasiadas chamadas a create_api_key nesta conta, tenta mais tarde");
 		const stranger = await customer("other-limits@example.com");
 		assert.equal((await api(stranger.key, "POST", "/api-keys", { name: "Theirs", level: "signups" })).status, 201, "another account counts on its own");
 	});
@@ -293,7 +293,7 @@ describe("sending through the API", () => {
 		await importReaders(user, 3);
 		const id = await draft(user);
 		assert.equal((await api(user.key, "GET", `/campaigns/${id}`)).body.sendProblem.code, "send_check_failed");
-		assert.equal(assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 422, "send_check_failed"), "Add a postal address to the newsletter");
+		assert.equal(assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 422, "send_check_failed"), "Adiciona uma morada postal à newsletter");
 
 		assert.equal((await api(user.key, "PATCH", `/newsletters/${user.slug}`, { postalAddress: "1 Main St, Paris" })).status, 200);
 		assert.match(assertError(await api(user.key, "PATCH", `/newsletters/${user.slug}`, { fromEmail: "ceo@example.com" }), 422, "sender_not_allowed"), /example.com/);
@@ -319,7 +319,7 @@ describe("sending through the API", () => {
 		assert.equal(first.status, 200);
 		assert.equal(first.body.status, "sending");
 		assert.equal(first.body.stats.recipients, 2);
-		assert.equal(assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 409, "conflict"), "This campaign is already sending");
+		assert.equal(assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 409, "conflict"), "Esta campanha já está a ser enviada");
 
 		await runJobs();
 		assert.equal(sesEmails.length - before, 2);
@@ -348,7 +348,7 @@ describe("sending through the API", () => {
 		const test = await api(user.key, "POST", `/campaigns/${id}/test`);
 		assert.equal(test.body.sentTo, "schedule-api@example.com", "only the account owner gets tests");
 		assert.equal(sesEmails.at(-1).to, "schedule-api@example.com");
-		assert.match(sesEmails.at(-1).subject, /^\[Test\] /);
+		assert.match(sesEmails.at(-1).subject, /^\[Teste\] /);
 	});
 });
 
@@ -357,7 +357,7 @@ describe("contacts", () => {
 		const user = await customer("contacts-api@example.com");
 		assert.equal(
 			assertError(await api(user.key, "POST", "/contacts/import", { consent: false, contacts: [{ email: "a@example.org" }] }), 400, "validation_failed"),
-			"Confirm that these people agreed to receive your emails"
+			"Confirma que estas pessoas aceitaram receber os teus emails"
 		);
 		const imported = await api(user.key, "POST", "/contacts/import", {
 			consent: true,
@@ -430,7 +430,7 @@ describe("contacts", () => {
 		const before = sesEmails.length;
 
 		for (const fields of [{}, { consent: "off" }, { consent: "true" }]) {
-			assert.deepEqual(await add("unticked@example.org", fields), { error: "Check that this person agreed to get your emails" }, JSON.stringify(fields));
+			assert.deepEqual(await add("unticked@example.org", fields), { error: "Confirma que esta pessoa aceitou receber os teus emails" }, JSON.stringify(fields));
 		}
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 0, "the server refuses it without the box");
 
@@ -443,9 +443,9 @@ describe("contacts", () => {
 		assert.equal(String(hand.consent.userId), String(user.userId), "the consent names who gave it");
 		assert.ok(Date.now() - hand.consent.at < 60_000, "and when");
 		assert.equal(hand.confirmedAt, undefined, "nobody clicked a confirmation link");
-		assert.deepEqual(await add("hand@example.org"), { error: "hand@example.org is already a contact" });
-		assert.deepEqual(await add("jane.doe@gmial.com"), { error: "Did you mean jane.doe@gmail.com?" });
-		assert.deepEqual(await add("hand..doe@example.org"), { error: "email is invalid" });
+		assert.deepEqual(await add("hand@example.org"), { error: "hand@example.org já é um contacto" });
+		assert.deepEqual(await add("jane.doe@gmial.com"), { error: "Querias dizer jane.doe@gmail.com?" });
+		assert.deepEqual(await add("hand..doe@example.org"), { error: "o email é inválido" });
 
 		assert.equal((await saveSettingsForm(user, { confirmation: getConfirmationContent({ name: `${user.slug} news` }) })).ok, true);
 		const fromSite = await api(user.signupsKey, "POST", "/contacts", { email: "site@example.org", consent: true, source: "dashboard" });
@@ -453,11 +453,11 @@ describe("contacts", () => {
 		await flushAfter();
 		// Past the confirmation's resend window, where signing up again sends it again.
 		await m.Message.collection.updateMany({ accountId: user.accountId, kind: "confirmation" }, { $set: { createdAt: new Date(Date.now() - 3_600_000) } });
-		assert.deepEqual(await add("site@example.org"), { error: "site@example.org is already a contact" });
+		assert.deepEqual(await add("site@example.org"), { error: "site@example.org já é um contacto" });
 		assert.deepEqual(await add("later@example.org"), { email: "later@example.org", status: "active" }, "added by hand, it doesn't");
 		await flushAfter();
 		assert.deepEqual(
-			sesEmails.slice(before + 1).map(({ subject }) => /^Confirm your subscription/.test(subject)),
+			sesEmails.slice(before + 1).map(({ subject }) => /^Confirma a tua subscrição/.test(subject)),
 			[true],
 			"one confirmation email, for the API signup; the welcome email is off while signups confirm"
 		);
@@ -499,7 +499,7 @@ describe("newsletters and images", () => {
 		assertError(await api(user.key, "PATCH", `/newsletters/${user.slug}`, { cleanup: { issues: 1 } }), 400, "validation_failed");
 		for (const name of ["Second", "Third"]) assert.equal((await api(user.key, "POST", "/newsletters", { name })).status, 201, name);
 		const fourth = assertError(await api(user.key, "POST", "/newsletters", { name: "Fourth" }), 409, "conflict");
-		assert.equal(fourth, "An account has up to 3 newsletters");
+		assert.equal(fourth, "Uma conta pode ter até 3 newsletters");
 	});
 
 	test("a new newsletter starts with list cleanup on and the default numbers, unless it says false", async () => {
@@ -545,12 +545,12 @@ describe("newsletters and images", () => {
 		assert.equal((await api(user.signupsKey, "POST", "/contacts", { email: "pending@example.org" })).body.status, "pending");
 		await flushAfter();
 		assert.equal(sesEmails.length - before, 1);
-		assert.ok(sesEmails.at(-1).text.includes(`You asked to get ${name}. Two ideas a week.`), "the confirmation email has the new description");
+		assert.ok(sesEmails.at(-1).text.includes(`Pediste para receber ${name}. Two ideas a week.`), "the confirmation email has the new description");
 
 		const { subject, previewText, markdown } = (await api(user.key, "GET", `/newsletters/${user.slug}`)).body.confirmation;
 		const renamed = await api(user.key, "PATCH", `/newsletters/${user.slug}`, { name: "Field notes", confirmation: { subject, previewText, markdown } });
 		assert.equal(renamed.body.confirmation.isCustom, false, "read before the rename, it's still the built-in one");
-		assert.equal(renamed.body.confirmation.subject, "Confirm your subscription to Field notes");
+		assert.equal(renamed.body.confirmation.subject, "Confirma a tua subscrição de Field notes");
 	});
 
 	test("an edited confirmation email is stored and kept; one stored before stays through saves that leave it out", async () => {

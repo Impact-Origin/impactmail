@@ -140,7 +140,7 @@ describe("the steps", () => {
 		assert.deepEqual(await doneSteps(user), [], "another account's app doesn't count");
 	});
 
-	test("an own domain: once it's verified; optional with a shared domain, needed without one", async () => {
+	test("an own domain: depois de verificado; optional with a shared domain, needed without one", async () => {
 		const user = await customer("gs-domain@example.com");
 		assert.equal((await as(user, () => m.domains.addDomainAction(null, form({ domain: "gs-pending.dev" })))).ok, true);
 		assert.deepEqual(await doneSteps(user), [], "not until it's verified");

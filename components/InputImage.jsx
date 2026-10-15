@@ -43,7 +43,7 @@ export default function InputImage({ name, defaultValue, label, isRound, onChang
 			<button
 				type="button"
 				disabled={isUploading}
-				aria-label={`${url ? "Change" : "Add"} ${label}`}
+				aria-label={`${url ? "Alterar" : "Adicionar"} ${label}`}
 				onClick={() => setIsPickerOpen(true)}
 				style={url ? CHECKERBOARD : undefined}
 				className={cn(
@@ -65,14 +65,14 @@ export default function InputImage({ name, defaultValue, label, isRound, onChang
 			</button>
 			<span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
 				<Button type="button" variant="outline" size="sm" disabled={isUploading} onClick={() => setIsPickerOpen(true)}>
-					{url ? "Change" : "Choose"}
+					{url ? "Alterar" : "Escolher"}
 				</Button>
 				{url ? (
 					<Button type="button" variant="ghost" size="sm" disabled={isUploading} onClick={() => update("")}>
-						Remove
+						Remover
 					</Button>
 				) : (
-					<span className="text-xs text-muted-foreground">{isDragging ? "Drop to upload" : "or drop a file here"}</span>
+					<span className="text-xs text-muted-foreground">{isDragging ? "Larga para carregar" : "ou larga aqui um ficheiro"}</span>
 				)}
 			</span>
 			<input type="hidden" name={name} value={url} />

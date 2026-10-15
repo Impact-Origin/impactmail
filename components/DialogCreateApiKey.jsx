@@ -32,7 +32,7 @@ export default function DialogCreateApiKey() {
 			<DialogTrigger asChild>
 				<Button>
 					<Plus data-icon="inline-start" />
-					New
+					Nova
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
@@ -49,20 +49,20 @@ function FormApiKey() {
 		return (
 			<>
 				<DialogHeader>
-					<DialogTitle>Copy your key</DialogTitle>
+					<DialogTitle>Copia a tua chave</DialogTitle>
 					<DialogDescription>
 						{state.level === "signups"
-							? "It is shown once. It can only add contacts, so it can go in your website's code."
-							: "It is shown once. Keep it on a server or in your AI assistant's settings, never in a web page."}
+							? "Só é mostrada uma vez. Só pode adicionar contactos, por isso pode ir no código do teu site."
+							: "Só é mostrada uma vez. Guarda-a num servidor ou nas definições do teu assistente de IA, nunca numa página web."}
 					</DialogDescription>
 				</DialogHeader>
 				<div className="flex items-center gap-1 rounded-lg bg-muted py-1 pr-1 pl-3">
 					<code className="min-w-0 flex-1 truncate font-mono text-[13px]">{state.key}</code>
-					<ButtonCopy value={state.key} label="Copy key" />
+					<ButtonCopy value={state.key} label="Copiar chave" />
 				</div>
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button>Done</Button>
+						<Button>Concluir</Button>
 					</DialogClose>
 				</DialogFooter>
 			</>
@@ -72,12 +72,12 @@ function FormApiKey() {
 	return (
 		<form action={action} className="flex flex-col gap-4">
 			<DialogHeader>
-				<DialogTitle>New API key</DialogTitle>
-				<DialogDescription>For the REST API and the MCP server.</DialogDescription>
+				<DialogTitle>Nova chave de API</DialogTitle>
+				<DialogDescription>Para a API REST e o servidor MCP.</DialogDescription>
 			</DialogHeader>
-			<Input name="name" placeholder="Name, e.g. Website signups" required autoFocus maxLength={60} />
+			<Input name="name" placeholder="Nome, por exemplo Inscrições do site" required autoFocus maxLength={60} />
 			<fieldset className="grid gap-2">
-				<legend className="sr-only">Access</legend>
+				<legend className="sr-only">Acesso</legend>
 				{LEVELS.map(({ value, label, description }) => (
 					<label
 						key={value}
@@ -100,7 +100,7 @@ function FormApiKey() {
 			{state?.error && <p className="text-sm text-destructive">{state.error}</p>}
 			<DialogFooter>
 				<Button type="submit" disabled={isPending} className="min-w-20">
-					{isPending ? <Loader2 className="animate-spin" /> : "Create"}
+					{isPending ? <Loader2 className="animate-spin" /> : "Criar"}
 				</Button>
 			</DialogFooter>
 		</form>
@@ -110,8 +110,8 @@ function FormApiKey() {
 const LEVELS = [
 	{
 		value: "full",
-		label: "Full access",
-		description: "Everything the dashboard does: campaigns, contacts, domains, billing. For scripts and AI assistants.",
+		label: "Acesso total",
+		description: "Tudo o que o dashboard faz: campanhas, contactos, domínios. Para scripts e assistentes de IA.",
 	},
-	{ value: "signups", label: "Signups only", description: "Adds contacts and nothing else, for signup forms on your website." },
+	{ value: "signups", label: "Só inscrições", description: "Adiciona contactos e mais nada, para formulários de inscrição no teu site." },
 ];

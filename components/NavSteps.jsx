@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 // Compact tabs on phones and tablets, a numbered stepper from lg. Any step is one click away, in either direction.
 export default function NavSteps({ step, onStep, className }) {
 	return (
-		<nav aria-label="Steps" className={className}>
+		<nav aria-label="Passos" className={className}>
 			<ol className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 lg:flex lg:items-center lg:gap-1.5 lg:bg-transparent lg:p-0">
 				{CAMPAIGN_STEPS.map(({ id, label }, index) => {
 					const isCurrent = id === step;

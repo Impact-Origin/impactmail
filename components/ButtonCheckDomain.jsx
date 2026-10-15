@@ -14,15 +14,15 @@ export default function ButtonCheckDomain({ id, hasArchiveHost }) {
 		startChecking(async () => {
 			const result = await checkDomainAction(id);
 			if (result?.error) return void toast.error(result.error);
-			if (result.verified && (result.archiveHostVerified || !hasArchiveHost)) toast.success("Everything is in place");
-			else toast.message("Some records aren't there yet. DNS changes can take up to a few hours.");
+			if (result.verified && (result.archiveHostVerified || !hasArchiveHost)) toast.success("Está tudo no sítio");
+			else toast.message("Alguns registos ainda não estão lá. As alterações de DNS podem demorar algumas horas.");
 		});
 	}
 
 	return (
 		<Button type="button" variant="outline" size="sm" onClick={check} disabled={isChecking}>
 			{isChecking ? <Loader2 className="animate-spin" /> : <RefreshCw data-icon="inline-start" />}
-			Check now
+			Verificar agora
 		</Button>
 	);
 }

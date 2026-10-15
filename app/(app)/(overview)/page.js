@@ -39,12 +39,12 @@ export default async function OverviewPage({ searchParams }) {
 			<Suspense fallback={null}>
 				<CookieTimezone />
 			</Suspense>
-			<HeaderPage title="Overview" />
+			<HeaderPage title="Visão geral" />
 
 			<div className="flex flex-col gap-8">
 				{selected ? (
 					<>
-						<Section title={`Last ${PERIOD_DAYS} days`} stagger={1}>
+						<Section title={`Últimos ${PERIOD_DAYS} dias`} stagger={1}>
 							<div className="overflow-hidden rounded-2xl bg-card shadow-border">
 								<Suspense key={`stats-${selectedId}`} fallback={<SkeletonStats />}>
 									<StatsEmail accountId={accountId} newsletterId={selected._id} />
@@ -57,24 +57,24 @@ export default async function OverviewPage({ searchParams }) {
 							</div>
 						</Section>
 
-						<Section title="Today" stagger={2}>
+						<Section title="Hoje" stagger={2}>
 							<Suspense key={`sends-${selectedId}`} fallback={<SkeletonSends />}>
 								<CardSends accountId={accountId} newsletterId={selected._id} timeZone={timeZone} />
 							</Suspense>
 						</Section>
 
-						<Section title="Campaigns" href="/campaigns" stagger={3}>
+						<Section title="Campanhas" href="/campaigns" stagger={3}>
 							<Suspense key={`campaigns-${selectedId}`} fallback={<SkeletonCampaigns rows={5} />}>
 								<TableRecentCampaigns account={account} newsletter={selected} />
 							</Suspense>
 						</Section>
 					</>
 				) : (
-					<StateEmpty icon={Newspaper} title="No newsletters yet">
+					<StateEmpty icon={Newspaper} title="Ainda não há newsletters">
 						<Button asChild variant="outline" size="sm">
 							<Link href={ADD_NEWSLETTER_PATH}>
 								<Plus data-icon="inline-start" />
-								Add a newsletter
+								Adicionar uma newsletter
 							</Link>
 						</Button>
 					</StateEmpty>
@@ -100,20 +100,20 @@ async function CardSubscribers({ accountId, newsletterId, timeZone }) {
 		<div className="flex flex-col gap-6 p-5 animate-fade-in sm:p-6">
 			<div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 				<div className="flex flex-col gap-1">
-					<h2 className="text-sm font-medium text-muted-foreground">Subscribers</h2>
+					<h2 className="text-sm font-medium text-muted-foreground">Subscritores</h2>
 					<p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 						<span className="text-4xl font-semibold tracking-tight tabular-nums">
 							{formatNumber(history.total)}
 						</span>
 						<span className={cn("text-sm font-medium tabular-nums", growthTone(history.growth))}>
-							{formatSigned(history.growth)} in {PERIOD_DAYS} days
+							{formatSigned(history.growth)} em {PERIOD_DAYS} dias
 						</span>
 					</p>
 				</div>
 				<ListLegend
 					items={[
-						{ swatch: "line", label: `Last ${PERIOD_DAYS} days`, value: formatSigned(history.growth) },
-						{ swatch: "dashed", label: `Previous ${PERIOD_DAYS} days`, value: formatSigned(history.previousGrowth) },
+						{ swatch: "line", label: `Últimos ${PERIOD_DAYS} dias`, value: formatSigned(history.growth) },
+						{ swatch: "dashed", label: `${PERIOD_DAYS} dias anteriores`, value: formatSigned(history.previousGrowth) },
 					]}
 				/>
 			</div>
@@ -131,18 +131,18 @@ async function CardSends({ accountId, newsletterId, timeZone }) {
 		<div className="flex flex-col gap-6 rounded-2xl bg-card p-5 shadow-border animate-fade-in sm:p-6">
 			<div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 				<div className="flex flex-col gap-1">
-					<h2 className="text-sm font-medium text-muted-foreground">Emails sent per hour</h2>
+					<h2 className="text-sm font-medium text-muted-foreground">Emails enviados por hora</h2>
 					<p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 						<span className="text-3xl font-semibold tracking-tight tabular-nums">{formatNumber(sentToday)}</span>
 						<span className="text-sm text-muted-foreground tabular-nums">
-							{formatNumber(sentYesterday)} yesterday
+							{formatNumber(sentYesterday)} ontem
 						</span>
 					</p>
 				</div>
 				<ListLegend
 					items={[
-						{ swatch: "bar", label: "Today" },
-						{ swatch: "ghost", label: "Yesterday" },
+						{ swatch: "bar", label: "Hoje" },
+						{ swatch: "ghost", label: "Ontem" },
 						{ label: timeZoneLabel(timeZone) },
 					]}
 				/>
@@ -157,7 +157,7 @@ async function TableRecentCampaigns({ account, newsletter }) {
 	if (campaigns.length === 0) {
 		return (
 			<p className="rounded-xl px-4 py-6 text-center text-sm text-muted-foreground shadow-border animate-fade-in">
-				No campaigns yet
+				Ainda não há campanhas
 			</p>
 		);
 	}

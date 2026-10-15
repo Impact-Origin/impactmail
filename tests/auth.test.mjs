@@ -44,7 +44,7 @@ test("sign-in codes go out through Resend and are stored hashed", async () => {
 	await as(user, () => actions.sendSigninCode(null, form({ email: user.email })));
 	const email = platformEmails.at(-1);
 	assert.deepEqual(email.to, [user.email]);
-	assert.match(email.subject, /^\d{6} is your ImpactMail code$/);
+	assert.match(email.subject, /^\d{6} é o teu código do ImpactMail$/);
 	const code = email.subject.slice(0, 6);
 	const stored = await mongoose.connection.db.collection("verifications").findOne({ identifier: `sign-in-otp-${user.email}` });
 	assert.ok(stored, "the code is waiting to be used");
@@ -60,7 +60,7 @@ test("an inbox gets 5 codes every 15 minutes, whatever dots or +tags its address
 	}
 	const sixth = { jar: new Map(), ip: "198.51.100.160" };
 	assert.deepEqual(await as(sixth, () => actions.sendSigninCode(null, form({ email: "janedoe+4@gmail.com" }))), {
-		error: "Too many codes. Try again in 15 minutes.",
+		error: "Demasiados códigos. Tenta de novo daqui a 15 minutos.",
 	});
 	assert.equal(platformEmails.length - emailsBefore, 5);
 });
@@ -69,7 +69,7 @@ test("a wrong code doesn't sign in and doesn't set a session", async () => {
 	const user = { email: "wrong@example.com", jar: new Map(), ip: "198.51.100.201" };
 	await as(user, () => actions.sendSigninCode(null, form({ email: user.email })));
 	const result = await as(user, () => actions.verifySigninCode(null, form({ email: user.email, code: "000000" })));
-	assert.deepEqual(result, { email: user.email, error: "This code is wrong or expired" });
+	assert.deepEqual(result, { email: user.email, error: "Este código está errado ou expirou" });
 	assert.equal(user.jar.size, 0);
 	assert.equal(await as(user, () => auth.getCurrentAccount()), null);
 });
@@ -90,7 +90,7 @@ test("without a Resend key the code only shows in the console, and only in devel
 		logged.length = 0;
 		process.env.NODE_ENV = "production";
 		const result = await as(user, () => actions.sendSigninCode(null, form({ email: "prod@example.com" })));
-		assert.equal(result.error, "Couldn't send the code. Try again in a minute.");
+		assert.equal(result.error, "Não foi possível enviar o código. Tenta de novo daqui a um minuto.");
 		assert.equal(logged.some((line) => line.includes("Code for")), false, "never logged in production");
 	} finally {
 		console.info = info;

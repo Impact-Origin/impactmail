@@ -21,7 +21,7 @@ function readChoice(formData, key, choices) {
 export async function completeOnboarding(_state, formData) {
 	const { account } = await requireAccount();
 	const name = readText(formData, "name");
-	if (!name) return { error: "Name your newsletter" };
+	if (!name) return { error: "Dá um nome à tua newsletter" };
 	if (await needsOnboarding(account)) {
 		const { failure } = await runDashboardAction("create_newsletter", {
 			name,

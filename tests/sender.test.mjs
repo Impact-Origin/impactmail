@@ -165,14 +165,14 @@ test("the domains page lists every record with its status in words", () => {
 		],
 	};
 	const steps = Object.fromEntries(getDomainSetup(domain, { cnameTarget: "cname.mailcheap.ai" }).map((step) => [step.key, step]));
-	assert.equal(steps.dkim.status.label, "Found");
-	assert.equal(steps["mail-from"].status.label, "Waiting for DNS");
+	assert.equal(steps.dkim.status.label, "Encontrado");
+	assert.equal(steps["mail-from"].status.label, "À espera do DNS");
 	assert.deepEqual(steps.archive.records, [{ type: "CNAME", name: "news.example.com", host: "news", value: "cname.mailcheap.ai" }]);
 	assert.deepEqual(steps.dmarc.records, [{ type: "TXT", name: "_dmarc.example.com", host: "_dmarc", value: "v=DMARC1; p=none;" }]);
 	const withTarget = { cnameTarget: "cname.mailcheap.ai" };
-	assert.equal(getDomainSummary(domain, withTarget).label, "Sending ready, website waiting");
-	assert.equal(getDomainSummary({ ...domain, archiveHostVerified: true }, withTarget).label, "Ready");
-	assert.equal(getDomainSummary({ ...domain, verified: false, dkimStatus: "FAILED" }, withTarget).label, "Records not found");
+	assert.equal(getDomainSummary(domain, withTarget).label, "Envio pronto, site à espera");
+	assert.equal(getDomainSummary({ ...domain, archiveHostVerified: true }, withTarget).label, "Pronto");
+	assert.equal(getDomainSummary({ ...domain, verified: false, dkimStatus: "FAILED" }, withTarget).label, "Registos não encontrados");
 });
 
 test("without an archive target, the domains page has no archive step and a verified domain is ready", () => {
@@ -187,6 +187,6 @@ test("without an archive target, the domains page has no archive step and a veri
 		records: [],
 	};
 	assert.deepEqual(getDomainSetup(domain, { cnameTarget: null }).map(({ key }) => key), ["dkim", "mail-from", "dmarc"]);
-	assert.deepEqual(getDomainSummary(domain, { cnameTarget: null }), { label: "Ready", tone: "good" });
-	assert.equal(getDomainSummary({ ...domain, verified: false }, { cnameTarget: null }).label, "Waiting for DNS");
+	assert.deepEqual(getDomainSummary(domain, { cnameTarget: null }), { label: "Pronto", tone: "good" });
+	assert.equal(getDomainSummary({ ...domain, verified: false }, { cnameTarget: null }).label, "À espera do DNS");
 });

@@ -191,7 +191,7 @@ describe("from addresses", () => {
 	});
 
 	test("before the provider's keys are in, the shared address waits without an alert; once they are, a failure alerts the admins", async () => {
-		const alerts = () => platformEmails.filter(({ subject }) => subject === "[ImpactMail] Shared address not set up").length;
+		const alerts = () => platformEmails.filter(({ subject }) => subject === "[ImpactMail] Endereço partilhado não configurado").length;
 		const before = { alerts: alerts(), calls: calls.length };
 		const user = await withEnv({ SES_ACCESS_KEY_ID: "", SES_SECRET_ACCESS_KEY: "" }, () => customer("no-provider@example.com", "no-provider"));
 		const waiting = await m.Newsletter.findOne({ accountId: user.accountId }).lean();
@@ -292,7 +292,7 @@ describe("own domains", () => {
 
 		for (const card of cards) {
 			for (const table of findAll(card, ({ type }) => type === "table")) {
-				assert.deepEqual(findAll(table, ({ type }) => type === "th").map(textOf), ["Type", "Host", "Value"]);
+				assert.deepEqual(findAll(table, ({ type }) => type === "th").map(textOf), ["Tipo", "Host", "Valor"]);
 			}
 			for (const cell of readRecordRows(card).flat().filter((cell) => typeof cell === "object")) {
 				assert.equal(cell.copied, cell.shown, "each Copy button copies what its cell shows");
@@ -313,8 +313,8 @@ describe("own domains", () => {
 			["tok1._domainkey.mail", "tok2._domainkey.mail", "tok3._domainkey.mail", "bounce.mail", "bounce.mail", "news.mail", "_dmarc.mail"],
 			"a subdomain of a co.uk domain: the zone is sub-hosts.co.uk"
 		);
-		assert.ok(textOf(cards[0]).includes("If your DNS provider asks for the full name, use tok1._domainkey.apex-hosts.com"));
-		assert.ok(textOf(cards[1]).includes("If your DNS provider asks for the full name, use tok1._domainkey.mail.sub-hosts.co.uk"));
+		assert.ok(textOf(cards[0]).includes("Se o teu fornecedor de DNS pedir o nome completo, usa tok1._domainkey.apex-hosts.com"));
+		assert.ok(textOf(cards[1]).includes("Se o teu fornecedor de DNS pedir o nome completo, usa tok1._domainkey.mail.sub-hosts.co.uk"));
 
 		const { key } = await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })));
 		const { body } = await callApi("GET", "/api/v1/domains", { key });
@@ -330,7 +330,7 @@ describe("own domains", () => {
 	test("the Domains page switches the newsletter to a verified domain, with the same checks as its settings", async () => {
 		const user = await customer("switch@example.com", "switch-news");
 		const domain = await addVerifiedDomain(user, "switch-mail.com");
-		assert.deepEqual(await switchTo(user, domain, "not valid"), { error: "From email is invalid" });
+		assert.deepEqual(await switchTo(user, domain, "not valid"), { error: "O email do remetente é inválido" });
 		assert.deepEqual(await switchTo(user, domain, " Jane "), { ok: true, fromEmail: "jane@switch-mail.com" });
 		const newsletter = await m.Newsletter.findOne({ accountId: user.accountId }).lean();
 		assert.deepEqual([newsletter.fromEmail, newsletter.archiveHost], ["jane@switch-mail.com", "news.switch-mail.com"], "its archive and links move too");
@@ -340,12 +340,12 @@ describe("own domains", () => {
 		const user = await customer("switch-pending@example.com", "switch-pending");
 		await as(user, () => m.domains.addDomainAction(null, form({ domain: "pending-mail.com" })));
 		const pending = await m.Domain.findOne({ accountId: user.accountId, domain: "pending-mail.com" }).lean();
-		assert.deepEqual(await switchTo(user, pending, "hi"), { error: "pending-mail.com isn't verified yet" });
+		assert.deepEqual(await switchTo(user, pending, "hi"), { error: "pending-mail.com ainda não está verificado" });
 		assert.equal((await m.Newsletter.findOne({ accountId: user.accountId }).lean()).fromEmail, "hello@switch-pending.mailcheapmail.com");
 
 		const other = await customer("switch-other@example.com", "switch-other");
 		const theirs = await addVerifiedDomain(other, "their-mail.com");
-		assert.deepEqual(await switchTo(user, theirs, "hi"), { error: "Domain not found" });
+		assert.deepEqual(await switchTo(user, theirs, "hi"), { error: "Domínio não encontrado" });
 	});
 
 	test("a domain belongs to one account: a second one is refused", async () => {
@@ -363,8 +363,8 @@ describe("own domains", () => {
 		const owner = await customer("guarded@example.com", "guarded");
 		const attacker = await customer("attacker@example.com", "attacker");
 		const domain = await addVerifiedDomain(owner, "guarded.com");
-		assert.deepEqual(await as(attacker, () => m.domains.checkDomainAction(String(domain._id))), { error: "Domain not found" });
-		assert.deepEqual(await as(attacker, () => m.domains.removeDomainAction(String(domain._id))), { error: "Domain not found" });
+		assert.deepEqual(await as(attacker, () => m.domains.checkDomainAction(String(domain._id))), { error: "Domínio não encontrado" });
+		assert.deepEqual(await as(attacker, () => m.domains.removeDomainAction(String(domain._id))), { error: "Domínio não encontrado" });
 		assert.ok(await m.Domain.exists({ accountId: owner.accountId, _id: domain._id }));
 	});
 

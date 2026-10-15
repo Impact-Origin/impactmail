@@ -12,7 +12,7 @@ import { serialize } from "@/lib/serialize";
 import Contact from "@/models/Contact";
 import Newsletter from "@/models/Newsletter";
 
-export const metadata = { title: "Settings" };
+export const metadata = { title: "Definições" };
 
 // The open newsletter's settings; /newsletters/<id> opens another one first. The form starts over for each
 // newsletter: its fields keep what they were given when it first rendered.
@@ -27,7 +27,7 @@ export default async function SettingsPage() {
 
 	return (
 		<LayoutNarrow>
-			<HeaderPage title="Settings" />
+			<HeaderPage title="Definições" />
 			<FormNewsletter
 				key={String(newsletter._id)}
 				newsletter={serialize(newsletter)}

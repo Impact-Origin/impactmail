@@ -131,18 +131,18 @@ describe("server actions refuse another account's data", () => {
 				})
 			)
 		);
-		assert.deepEqual(update, { error: "Newsletter not found" });
-		assert.match((await as(alice, () => m.newsletters.sendWelcomeTest(bobData.newsletterId))).error, /Newsletter not found/);
-		assert.deepEqual(await as(alice, () => m.campaigns.createCampaign(bobData.newsletterId)), { error: "Newsletter not found" });
+		assert.deepEqual(update, { error: "Newsletter não encontrada" });
+		assert.match((await as(alice, () => m.newsletters.sendWelcomeTest(bobData.newsletterId))).error, /Newsletter não encontrada/);
+		assert.deepEqual(await as(alice, () => m.campaigns.createCampaign(bobData.newsletterId)), { error: "Newsletter não encontrada" });
 		assert.deepEqual(
 			await as(alice, () =>
 				m.contacts.importContacts({ newsletterId: bobData.newsletterId, rows: [{ email: "spam@example.net", status: "active" }] })
 			),
-			{ error: "Newsletter not found" }
+			{ error: "Newsletter não encontrada" }
 		);
 		assert.deepEqual(
 			await as(alice, () => m.contacts.addContact(null, form({ newsletterId: bobData.newsletterId, email: "spam@example.net", consent: "on" }))),
-			{ error: "Newsletter not found" }
+			{ error: "Newsletter não encontrada" }
 		);
 		assert.deepEqual(await snapshot(), before);
 		assert.equal(await m.Contact.countDocuments({ accountId: bob.accountId, email: "spam@example.net" }), 0);
@@ -170,7 +170,7 @@ describe("server actions refuse another account's data", () => {
 		const emailsBefore = sesEmails.length;
 		for (const [name, attempt] of Object.entries(attempts)) {
 			const result = await as(alice, attempt);
-			assert.equal(result?.error, "Campaign not found", name);
+			assert.equal(result?.error, "Campanha não encontrada", name);
 		}
 		assert.equal(sesEmails.length, emailsBefore, "no test email went out");
 		assert.equal(await m.Campaign.countDocuments({ accountId: alice.accountId }), 0, "no copy landed in Alice's account");
@@ -180,18 +180,18 @@ describe("server actions refuse another account's data", () => {
 	test("contacts: status changes and deleting", async () => {
 		const before = await snapshot();
 		assert.deepEqual(await as(alice, () => m.contacts.setContactStatus(bobData.readerId, "unsubscribed")), {
-			error: "Contact not found",
+			error: "Contacto não encontrado",
 		});
 		assert.deepEqual(await as(alice, () => m.contacts.setContactStatus(bobData.dormantId, "active")), {
-			error: "Contact not found",
+			error: "Contacto não encontrado",
 		});
-		assert.deepEqual(await as(alice, () => m.contacts.deleteContact(bobData.readerId)), { error: "Contact not found" });
+		assert.deepEqual(await as(alice, () => m.contacts.deleteContact(bobData.readerId)), { error: "Contacto não encontrado" });
 		assert.deepEqual(await snapshot(), before);
 	});
 
 	test("API keys: revoking", async () => {
 		const before = await snapshot();
-		assert.deepEqual(await as(alice, () => m.apiKeys.revokeApiKey(bobData.apiKeyId)), { error: "Key not found" });
+		assert.deepEqual(await as(alice, () => m.apiKeys.revokeApiKey(bobData.apiKeyId)), { error: "Chave não encontrada" });
 		assert.deepEqual(await snapshot(), before);
 		const stillWorks = await callApi("GET", "/api/v1/campaigns?newsletter=bob-weekly", { key: bobData.apiKey });
 		assert.equal(stillWorks.status, 200);
@@ -250,7 +250,7 @@ describe("API routes stay inside the key's account", () => {
 			body: { newsletter: "bob-weekly", email: "intruder@example.net" },
 		});
 		assert.equal(response.status, 404);
-		assert.deepEqual(response.body, { error: { code: "not_found", message: "Newsletter not found" } });
+		assert.deepEqual(response.body, { error: { code: "not_found", message: "Newsletter não encontrada" } });
 		assert.equal(await m.Contact.exists({ email: "intruder@example.net" }).setOptions({ crossAccount: true }), null);
 
 		const own = await callApi("POST", "/api/v1/contacts", { key: bobData.apiKey, body: { newsletter: "bob-weekly", email: "fan@example.net" } });

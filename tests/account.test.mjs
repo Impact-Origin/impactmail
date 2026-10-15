@@ -63,9 +63,9 @@ describe("the profile", () => {
 		const someone = await signIn("someone@example.com");
 		const theirs = await uploadImage(someone);
 
-		assert.deepEqual(await saveProfile(user, { name: "Jo", image: "https://evil.example/pixel.png" }), { error: "Choose a photo you uploaded" });
-		assert.deepEqual(await saveProfile(user, { name: "Jo", image: theirs }), { error: "Choose a photo you uploaded" });
-		assert.deepEqual(await saveProfile(user, { name: "J".repeat(81) }), { error: "Keep your name under 80 characters" });
+		assert.deepEqual(await saveProfile(user, { name: "Jo", image: "https://evil.example/pixel.png" }), { error: "Escolhe uma foto que tenhas carregado" });
+		assert.deepEqual(await saveProfile(user, { name: "Jo", image: theirs }), { error: "Escolhe uma foto que tenhas carregado" });
+		assert.deepEqual(await saveProfile(user, { name: "J".repeat(81) }), { error: "O nome tem de ter menos de 80 caracteres" });
 		const unchanged = await readUser(user);
 		assert.deepEqual([unchanged.name, unchanged.image ?? null], ["", null]);
 	});
@@ -104,13 +104,13 @@ describe("the account menu", () => {
 	test("shows whether the account sends, and what to do when it doesn't", async () => {
 		const user = await signIn("status@example.com");
 		const paid = user.account;
-		assert.deepEqual(m.state.getSendingStatus(paid), { label: "Sending on", hint: null, tone: "green" });
+		assert.deepEqual(m.state.getSendingStatus(paid), { label: "Envio ligado", hint: null, tone: "green" });
 		assert.deepEqual(m.state.getSendingStatus({ ...paid, status: "paused", pauseReason: "Review" }), {
-			label: "Account blocked",
-			hint: "This account is blocked: Review. An admin can unblock it on the admin page.",
+			label: "Conta bloqueada",
+			hint: "Esta conta está bloqueada: Review. Um administrador pode desbloqueá-la na página de administração.",
 			tone: "red",
 		});
-		assert.equal(await withEnv({ SENDING_ENABLED: "false" }, () => m.state.getSendingStatus(paid).label), "Sending off");
+		assert.equal(await withEnv({ SENDING_ENABLED: "false" }, () => m.state.getSendingStatus(paid).label), "Envio desligado");
 	});
 
 	test("asks before signing out, like every sign-out button, and nothing signs out without asking", async () => {
@@ -129,7 +129,7 @@ describe("the account menu", () => {
 			assert.deepEqual(events, [], "a no tells nobody");
 			answer = true;
 			assert.equal(m.signOut.askToSignOut(), true);
-			assert.deepEqual(asked, ["Sign out of ImpactMail?", "Sign out of ImpactMail?"]);
+			assert.deepEqual(asked, ["Terminar sessão no ImpactMail?", "Terminar sessão no ImpactMail?"]);
 			assert.deepEqual(events, [m.signOut.SIGN_OUT_EVENT], "a yes tells the page, for the support chat");
 		} finally {
 			delete globalThis.window;
@@ -148,7 +148,7 @@ describe("the account menu", () => {
 
 	test("holds Account, the theme menu and Sign out", async () => {
 		const menu = await readFile(join(ROOT, "components/MenuUser.jsx"), "utf8");
-		for (const item of ['href="/account"', "<RadioGroupTheme />", "Sign out"]) assert.ok(menu.includes(item), item);
+		for (const item of ['href="/account"', "<RadioGroupTheme />", "Terminar sessão"]) assert.ok(menu.includes(item), item);
 	});
 });
 

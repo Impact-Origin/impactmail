@@ -20,14 +20,14 @@ export default async function StripPostshibaClusters() {
 
 	const items = clusters.isSingle
 		? [
-				{ label: "Cluster, every email", value: <BadgeCluster cluster={clusters.bulk} /> },
-				{ label: "Cap", value: formatCaps(clusters.bulk) },
+				{ label: "Cluster, todos os emails", value: <BadgeCluster cluster={clusters.bulk} /> },
+				{ label: "Limite", value: formatCaps(clusters.bulk) },
 			]
 		: [
-				{ label: "Bulk cluster", value: <BadgeCluster cluster={clusters.bulk} /> },
-				{ label: "Bulk cap", value: formatCaps(clusters.bulk) },
-				{ label: "Transactional cluster", value: <BadgeCluster cluster={clusters.transactional} /> },
-				{ label: "Transactional cap", value: formatCaps(clusters.transactional) },
+				{ label: "Cluster de massa", value: <BadgeCluster cluster={clusters.bulk} /> },
+				{ label: "Limite de massa", value: formatCaps(clusters.bulk) },
+				{ label: "Cluster transacional", value: <BadgeCluster cluster={clusters.transactional} /> },
+				{ label: "Limite transacional", value: formatCaps(clusters.transactional) },
 			];
 
 	return (
@@ -47,9 +47,9 @@ export default async function StripPostshibaClusters() {
 function BadgeCluster({ cluster }) {
 	const isReady = cluster.sending_ready && cluster.status === "active";
 	const plan = String(cluster.plan ?? "custom");
-	return <BadgeStatus status={isReady ? "active" : "paused"} label={`${plan.charAt(0).toUpperCase()}${plan.slice(1)}${isReady ? "" : ", not ready"}`} />;
+	return <BadgeStatus status={isReady ? "active" : "paused"} label={`${plan.charAt(0).toUpperCase()}${plan.slice(1)}${isReady ? "" : ", não está pronto"}`} />;
 }
 
 function formatCaps(cluster) {
-	return `${formatCompact(cluster.emails_per_hour ?? 0)} an hour, ${formatCompact(cluster.emails_per_day ?? 0)} a day`;
+	return `${formatCompact(cluster.emails_per_hour ?? 0)} por hora, ${formatCompact(cluster.emails_per_day ?? 0)} por dia`;
 }

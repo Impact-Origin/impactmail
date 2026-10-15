@@ -122,7 +122,7 @@ describe("deleting a contact", () => {
 		const list = (await api(user, "GET", "/contacts")).body;
 		assert.deepEqual(list.contacts.map(({ email }) => email), ["stays@example.org"]);
 		assert.equal(list.counts.active, 1);
-		assert.deepEqual(await as(user, () => m.contacts.deleteContact(String(goes._id))), { error: "Contact not found" });
+		assert.deepEqual(await as(user, () => m.contacts.deleteContact(String(goes._id))), { error: "Contacto não encontrado" });
 		assert.equal(await m.DeletedContact.countDocuments({ accountId: user.accountId }), 0, "an active contact leaves nothing behind");
 	});
 
@@ -135,7 +135,7 @@ describe("deleting a contact", () => {
 		const second = await findContact(user, "both@example.org", otherId);
 
 		const ambiguous = await api(user, "DELETE", "/contacts/both%40example.org");
-		assert.deepEqual([ambiguous.status, ambiguous.body.error.message], [400, "newsletter is required: this address is a contact of several newsletters"]);
+		assert.deepEqual([ambiguous.status, ambiguous.body.error.message], [400, "newsletter é obrigatório: este endereço é contacto de várias newsletters"]);
 		const outside = await api(user, "DELETE", `/contacts/${first._id}?newsletter=delete-scoped-two`);
 		assert.deepEqual([outside.status, outside.body.error.code], [404, "not_found"], "an ID outside the newsletter named isn't found");
 
@@ -255,7 +255,7 @@ describe("limits", () => {
 		await m.blocks.blockAccount(user.accountId, { reason: "Review" });
 
 		assert.deepEqual(await as(user, () => m.contacts.deleteContact(String(reader._id))), {
-			error: "This account is blocked: Review. An admin can unblock it on the admin page.",
+			error: "Esta conta está bloqueada: Review. Um administrador pode desbloqueá-la na página de administração.",
 			code: "account_blocked",
 		});
 		const viaApi = await api(user, "DELETE", `/contacts/${reader._id}`);
@@ -272,10 +272,10 @@ describe("limits", () => {
 		}
 
 		const limited = await api(user, "DELETE", `/contacts/${contacts[120]._id}`);
-		assert.deepEqual([limited.status, limited.body.error.message], [429, "Too many delete_contact calls, try again later"]);
+		assert.deepEqual([limited.status, limited.body.error.message], [429, "Demasiadas chamadas a delete_contact, tenta mais tarde"]);
 		const otherKey = (await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Other agent", level: "full" })))).key;
 		const viaOtherKey = await callApi("DELETE", `/api/v1/contacts/${contacts[120]._id}`, { key: otherKey });
-		assert.deepEqual([viaOtherKey.status, viaOtherKey.body.error.message], [429, "Too many delete_contact calls on this account, try again later"]);
+		assert.deepEqual([viaOtherKey.status, viaOtherKey.body.error.message], [429, "Demasiadas chamadas a delete_contact nesta conta, tenta mais tarde"]);
 		assert.deepEqual(await as(user, () => m.contacts.deleteContact(String(contacts[121]._id))), { ok: true });
 	});
 });

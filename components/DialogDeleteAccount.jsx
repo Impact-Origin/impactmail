@@ -25,7 +25,7 @@ export default function DialogDeleteAccount({ email, graceDays, isDisabled }) {
 		<Dialog>
 			<DialogTrigger asChild>
 				<Button type="button" variant="destructive" disabled={isDisabled}>
-					Delete account
+					Eliminar conta
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
@@ -48,7 +48,7 @@ function StepsDelete({ email, graceDays }) {
 		startSending(async () => {
 			const result = await sendDeletionCode();
 			if (result?.error) return void toast.error(result.error);
-			if (isCodeSent) toast.success(`New code sent to ${email}`);
+			if (isCodeSent) toast.success(`Novo código enviado para ${email}`);
 			setIsCodeSent(true);
 		});
 	}
@@ -57,20 +57,20 @@ function StepsDelete({ email, graceDays }) {
 		return (
 			<>
 				<DialogHeader>
-					<DialogTitle>Delete your account?</DialogTitle>
+					<DialogTitle>Eliminar a tua conta?</DialogTitle>
 					<DialogDescription>
-						It stops at once: you&apos;re signed out everywhere, API keys and connected apps stop working, and nothing more is sent.
+						Para de imediato: a tua sessão é terminada em todo o lado, as chaves de API e as apps ligadas deixam de funcionar, e nada mais é enviado.
 					</DialogDescription>
 				</DialogHeader>
 				<p className="text-sm text-pretty text-muted-foreground">
-					In {graceDays} days, its newsletters, contacts, campaigns and images are deleted for good. Sign in before then to restore it.
+					Daqui a {graceDays} dias, as newsletters, contactos, campanhas e imagens são eliminados de vez. Inicia sessão antes disso para a restaurar.
 				</p>
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="outline">Cancelar</Button>
 					</DialogClose>
 					<Button onClick={sendCode} disabled={isSending} className="min-w-32">
-						{isSending ? <Loader2 className="animate-spin" /> : "Email me a code"}
+						{isSending ? <Loader2 className="animate-spin" /> : "Enviar-me um código"}
 					</Button>
 				</DialogFooter>
 			</>
@@ -80,13 +80,13 @@ function StepsDelete({ email, graceDays }) {
 	return (
 		<form action={action} className="grid gap-4">
 			<DialogHeader>
-				<DialogTitle>Confirm it&apos;s you</DialogTitle>
+				<DialogTitle>Confirma que és tu</DialogTitle>
 				<DialogDescription>
-					Enter the code sent to <span className="font-medium text-foreground">{email}</span>, then type your email address.
+					Introduz o código enviado para <span className="font-medium text-foreground">{email}</span> e depois escreve o teu endereço de email.
 				</DialogDescription>
 			</DialogHeader>
 			<div className="grid gap-2">
-				<Label htmlFor="deletion-code">Code</Label>
+				<Label htmlFor="deletion-code">Código</Label>
 				<Input
 					id="deletion-code"
 					name="code"
@@ -102,7 +102,7 @@ function StepsDelete({ email, graceDays }) {
 				/>
 			</div>
 			<div className="grid gap-2">
-				<Label htmlFor="deletion-email">Email address</Label>
+				<Label htmlFor="deletion-email">Endereço de email</Label>
 				<Input
 					id="deletion-email"
 					name="email"
@@ -127,15 +127,15 @@ function StepsDelete({ email, graceDays }) {
 					disabled={isSending}
 					className="text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground disabled:opacity-50 sm:mr-auto"
 				>
-					{isSending ? "Sending…" : "Send a new code"}
+					{isSending ? "A enviar…" : "Enviar um novo código"}
 				</button>
 				<DialogClose asChild>
 					<Button type="button" variant="outline">
-						Cancel
+						Cancelar
 					</Button>
 				</DialogClose>
 				<Button type="submit" variant="destructive" disabled={!isConfirmed || isDeleting} className="min-w-32">
-					{isDeleting ? <Loader2 className="animate-spin" /> : "Delete account"}
+					{isDeleting ? <Loader2 className="animate-spin" /> : "Eliminar conta"}
 				</Button>
 			</DialogFooter>
 		</form>

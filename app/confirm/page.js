@@ -8,7 +8,7 @@ import { findOpenNewsletter } from "@/lib/public-newsletters";
 
 // The URL carries the confirmation token: keep it out of search results and referrer headers.
 export const metadata = {
-	title: "Confirm your subscription",
+	title: "Confirmar a tua subscrição",
 	robots: { index: false, follow: false },
 	referrer: "no-referrer",
 };
@@ -30,8 +30,8 @@ export default async function ConfirmPage({ searchParams }) {
 					archiveUrl={newsletter.archiveEnabled ? getArchiveUrls(newsletter).siteIndex : null}
 				/>
 			) : (
-				<CardNotice icon={Link2Off} title="This link doesn't work">
-					It may be older than 30 days. Sign up again and use the newest confirmation email.
+				<CardNotice icon={Link2Off} title="Este link não funciona">
+					Pode ter mais de 30 dias. Inscreve-te de novo e usa o email de confirmação mais recente.
 				</CardNotice>
 			)}
 		</main>

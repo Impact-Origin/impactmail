@@ -21,9 +21,9 @@ const S3 = {
 	IMAGES_CDN_URL: "https://cdn.example.com",
 	IMAGES_CLOUDFRONT_DISTRIBUTION_ID: "E2TESTDISTRIBUTION",
 };
-const DELETION_SUBJECT = /^(\d{6}) is your code to delete your ImpactMail account$/;
-const BLOCKED = { error: "Your account can't be deleted yet. This page says what to do first." };
-const WRONG_CODE = { error: "This code is wrong or expired" };
+const DELETION_SUBJECT = /^(\d{6}) é o teu código para eliminar a tua conta ImpactMail$/;
+const BLOCKED = { error: "A tua conta ainda não pode ser eliminada. Esta página diz o que tens de fazer primeiro." };
+const WRONG_CODE = { error: "Este código está errado ou expirou" };
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 const OAUTH_COLLECTIONS = ["oauthConsent", "oauthAccessToken", "oauthRefreshToken"];
@@ -226,12 +226,12 @@ describe("the confirmation", () => {
 		const code = await sendCode(user);
 		const email = platformEmails.at(-1);
 		assert.deepEqual(email.to, [user.email]);
-		assert.match(email.text, /If you didn't ask for it, don't share it/);
+		assert.match(email.text, /Se não o pediste, não o partilhes/);
 		const stored = await collection("verifications").findOne({ identifier: `email-verification-otp-${user.email}` });
 		assert.equal(stored.value.includes(code), false, "stored hashed");
 
-		assert.deepEqual(await deleteWith(user, { code, email: "code@example.org" }), { error: "Type your email address to confirm" });
-		assert.deepEqual(await deleteWith(user, { code: "12345" }), { error: "Enter the 6-digit code" });
+		assert.deepEqual(await deleteWith(user, { code, email: "code@example.org" }), { error: "Escreve o teu endereço de email para confirmar" });
+		assert.deepEqual(await deleteWith(user, { code: "12345" }), { error: "Introduz o código de 6 dígitos" });
 		await collection("verifications").updateOne({ _id: stored._id }, { $set: { expiresAt: new Date(Date.now() - 1000) } });
 		assert.deepEqual(await deleteWith(user, { code }), WRONG_CODE, "expired after 5 minutes");
 		assert.equal((await m.Account.findById(user.accountId).lean()).deletion, undefined);
@@ -251,7 +251,7 @@ describe("the confirmation", () => {
 		assert.deepEqual(await deleteWith(user, { code }), WRONG_CODE, "dead after 3 wrong tries");
 		await sendCode(user);
 		await sendCode(user);
-		assert.deepEqual(await as(user, () => m.account.sendDeletionCode()), { error: "Too many codes. Try again in 15 minutes." });
+		assert.deepEqual(await as(user, () => m.account.sendDeletionCode()), { error: "Demasiados códigos. Tenta de novo daqui a 15 minutos." });
 	});
 
 	test("isn't an action, so no API key or connected app can delete an account or change its profile", () => {
@@ -335,7 +335,7 @@ describe("a deleted account", () => {
 		await deleteAccount(user);
 		await m.Account.updateOne({ _id: user.accountId }, { $set: { "deletion.purgeStartedAt": new Date() } });
 		const again = await signIn(user.email);
-		assert.deepEqual(await as(again, () => m.restore.restoreDeletedAccount()), { error: "Your account is being deleted, so it can't be restored anymore." });
+		assert.deepEqual(await as(again, () => m.restore.restoreDeletedAccount()), { error: "A tua conta está a ser eliminada, por isso já não pode ser restaurada." });
 		assert.equal(await as(again, () => catchRedirect(m.auth.requireAccount())), "/restore");
 	});
 });
@@ -394,7 +394,7 @@ describe("the purge", () => {
 		const returning = await signIn(doomed.email);
 		assert.notEqual(String(returning.accountId), String(doomed.accountId), "signing in again opens a new account");
 		assert.ok(
-			platformEmails.slice(admins).some(({ to, subject }) => to.includes("admin@example.com") && subject === "[ImpactMail] A deleted account's email signed up again"),
+			platformEmails.slice(admins).some(({ to, subject }) => to.includes("admin@example.com") && subject === "[ImpactMail] O email de uma conta eliminada voltou a registar-se"),
 			"and the admins hear of it"
 		);
 	});
@@ -412,7 +412,7 @@ describe("the purge", () => {
 		assert.equal(await m.Upload.countDocuments({ accountId: user.accountId }), 1, "kept, so the next try deletes the file");
 		assert.equal((await countData(user)).user, 0, "the rest went ahead");
 		assert.ok(
-			platformEmails.some(({ to, subject }) => to.includes("admin@example.com") && subject === "[ImpactMail] Account purge postponed"),
+			platformEmails.some(({ to, subject }) => to.includes("admin@example.com") && subject === "[ImpactMail] Limpeza da conta adiada"),
 			"the admins hear of it"
 		);
 

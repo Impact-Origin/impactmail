@@ -73,17 +73,17 @@ export default function InputCampaignSlug({ campaignId, initialSlug = "", placeh
 				{isPublished && isDirty ? (
 					<span className="flex shrink-0 items-center gap-1">
 						<Button type="button" variant="ghost" size="sm" onClick={reset} disabled={isSaving}>
-							Cancel
+							Cancelar
 						</Button>
 						<Button type="button" size="sm" onClick={save} disabled={isSaving} className="min-w-14">
-							{isSaving ? <Loader2 className="animate-spin" /> : "Save"}
+							{isSaving ? <Loader2 className="animate-spin" /> : "Guardar"}
 						</Button>
 					</span>
 				) : (
 					<span aria-live="polite" className="grid size-4 shrink-0 place-items-center text-muted-foreground">
 						{isSaving && <Loader2 className="size-3.5 animate-spin" />}
 						{!isSaving && isSaved && <Check key="saved" className="size-3.5 animate-icon-in" />}
-						{!isSaving && isSaved && <span className="sr-only">URL saved</span>}
+						{!isSaving && isSaved && <span className="sr-only">URL guardado</span>}
 					</span>
 				)}
 			</div>
@@ -91,7 +91,7 @@ export default function InputCampaignSlug({ campaignId, initialSlug = "", placeh
 			{!error && isPublished && isDirty && (
 				<p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400">
 					<TriangleAlert className="mt-px size-3.5 shrink-0" />
-					Links to the current URL stop working: sent emails, shares and search results.
+					Os links para o URL atual deixam de funcionar: emails enviados, partilhas e resultados de pesquisa.
 				</p>
 			)}
 		</div>

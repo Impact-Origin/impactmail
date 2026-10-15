@@ -5,7 +5,7 @@ import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-export default function ButtonCopy({ value, label = "Copy" }) {
+export default function ButtonCopy({ value, label = "Copiar" }) {
 	const [isCopied, setIsCopied] = useState(false);
 	const timeout = useRef(null);
 
@@ -32,7 +32,7 @@ export default function ButtonCopy({ value, label = "Copy" }) {
 					<Icon key={String(isCopied)} className="animate-icon-in" />
 				</Button>
 			</TooltipTrigger>
-			<TooltipContent>{isCopied ? "Copied" : label}</TooltipContent>
+			<TooltipContent>{isCopied ? "Copiado" : label}</TooltipContent>
 		</Tooltip>
 	);
 }

@@ -17,13 +17,13 @@ export default function FormConfirm({ token, newsletterName, fromName, fromEmail
 
 	if (state?.ok) {
 		return (
-			<CardNotice icon={MailCheck} tone="success" title="You're in">
-				The next issue of {newsletterName} comes from{" "}
+			<CardNotice icon={MailCheck} tone="success" title="Estás dentro">
+				A próxima edição de {newsletterName} chega de{" "}
 				<span className="font-medium text-foreground">{fromName || fromEmail}</span>
-				{fromName && ` (${fromEmail})`}. If it lands in Promotions, drag it to Primary.
+				{fromName && ` (${fromEmail})`}. Se for parar a Promoções, arrasta-a para Principal.
 				{archiveUrl && (
 					<Button asChild size="lg" variant="outline" className="mt-6 w-full">
-						<a href={archiveUrl}>Read past issues</a>
+						<a href={archiveUrl}>Ler edições anteriores</a>
 					</Button>
 				)}
 			</CardNotice>
@@ -32,8 +32,8 @@ export default function FormConfirm({ token, newsletterName, fromName, fromEmail
 
 	if (state?.error) {
 		return (
-			<CardNotice icon={Link2Off} title="This link doesn't work">
-				It may be older than 30 days. Sign up again and use the newest confirmation email.
+			<CardNotice icon={Link2Off} title="Este link não funciona">
+				Pode ter mais de 30 dias. Inscreve-te de novo e usa o email de confirmação mais recente.
 			</CardNotice>
 		);
 	}
@@ -42,12 +42,12 @@ export default function FormConfirm({ token, newsletterName, fromName, fromEmail
 		<CardNotice
 			icon={isPending ? Loader2 : MailCheck}
 			spin={isPending}
-			title={`Confirm your subscription to ${newsletterName}`}
+			title={`Confirma a tua subscrição de ${newsletterName}`}
 		>
-			One click and the next issue lands in your inbox.
+			Um clique e a próxima edição chega à tua caixa de entrada.
 			<form ref={formRef} action={action} className="mt-6">
 				<Button type="submit" size="lg" disabled={isPending} className="w-full">
-					{isPending ? "Confirming…" : "Confirm my subscription"}
+					{isPending ? "A confirmar…" : "Confirmar a minha subscrição"}
 				</Button>
 			</form>
 		</CardNotice>

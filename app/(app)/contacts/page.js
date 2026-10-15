@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import AvatarContact from "@/components/AvatarContact";
-import BadgeStatus from "@/components/BadgeStatus";
+import BadgeStatus, { statusLabel } from "@/components/BadgeStatus";
 import ButtonExportContacts from "@/components/ButtonExportContacts";
 import CardAddContacts from "@/components/CardAddContacts";
 import DialogAddContact from "@/components/DialogAddContact";
@@ -34,7 +34,7 @@ import { getSelectedNewsletter, openNewsletter } from "@/lib/selected-newsletter
 import { cn } from "@/lib/utils";
 import Contact, { CONTACT_STATUSES } from "@/models/Contact";
 
-export const metadata = { title: "Contacts" };
+export const metadata = { title: "Contactos" };
 
 // The open newsletter's contacts. A newsletter in ?newsletter=, from the filter this page had, opens first.
 export default async function ContactsPage({ searchParams }) {
@@ -69,7 +69,7 @@ export default async function ContactsPage({ searchParams }) {
 
 	return (
 		<>
-			<HeaderPage title="Contacts">
+			<HeaderPage title="Contactos">
 				<ButtonExportContacts newsletterId={newsletterId} status={status} query={query} isDisabled={total === 0} />
 				{hasContacts && <DialogAddContact newsletter={newsletter} />}
 				<DialogImportContacts newsletter={newsletter} />
@@ -83,7 +83,7 @@ export default async function ContactsPage({ searchParams }) {
 						</Suspense>
 
 						<nav
-							aria-label="Status"
+							aria-label="Estado"
 							className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 animate-enter [scrollbar-width:none]"
 						>
 							{[null, ...CONTACT_STATUSES].map((key) => {
@@ -101,7 +101,7 @@ export default async function ContactsPage({ searchParams }) {
 												: "text-muted-foreground hover:bg-muted hover:text-foreground"
 										)}
 									>
-										{key ? key.charAt(0).toUpperCase() + key.slice(1) : "All"}
+										{key ? statusLabel(key) : "Todos"}
 										<span className={cn("text-xs tabular-nums", isActive ? "opacity-70" : "opacity-60")}>
 											{formatNumber(key ? counts[key] || 0 : totalAll)}
 										</span>
@@ -115,17 +115,17 @@ export default async function ContactsPage({ searchParams }) {
 				{!hasContacts ? (
 					<CardAddContacts newsletter={newsletter} curl={getAddContactCurl(getAppUrl(), selected?.slug)} />
 				) : contacts.length === 0 ? (
-					<StateEmpty icon={Users} title="No contacts match" />
+					<StateEmpty icon={Users} title="Nenhum contacto corresponde" />
 				) : (
 					<div style={{ "--stagger": 1 }} className="overflow-hidden rounded-xl shadow-border animate-enter">
 						<Table>
 							<TableHeader>
 								<TableRow className="hover:bg-transparent">
 									<TableHead className="pl-4">Email</TableHead>
-									<TableHead>Status</TableHead>
-									<TableHead className="hidden text-right lg:table-cell">Opens</TableHead>
-									<TableHead className="hidden text-right lg:table-cell">Clicks</TableHead>
-									<TableHead className="hidden text-right sm:table-cell">Added</TableHead>
+									<TableHead>Estado</TableHead>
+									<TableHead className="hidden text-right lg:table-cell">Aberturas</TableHead>
+									<TableHead className="hidden text-right lg:table-cell">Cliques</TableHead>
+									<TableHead className="hidden text-right sm:table-cell">Adicionado</TableHead>
 									<TableHead className="w-12 pr-2" />
 								</TableRow>
 							</TableHeader>
@@ -143,7 +143,7 @@ export default async function ContactsPage({ searchParams }) {
 											</span>
 										</TableCell>
 										<TableCell>
-											<BadgeStatus status={contact.status} label={contact.undeliverableAt && "Undeliverable"} />
+											<BadgeStatus status={contact.status} label={contact.undeliverableAt && "Não entregável"} />
 										</TableCell>
 										<TableCell className="hidden text-right lg:table-cell">
 											{engagement(contact, "opens", "openRate")}
@@ -168,14 +168,14 @@ export default async function ContactsPage({ searchParams }) {
 					<div className="flex items-center justify-between gap-3 text-sm text-muted-foreground tabular-nums">
 						<span>
 							{formatNumber((page - 1) * CONTACTS_PAGE_SIZE + 1)}–
-							{formatNumber(Math.min(page * CONTACTS_PAGE_SIZE, total))} of{" "}
+							{formatNumber(Math.min(page * CONTACTS_PAGE_SIZE, total))} de{" "}
 							{formatNumber(total)}
 						</span>
 						<div className="flex gap-1">
-							<PageLink href={href({ page: page - 1 })} isDisabled={page <= 1} label="Previous">
+							<PageLink href={href({ page: page - 1 })} isDisabled={page <= 1} label="Anterior">
 								<ChevronLeft />
 							</PageLink>
-							<PageLink href={href({ page: page + 1 })} isDisabled={page >= pageCount} label="Next">
+							<PageLink href={href({ page: page + 1 })} isDisabled={page >= pageCount} label="Seguinte">
 								<ChevronRight />
 							</PageLink>
 						</div>

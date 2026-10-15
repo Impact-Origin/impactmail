@@ -185,10 +185,10 @@ describe("delivery", () => {
 		const before = { telegram: telegramMessages.length, emails: platformEmails.length };
 		const halves = [NO_TELEGRAM, { ...NO_TELEGRAM, TELEGRAM_BOT_TOKEN: TELEGRAM.TELEGRAM_BOT_TOKEN }, { ...NO_TELEGRAM, TELEGRAM_CHAT_ID: TELEGRAM.TELEGRAM_CHAT_ID }];
 		for (const [index, env] of halves.entries()) {
-			await withEnv(env, () => m.alerts.sendAlert({ accountId: null, key: `account-blocked:${ACCOUNT_ID}:${index}`, title: "Account blocked", detail: "By a spam trap." }));
+			await withEnv(env, () => m.alerts.sendAlert({ accountId: null, key: `account-blocked:${ACCOUNT_ID}:${index}`, title: "Conta bloqueada", detail: "By a spam trap." }));
 		}
 		assert.equal(telegramMessages.length, before.telegram);
-		assert.deepEqual(toAdmins(platformEmails.slice(before.emails)).map(({ subject }) => subject), Array(3).fill("[ImpactMail] Account blocked"));
+		assert.deepEqual(toAdmins(platformEmails.slice(before.emails)).map(({ subject }) => subject), Array(3).fill("[ImpactMail] Conta bloqueada"));
 		assert.deepEqual(await withEnv(NO_TELEGRAM, () => m.alerts.announceTelegram()), { skipped: "Telegram isn't set up" });
 	});
 
@@ -198,20 +198,20 @@ describe("delivery", () => {
 			await m.alerts.sendAlert({
 				accountId: null,
 				key: "shared-sender-failed:format",
-				title: "Shared address not set up",
+				title: "Endereço partilhado não configurado",
 				detail: 'news.mailcheapmail.com (account 1): PostShiba answered 422 <b>"taken"</b> & more.',
-				action: "The newsletter's next save or send tries again.",
+				action: "A próxima gravação ou envio da newsletter tenta de novo.",
 				path: "/admin",
 			});
 			const sent = telegramMessages.slice(before.telegram);
 			assert.equal(sent.length, 1);
 			const { text, ...request } = sent[0];
 			assert.deepEqual(request, { token: TELEGRAM.TELEGRAM_BOT_TOKEN, chat_id: TELEGRAM.TELEGRAM_CHAT_ID, parse_mode: "HTML", link_preview_options: { is_disabled: true } });
-			const lines = ["news.mailcheapmail.com (account 1): PostShiba answered 422 <b>\"taken\"</b> & more.", "The newsletter's next save or send tries again.", "http://localhost:3000/admin"];
-			assert.equal(text, `<b>ImpactMail</b> · Shared address not set up\n\n${lines.map(escapeTelegramHtml).join("\n")}`);
+			const lines = ["news.mailcheapmail.com (account 1): PostShiba answered 422 <b>\"taken\"</b> & more.", "A próxima gravação ou envio da newsletter tenta de novo.", "http://localhost:3000/admin"];
+			assert.equal(text, `<b>ImpactMail</b> · Endereço partilhado não configurado\n\n${lines.map(escapeTelegramHtml).join("\n")}`);
 			const [email] = toAdmins(platformEmails.slice(before.emails));
-			assert.equal(email.subject, "[ImpactMail] Shared address not set up");
-			assert.equal(email.text, ["Shared address not set up", ...lines].join("\n"), "the email as it was, with what to do on its own line");
+			assert.equal(email.subject, "[ImpactMail] Endereço partilhado não configurado");
+			assert.equal(email.text, ["Endereço partilhado não configurado", ...lines].join("\n"), "the email as it was, with what to do on its own line");
 		});
 	});
 
@@ -239,7 +239,7 @@ describe("delivery", () => {
 		const other = await signIn("blocked-by-hand@example.com");
 		await withEnv(TELEGRAM, async () => {
 			const before = telegramMessages.length;
-			await m.alerts.sendAlert({ accountId: null, key: `deleted-email-signup:${ACCOUNT_ID}`, title: "A deleted account's email signed up again", detail: "jane.doe@example.com deleted an account." });
+			await m.alerts.sendAlert({ accountId: null, key: `deleted-email-signup:${ACCOUNT_ID}`, title: "O email de uma conta eliminada voltou a registar-se", detail: "jane.doe@example.com deleted an account." });
 			await m.alerts.sendAlert({ accountId: user.accountId, key: "complaints", title: "Spam complaint", detail: "reader@example.org marked an email as spam." });
 			assert.equal(await m.blocks.blockAccount(other.accountId, { reason: "Spam", by: "admin", detail: "Blocked by admin@example.com" }), true);
 			assert.equal(telegramMessages.length, before, "none of them");
@@ -249,8 +249,8 @@ describe("delivery", () => {
 			await m.Account.updateOne({ _id: user.accountId }, { $set: { status: "active" } });
 			assert.equal(await m.blocks.blockAccount(user.accountId, { reason: "Complaints over 0.3% again", by: "rates" }), true);
 			const blocks = telegramMessages.slice(before);
-			assert.deepEqual(firstLines(blocks), ["<b>ImpactMail</b> · Account blocked", "<b>ImpactMail</b> · Account blocked"]);
-			assert.match(blocks[0].text, new RegExp(`\\n\\nAccount ${user.accountId}, blocked by .+: Complaints over 0\\.3%\\.\\nReview it on the admin page, and unblock it once it's sorted out\\.\\nhttp://localhost:3000/admin$`));
+			assert.deepEqual(firstLines(blocks), ["<b>ImpactMail</b> · Conta bloqueada", "<b>ImpactMail</b> · Conta bloqueada"]);
+			assert.match(blocks[0].text, new RegExp(`\\n\\nConta ${user.accountId}, bloqueada .+: Complaints over 0\\.3%\\.\\nRevê-a na página de administração e desbloqueia-a quando estiver resolvido\\.\\nhttp://localhost:3000/admin$`));
 		});
 	});
 
@@ -260,7 +260,7 @@ describe("delivery", () => {
 			const { error, warn } = console;
 			console.error = (...args) => logged.push(args.join(" "));
 			console.warn = (...args) => logged.push(args.join(" "));
-			const refused = { accountId: null, key: "qstash-refused", title: "QStash refused a job", detail: "Unauthorized.", cooldownMinutes: 0 };
+			const refused = { accountId: null, key: "qstash-refused", title: "O QStash recusou uma tarefa", detail: "Unauthorized.", cooldownMinutes: 0 };
 			const before = { telegram: telegramMessages.length, emails: platformEmails.length };
 			try {
 				answerTelegram(() => Response.json({ ok: false, error_code: 401, description: "Unauthorized" }, { status: 401 }));
@@ -268,7 +268,7 @@ describe("delivery", () => {
 				answerTelegram(() => {
 					throw new TypeError("fetch failed");
 				});
-				await m.alerts.sendAlert({ accountId: null, key: "rate-limit-unavailable", title: "Rate limiter unavailable", detail: "Upstash Redis failed (fetch failed)." });
+				await m.alerts.sendAlert({ accountId: null, key: "rate-limit-unavailable", title: "Limitador de pedidos indisponível", detail: "Upstash Redis failed (fetch failed)." });
 			} finally {
 				answerTelegram(null);
 				Object.assign(console, { error, warn });
@@ -281,7 +281,7 @@ describe("delivery", () => {
 			assert.ok(!log.includes(TELEGRAM.TELEGRAM_BOT_TOKEN) && !log.includes("api.telegram.org"));
 
 			await m.alerts.sendAlert(refused);
-			assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · QStash refused a job"], "a message that didn't go out leaves its turn");
+			assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · O QStash recusou uma tarefa"], "a message that didn't go out leaves its turn");
 		});
 	});
 
@@ -310,7 +310,7 @@ describe("delivery", () => {
 			assert.deepEqual(await m.alerts.announceTelegram(), { skipped: "already announced" });
 			const sent = telegramMessages.slice(before);
 			assert.equal(sent.length, 1);
-			assert.match(sent[0].text, /^<b>ImpactMail<\/b> · Telegram alerts are on\n\nOnly what needs you comes here: account blocks, PostShiba stopping sends, .+\.$/);
+			assert.match(sent[0].text, /^<b>ImpactMail<\/b> · Alertas do Telegram ligados\n\nAqui só chega o que precisa de ti: bloqueios de contas, a PostShiba a parar envios, .+\.$/);
 		});
 	});
 });
@@ -352,7 +352,7 @@ describe("what alerts", () => {
 			assert.equal(telegramMessages.length - before.telegram, 4, "an outage waits for the next hour");
 			fake.fail({ method: "GET", path: /\/status$/, status: 401, body: { error: "Invalid token or no user signed in" } });
 			await call(`Bearer ${CRON_SECRET}`);
-			assert.deepEqual(firstLines(telegramMessages.slice(-1)), ["<b>ImpactMail</b> · PostShiba refused the status check"]);
+			assert.deepEqual(firstLines(telegramMessages.slice(-1)), ["<b>ImpactMail</b> · A PostShiba recusou a verificação de estado"]);
 		});
 	});
 
@@ -369,12 +369,12 @@ describe("what alerts", () => {
 			await assert.rejects(failing(job("/api/jobs/send-batch", 2)), /The database is down/);
 			assert.equal(
 				telegramMessages.at(-1).text,
-				"<b>ImpactMail</b> · Background job failing\n\n/api/jobs/send-batch failed 3 times in a row: The database is down.\nAfter its last try QStash keeps it in the dead letter queue: check the logs, then retry it there.\nhttps://console.upstash.com/qstash"
+				"<b>ImpactMail</b> · Tarefa em segundo plano a falhar\n\n/api/jobs/send-batch falhou 3 vezes seguidas: The database is down.\nDepois da última tentativa o QStash guarda-a na dead letter queue: vê os registos e tenta de novo lá.\nhttps://console.upstash.com/qstash"
 			);
 
 			const busy = m.qstashRoute.withQStashSignature(async () => Response.json({ retry: true }, { status: 503 }));
 			assert.equal((await busy(job("/api/jobs/check-first-send", 3))).status, 503);
-			assert.match(telegramMessages.at(-1).text, /\/api\/jobs\/check-first-send failed 4 times in a row: it answered 503\./);
+			assert.match(telegramMessages.at(-1).text, /\/api\/jobs\/check-first-send falhou 4 vezes seguidas: it answered 503\./);
 
 			const refuse = () => async () => {
 				throw Object.assign(new Error("signature verification failed"), { name: "SignatureError" });
@@ -391,12 +391,12 @@ describe("what alerts", () => {
 			const before = telegramMessages.length;
 			const visitor = { jar: new Map(), ip: `203.0.113.${++visitors}` };
 			const result = await quietly(() => as(visitor, () => m.signin.sendSigninCode(null, form({ email: "no-code@example.com" }))));
-			assert.equal(result.error, "Couldn't send the code. Try again in a minute.");
+			assert.equal(result.error, "Não foi possível enviar o código. Tenta de novo daqui a um minuto.");
 			await flushAfter();
 			assert.deepEqual(
 				telegramMessages.slice(before).map(({ text }) => text),
 				[
-					"<b>ImpactMail</b> · Sign-in codes not sending\n\nEMAIL_FROM is not set: ImpactMail's own emails need a from address on a domain Resend or the email provider verified.\nNobody can sign in with a code until it's fixed: check EMAIL_FROM and the email provider.",
+					"<b>ImpactMail</b> · Os códigos de início de sessão não estão a ser enviados\n\nEMAIL_FROM is not set: ImpactMail's own emails need a from address on a domain Resend or the email provider verified.\nNinguém consegue iniciar sessão com um código até isto ser resolvido: verifica o EMAIL_FROM e o fornecedor de email.",
 				]
 			);
 		});
@@ -415,16 +415,16 @@ describe("what alerts", () => {
 					await save(user, slug);
 				}
 			});
-			assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · DNS helper at its daily cap"], "once for both");
+			assert.deepEqual(firstLines(telegramMessages.slice(before.telegram)), ["<b>ImpactMail</b> · Assistente de DNS no limite diário"], "once for both");
 			const emails = toAdmins(platformEmails.slice(before.emails));
-			assert.deepEqual(emails.map(({ subject }) => subject), ["[ImpactMail] DNS helper at its daily cap", "[ImpactMail] Shared address not set up", "[ImpactMail] Shared address not set up"]);
+			assert.deepEqual(emails.map(({ subject }) => subject), ["[ImpactMail] Assistente de DNS no limite diário", "[ImpactMail] Endereço partilhado não configurado", "[ImpactMail] Endereço partilhado não configurado"]);
 			assert.ok(emails[2].text.includes("dns-cap-two.mailcheapmail.com"), "each one named");
 
 			await quietly(async () => {
 				failNextPublish({ status: 403, message: "CNAME dns-own.mailcheapmail.com isn't a shared address record of dns-own", helperProblem: null });
 				await save(third, "dns-own");
 			});
-			assert.deepEqual(firstLines(telegramMessages.slice(-1)), ["<b>ImpactMail</b> · Shared address not set up"], "a slug's own problem reaches Telegram itself");
+			assert.deepEqual(firstLines(telegramMessages.slice(-1)), ["<b>ImpactMail</b> · Endereço partilhado não configurado"], "a slug's own problem reaches Telegram itself");
 		});
 	});
 

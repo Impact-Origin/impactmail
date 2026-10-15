@@ -15,19 +15,19 @@ export default function TableAccounts({ accounts }) {
 			<Table>
 				<TableHeader>
 					<TableRow className="hover:bg-transparent">
-						<TableHead className="pl-4">Owner</TableHead>
-						<TableHead>Status</TableHead>
-						<TableHead className="hidden text-right md:table-cell">Emails sent</TableHead>
-						<TableHead className="hidden text-right md:table-cell">Subscribers</TableHead>
-						<TableHead className="hidden text-right lg:table-cell">Last 7 days</TableHead>
+						<TableHead className="pl-4">Dono</TableHead>
+						<TableHead>Estado</TableHead>
+						<TableHead className="hidden text-right md:table-cell">Emails enviados</TableHead>
+						<TableHead className="hidden text-right md:table-cell">Subscritores</TableHead>
+						<TableHead className="hidden text-right lg:table-cell">Últimos 7 dias</TableHead>
 						<TableHead className="hidden xl:table-cell">{provider.name} tenant</TableHead>
-						<TableHead className="hidden text-right sm:table-cell">Created</TableHead>
+						<TableHead className="hidden text-right sm:table-cell">Criada</TableHead>
 						<TableHead className="w-12 pr-2" />
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{accounts.map((account) => {
-						const blockedBy = isBlocked(account) ? `Blocked by ${BLOCKED_BY[account.pausedBy] ?? "an admin"}` : null;
+						const blockedBy = isBlocked(account) ? `Bloqueada ${BLOCKED_BY[account.pausedBy] ?? BLOCKED_BY.admin}` : null;
 						return (
 							<TableRow key={account._id} className="tabular-nums">
 								<TableCell className="max-w-0 py-2.5 pl-4 sm:w-1/4">
@@ -92,7 +92,7 @@ function Rate({ value = 0, limit, digits = 2 }) {
 
 // The account's tenant at the active provider (describeTenant in lib/email-provider), with its status there.
 function Tenant({ tenant }) {
-	if (!tenant) return <span className="text-xs text-muted-foreground">No tenant yet</span>;
+	if (!tenant) return <span className="text-xs text-muted-foreground">Ainda sem tenant</span>;
 	const isStopped = STOPPED_TENANT_STATUSES.has(tenant.status);
 	return (
 		<span className="flex min-w-0 flex-col text-xs">
@@ -100,7 +100,7 @@ function Tenant({ tenant }) {
 				{tenant.id}
 			</span>
 			<span className={cn("truncate", isStopped ? "text-red-600 dark:text-red-400" : "text-muted-foreground")}>
-				{TENANT_STATUSES[tenant.status] ?? tenant.status ?? "Status unknown"}
+				{TENANT_STATUSES[tenant.status] ?? tenant.status ?? "Estado desconhecido"}
 			</span>
 			{tenant.detail && <span className="truncate text-muted-foreground">{tenant.detail}</span>}
 		</span>
@@ -108,11 +108,11 @@ function Tenant({ tenant }) {
 }
 
 const TENANT_STATUSES = {
-	active: "Active",
-	suspended: "Suspended with the account",
-	operator_hold: "Held by PostShiba (operator_hold)",
-	ENABLED: "Enabled",
-	DISABLED: "Paused by SES",
-	REINSTATED: "Reinstated",
+	active: "Ativo",
+	suspended: "Suspenso com a conta",
+	operator_hold: "Retido pela PostShiba (operator_hold)",
+	ENABLED: "Ativo",
+	DISABLED: "Pausado pelo SES",
+	REINSTATED: "Reposto",
 };
 const STOPPED_TENANT_STATUSES = new Set(["suspended", "operator_hold", "DISABLED"]);

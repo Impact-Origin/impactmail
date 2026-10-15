@@ -21,16 +21,16 @@ export default function CardAddContacts({ newsletter, curl }) {
 				</span>
 				<div className="min-w-0">
 					<h2 id="add-contacts-title" className="font-semibold tracking-tight">
-						No contacts yet
+						Ainda não há contactos
 					</h2>
-					<p className="text-sm text-muted-foreground">Add them in one of two ways.</p>
+					<p className="text-sm text-muted-foreground">Adiciona-os de uma de duas formas.</p>
 				</div>
 			</header>
 			{/* The request's lines are the longest: side by side, it gets the wider column. */}
 			<div className="grid @4xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
 				<ColumnWay
-					title="Import your list"
-					description="Import a CSV from beehiiv, Substack or Mailchimp."
+					title="Importa a tua lista"
+					description="Importa um CSV do beehiiv, Substack ou Mailchimp."
 				>
 					<ul
 						aria-hidden="true"
@@ -44,32 +44,32 @@ export default function CardAddContacts({ newsletter, curl }) {
 						))}
 					</ul>
 					<div className="flex items-center">
-						<DialogImportContacts newsletter={newsletter} label="Import contacts" variant="default" />
+						<DialogImportContacts newsletter={newsletter} label="Importar contactos" variant="default" />
 					</div>
 				</ColumnWay>
 				<ColumnWay
-					title="Add them with the API"
-					description="Sign people up from your site or app, one request each."
+					title="Adiciona-os com a API"
+					description="Inscreve pessoas a partir do teu site ou app, um pedido por pessoa."
 					className="border-t border-border/60 @4xl:border-t-0 @4xl:border-l"
 				>
-					<BlockCode code={curl} title="Request" />
+					<BlockCode code={curl} title="Pedido" />
 					<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
 						<Button asChild variant="outline">
-							<Link href="/api-keys">Create an API key</Link>
+							<Link href="/api-keys">Criar uma chave de API</Link>
 						</Button>
 						<Link
 							href="/docs/api#add-contact"
 							target="_blank"
 							className="relative inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors duration-150 after:absolute after:-inset-x-2 after:-inset-y-2 hover:text-foreground"
 						>
-							API docs
+							Documentação da API
 							<ArrowUpRight className="size-3.5" />
 						</Link>
 					</div>
 				</ColumnWay>
 			</div>
 			<div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border/60 bg-muted/40 px-5 py-3">
-				<p className="text-sm text-muted-foreground">Trying it out? Add yourself as a contact.</p>
+				<p className="text-sm text-muted-foreground">Estás a experimentar? Adiciona-te como contacto.</p>
 				<DialogAddContact newsletter={newsletter} variant="outline" size="sm" />
 			</div>
 		</section>

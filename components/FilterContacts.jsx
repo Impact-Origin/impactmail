@@ -41,8 +41,8 @@ export default function FilterContacts() {
 				type="search"
 				value={query}
 				onChange={onQueryChange}
-				placeholder="Search by email"
-				aria-label="Search by email"
+				placeholder="Pesquisar por email"
+				aria-label="Pesquisar por email"
 				className="h-9 pl-8"
 			/>
 		</div>

@@ -102,7 +102,7 @@ function event(user, message, fields) {
 }
 
 function alertsSince(index) {
-	return platformEmails.slice(index).filter(({ subject }) => subject === "[ImpactMail] Account blocked");
+	return platformEmails.slice(index).filter(({ subject }) => subject === "[ImpactMail] Conta bloqueada");
 }
 
 function assertError(response, status, code) {
@@ -171,15 +171,15 @@ describe("what blocks an account", () => {
 		await event(user, hard, { type: "bounce", bounce: "hard", reason: "550 5.1.1 This address is a spam trap" });
 		const account = await loadAccount(user);
 		assert.deepEqual([account.status, account.pausedBy], ["paused", "trap"]);
-		assert.equal(account.pauseReason, "An email reached a spam trap, an address found only on bought, scraped or old lists");
+		assert.equal(account.pauseReason, "Um email chegou a uma armadilha de spam, um endereço que só existe em listas compradas, recolhidas ou antigas");
 
 		const alerts = alertsSince(emailsBefore);
 		const toAdmins = alerts.find(({ to }) => to.includes("admin@example.com"));
 		const toOwner = alerts.find(({ to }) => to.includes("trap@example.com"));
-		assert.match(toAdmins.text, /blocked by a spam trap/);
+		assert.match(toAdmins.text, /bloqueada por uma armadilha de spam/);
 		assert.ok(toAdmins.text.includes(`${hard.email} bounced: Hard bounce: 550 5.1.1 This address is a spam trap`));
 		assert.ok(!toOwner.text.includes(hard.email), "the trap's address stays with the admins");
-		assert.ok(toOwner.text.endsWith(`welcome emails included, and imports and changes are off. An admin can unblock it on the admin page.\nhttp://localhost:3000/`), toOwner.text);
+		assert.ok(toOwner.text.endsWith(`incluindo emails de boas-vindas, e as importações e alterações estão desligadas. Um administrador pode desbloqueá-la na página de administração.\nhttp://localhost:3000/`), toOwner.text);
 		assert.ok(!toOwner.text.includes("hello@mailcheap.ai"), "the chat, not email");
 	});
 
@@ -190,18 +190,18 @@ describe("what blocks an account", () => {
 
 		let emailsBefore = platformEmails.length;
 		await event(user, messages[0], { type: "complaint" });
-		assert.deepEqual(subjectsSince(emailsBefore), ["complaints@example.com [ImpactMail] Spam complaint"], "only the usual notice");
+		assert.deepEqual(subjectsSince(emailsBefore), ["complaints@example.com [ImpactMail] Denúncia de spam"], "only the usual notice");
 
 		emailsBefore = platformEmails.length;
 		await event(user, messages[1], { type: "complaint" });
 		assert.equal((await loadAccount(user)).status, "active", "2 complaints never block");
-		assert.deepEqual(subjectsSince(emailsBefore), ["complaints@example.com [ImpactMail] Bounces or complaints are high"]);
+		assert.deepEqual(subjectsSince(emailsBefore), ["complaints@example.com [ImpactMail] Devoluções ou denúncias elevadas"]);
 
 		emailsBefore = platformEmails.length;
 		await event(user, messages[2], { type: "complaint" });
 		const account = await loadAccount(user);
 		assert.deepEqual([account.status, account.pausedBy], ["paused", "rates"]);
-		assert.equal(account.pauseReason, "Complaint rate of 3.00% over the last 7 days (limit 0.30%)");
+		assert.equal(account.pauseReason, "Taxa de denúncias de 3,00% nos últimos 7 dias (limite 0,30%)");
 		assert.equal(alertsSince(emailsBefore).length, 2, "the admins and the owner");
 	});
 
@@ -218,10 +218,10 @@ describe("what blocks an account", () => {
 		assert.equal((await loadAccount(user)).status, "active");
 		const paused = await loadCampaign(user, warned);
 		assert.deepEqual([paused.status, paused.pauseCode], ["paused", "high_rates"]);
-		assert.match(paused.pauseReason, /^Bounce rate of 5.00% on this campaign \(limit 2.00%\)\. Check where these contacts came from before you resume/);
+		assert.match(paused.pauseReason, /^Taxa de devoluções de 5,00% nesta campanha \(limite 2,00%\)\. Verifica de onde vieram estes contactos antes de retomar/);
 		assert.equal((await loadCampaign(user, other)).status, "sent");
 		const emails = platformEmails.slice(emailsBefore);
-		assert.deepEqual(emails.map(({ to, subject }) => [to, subject]), [[["campaign-warning@example.com"], "[ImpactMail] Campaign paused"]], "no admin email");
+		assert.deepEqual(emails.map(({ to, subject }) => [to, subject]), [[["campaign-warning@example.com"], "[ImpactMail] Campanha em pausa"]], "no admin email");
 
 		assert.deepEqual(await as(user, () => m.campaigns.resumeCampaign(warned)), { ok: true });
 		assert.equal(sentCount(await runJobs(user)), 3, "the same rates don't pause it again");
@@ -239,10 +239,10 @@ describe("what blocks an account", () => {
 		const emailsBefore = platformEmails.length;
 		assert.equal(sentCount(await runJobs(user)), 0);
 		const account = await loadAccount(user);
-		assert.deepEqual([account.status, account.pausedBy, account.pauseReason], ["paused", "campaign", "Bounce rate of 10.00% on a campaign (limit 5.00%)"]);
+		assert.deepEqual([account.status, account.pausedBy, account.pauseReason], ["paused", "campaign", "Taxa de devoluções de 10,00% numa campanha (limite 5,00%)"]);
 		for (const id of [bad, other]) {
 			const campaign = await loadCampaign(user, id);
-			assert.deepEqual([campaign.status, campaign.pauseCode, campaign.pauseReason], ["paused", "account_blocked", "the account is blocked"]);
+			assert.deepEqual([campaign.status, campaign.pauseCode, campaign.pauseReason], ["paused", "account_blocked", "a conta está bloqueada"]);
 		}
 		assert.equal(alertsSince(emailsBefore).length, 2, "one block, one alert each, no campaign alerts on top");
 	});
@@ -277,7 +277,7 @@ describe("a blocked account", () => {
 		assert.equal((await loadCampaign(user, later)).status, "draft", "a scheduled send goes back to draft");
 
 		const test = await as(user, () => m.campaigns.sendTestCampaign(sending));
-		assert.deepEqual(test, { error: "This account is blocked: Review. An admin can unblock it on the admin page.", code: "account_blocked" });
+		assert.deepEqual(test, { error: "Esta conta está bloqueada: Review. Um administrador pode desbloqueá-la na página de administração.", code: "account_blocked" });
 		assert.equal((await as(user, () => m.newsletters.sendWelcomeTest(user.newsletterId))).code, "account_blocked");
 
 		const newsletter = await m.Newsletter.findOne({ accountId: user.accountId, _id: user.newsletterId }).lean();
@@ -288,7 +288,7 @@ describe("a blocked account", () => {
 
 		const batch = await m.sending.sendMessageBatch({ accountId: String(user.accountId), messageIds: [String(queuedWelcome._id)] });
 		assert.deepEqual([batch.sent, batch.failed], [0, 1], "a welcome email already queued");
-		assert.match((await m.Message.findOne({ accountId: user.accountId, _id: queuedWelcome._id }).lean()).error, /^This account is blocked: Review/);
+		assert.match((await m.Message.findOne({ accountId: user.accountId, _id: queuedWelcome._id }).lean()).error, /^Esta conta está bloqueada: Review/);
 		assert.equal(sesEmails.length, emailsBefore, "nothing reached the provider");
 	});
 
@@ -300,7 +300,7 @@ describe("a blocked account", () => {
 		await as(user, () => m.campaigns.scheduleCampaign(scheduled, { scheduledAt: new Date(Date.now() + 86_400_000).toISOString() }));
 		await m.blocks.blockAccount(user.accountId, { reason: "Review" });
 
-		const refused = { error: "This account is blocked: Review. An admin can unblock it on the admin page.", code: "account_blocked" };
+		const refused = { error: "Esta conta está bloqueada: Review. Um administrador pode desbloqueá-la na página de administração.", code: "account_blocked" };
 		const rows = [{ email: "new@example.org", status: "active" }];
 		assert.deepEqual(await as(user, () => m.contacts.importContacts({ newsletterId: user.newsletterId, consent: true, rows })), refused);
 		assert.deepEqual(await as(user, () => m.campaigns.sendCampaign(id, {})), refused);
@@ -308,12 +308,12 @@ describe("a blocked account", () => {
 		assert.deepEqual(await as(user, () => m.campaigns.scheduleCampaign(id, { scheduledAt: tomorrow })), refused);
 		assert.deepEqual(await as(user, () => m.campaigns.saveCampaign(id, { subject: "Edited", body: "<p>Edited</p>" })), refused);
 		const formResult = await anonymous(() => m.archive.subscribe(null, form({ newsletter: user.slug, email: "visitor@example.org" })));
-		assert.deepEqual(formResult, { error: "This newsletter is not taking signups" });
+		assert.deepEqual(formResult, { error: "Esta newsletter não está a aceitar inscrições" });
 
 		const signup = await callApi("POST", "/api/v1/contacts", { key: signupsKey, body: { newsletter: user.slug, email: "visitor@example.org" } });
 		await flushAfter();
 		assertError(signup, 403, "account_blocked");
-		assert.equal(signup.body.error.message, "This account is blocked: Review. An admin can unblock it on the admin page.");
+		assert.equal(signup.body.error.message, "Esta conta está bloqueada: Review. Um administrador pode desbloqueá-la na página de administração.");
 		assertError(await callApi("POST", "/api/v1/contacts", { key: user.key, body: { newsletter: user.slug, email: "visitor@example.org" } }), 403, "account_blocked");
 		assertError(await callApi("POST", "/api/v1/contacts/import", { key: user.key, body: { newsletter: user.slug, consent: true, contacts: rows } }), 403, "account_blocked");
 		assertError(await callApi("POST", "/api/v1/campaigns", { key: user.key, body: { subject: "New" } }), 403, "account_blocked");
@@ -361,7 +361,7 @@ describe("links in emails", () => {
 		assert.equal(page.headers.get("x-robots-tag"), "noindex");
 		assert.equal(page.headers.get("content-type"), "text/html; charset=utf-8");
 		const html = await page.text();
-		assert.ok(html.includes("<h1>This link is disabled</h1><p>The sender's account is suspended.</p>"));
+		assert.ok(html.includes("<h1>Este link está desativado</h1><p>A conta do remetente está suspensa.</p>"));
 		assert.ok(!html.includes("example.net") && !html.includes("<a "), "the destination isn't shown or linked");
 		assert.deepEqual(answerOf(await click(clicked, "HEAD")), [403, null, "no-store"]);
 

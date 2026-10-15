@@ -79,14 +79,14 @@ function Dock({ done, total, isFinished, children }) {
 				inert={!isMinimized}
 				aria-expanded={isOpen}
 				aria-controls={panelId}
-				aria-label={`Get started, ${done} of ${total} done`}
+				aria-label={`Primeiros passos, ${done} de ${total} feitos`}
 				className={cn(
 					"flex h-10 items-center gap-1.5 rounded-full bg-card pr-3 pl-4 text-sm font-medium shadow-float transition-[opacity,scale,background-color] hover:bg-muted active:scale-[0.96]",
 					MOTION,
 					isMinimized ? SHOWN : HIDDEN
 				)}
 			>
-				Get started
+				Primeiros passos
 				<span className="text-muted-foreground tabular-nums">
 					· {done}/{total}
 				</span>
@@ -107,10 +107,10 @@ function Dock({ done, total, isFinished, children }) {
 			>
 				{children}
 				<div className="absolute top-4 right-3 flex gap-1">
-					<Button variant="ghost" size="icon-sm" onClick={minimize} aria-label="Minimize" title="Minimize" className={CONTROL}>
+					<Button variant="ghost" size="icon-sm" onClick={minimize} aria-label="Minimizar" title="Minimizar" className={CONTROL}>
 						<ChevronDown />
 					</Button>
-					<Button variant="ghost" size="icon-sm" onClick={close} aria-label="Hide for good" title="Hide for good" className={CONTROL}>
+					<Button variant="ghost" size="icon-sm" onClick={close} aria-label="Esconder de vez" title="Esconder de vez" className={CONTROL}>
 						<X />
 					</Button>
 				</div>

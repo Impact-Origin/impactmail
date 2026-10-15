@@ -19,10 +19,10 @@ export default function FormConsent({ oauthQuery }) {
 			)}
 			<div className="grid grid-cols-2 gap-2">
 				<Button type="submit" name="decision" value="deny" variant="outline" size="lg" disabled={isPending} onClick={() => setDecision("deny")}>
-					{isPending && decision === "deny" ? <Loader2 className="animate-spin" /> : "Cancel"}
+					{isPending && decision === "deny" ? <Loader2 className="animate-spin" /> : "Cancelar"}
 				</Button>
 				<Button type="submit" name="decision" value="allow" size="lg" disabled={isPending} onClick={() => setDecision("allow")}>
-					{isPending && decision === "allow" ? <Loader2 className="animate-spin" /> : "Allow"}
+					{isPending && decision === "allow" ? <Loader2 className="animate-spin" /> : "Permitir"}
 				</Button>
 			</div>
 		</form>

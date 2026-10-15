@@ -236,7 +236,7 @@ describe("search engines", () => {
 		const { metadata } = await importFile("app/(site)/layout.js");
 		assert.equal(metadata.metadataBase.href, new URL("/", m.config.getAppUrl()).href);
 		assert.deepEqual(metadata.robots, { index: true, follow: true });
-		assert.deepEqual(metadata.openGraph, { type: "website", siteName: "ImpactMail", locale: "en_US", url: "./" });
+		assert.deepEqual(metadata.openGraph, { type: "website", siteName: "ImpactMail", locale: "pt_PT", url: "./" });
 		assert.equal(metadata.twitter.card, "summary_large_image");
 		assert.deepEqual((await importFile("app/layout.js")).metadata.robots, { index: false, follow: false }, "the app's own pages stay out of search");
 	});

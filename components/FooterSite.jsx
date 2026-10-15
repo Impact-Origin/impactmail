@@ -53,13 +53,13 @@ export default function FooterSite() {
 }
 
 const FOOTER = {
-	tagline: "Newsletters sent from your own server.",
+	tagline: "Newsletters da Impact-Origin, enviadas a partir do nosso servidor.",
 	columns: [
 		{
 			title: "ImpactMail",
 			links: [
-				{ href: "/docs", label: "Docs" },
-				{ href: SOURCE_URL, label: "Source code", isExternal: true },
+				{ href: "/docs", label: "Documentação" },
+				{ href: SOURCE_URL, label: "Código-fonte", isExternal: true },
 			],
 		},
 	],

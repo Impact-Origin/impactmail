@@ -238,8 +238,8 @@ describe("PostShiba domains", () => {
 			error: "ps-owner.dev is used by another ImpactMail account",
 		});
 		assert.equal(fake.state.domains.size, domainsBefore, "PostShiba never heard of the second claim");
-		assert.deepEqual(await as(other, () => m.domains.checkDomainAction(String(domain._id))), { error: "Domain not found" });
-		assert.deepEqual(await as(other, () => m.domains.removeDomainAction(String(domain._id))), { error: "Domain not found" });
+		assert.deepEqual(await as(other, () => m.domains.checkDomainAction(String(domain._id))), { error: "Domínio não encontrado" });
+		assert.deepEqual(await as(other, () => m.domains.removeDomainAction(String(domain._id))), { error: "Domínio não encontrado" });
 		assert.equal(fake.state.domains.get(domain.providerDomainId).tenant_id, owner.account.postshiba.tenantId);
 		assert.match((await saveFrom(other, "hi@ps-owner.dev")).error, /Add ps-owner.dev on the Domains page first/);
 	});
@@ -273,18 +273,18 @@ describe("PostShiba domains", () => {
 			return output.setup.find(({ key }) => key === "dmarc").status;
 		}
 
-		assert.equal(await check(), "Recommended");
+		assert.equal(await check(), "Recomendado");
 		txts.set("_dmarc.dmarc-parent.dev", [["v=DMARC1; p=quarantine; ", "rua=mailto:reports@dmarc-parent.dev"]]);
-		assert.equal(await check(), "Found on dmarc-parent.dev", "the parent's record covers its subdomains");
+		assert.equal(await check(), "Encontrado em dmarc-parent.dev", "the parent's record covers its subdomains");
 		txts.set("_dmarc.mail.dmarc-parent.dev", [["v=DMARC1; p=none;"], ["v=DMARC1; p=reject;"]]);
-		assert.equal(await check(), "More than one record, keep one", "the domain's own records come first");
+		assert.equal(await check(), "Mais do que um registo, mantém só um", "the domain's own records come first");
 		txts.set("_dmarc.mail.dmarc-parent.dev", [["v=DMARC1; p=none;"]]);
-		assert.equal(await check(), "Found");
+		assert.equal(await check(), "Encontrado");
 		txts.set("_dmarc.mail.dmarc-parent.dev", null);
-		assert.equal(await check(), "Found", "the resolver failed: nothing changes");
+		assert.equal(await check(), "Encontrado", "the resolver failed: nothing changes");
 		txts.delete("_dmarc.mail.dmarc-parent.dev");
 		txts.delete("_dmarc.dmarc-parent.dev");
-		assert.equal(await check(), "Recommended");
+		assert.equal(await check(), "Recomendado");
 		assert.deepEqual((await m.Domain.findOne({ accountId: user.accountId, _id }).lean()).dmarc, { status: "missing" });
 	});
 
@@ -307,15 +307,15 @@ describe("PostShiba domains", () => {
 		Object.assign(atPostshiba, { dkim_status: "verified", sending_allowed: true });
 		await checkedLongAgo();
 		assert.deepEqual(await as(user, () => m.domains.checkDomainAction(String(_id))), { ok: true, verified: true, archiveHostVerified: false });
-		assert.equal(await returnPathStatus(), "Waiting for DNS");
+		assert.equal(await returnPathStatus(), "À espera do DNS");
 		atPostshiba.return_path_status = "verified";
 
 		const before = { verifyCalls: verifyCalls(), reads: reads() };
 		await openPage();
-		assert.deepEqual([reads(), await returnPathStatus()], [before.reads, "Waiting for DNS"], "checked a moment ago: not read again yet");
+		assert.deepEqual([reads(), await returnPathStatus()], [before.reads, "À espera do DNS"], "checked a moment ago: not read again yet");
 		await checkedLongAgo();
 		await openPage();
-		assert.equal(await returnPathStatus(), "Found");
+		assert.equal(await returnPathStatus(), "Encontrado");
 		assert.deepEqual([verifyCalls(), reads()], [before.verifyCalls, before.reads + 1], "a read, outside the verification budget");
 		assert.ok((await stored()).readAt);
 		await openPage();
@@ -355,17 +355,17 @@ describe("PostShiba domains", () => {
 
 		await withEnv({ ARCHIVE_CNAME_TARGET: "" }, async () => {
 			const domain = await listDomain();
-			assert.equal(domain.status, "Ready");
+			assert.equal(domain.status, "Pronto");
 			assert.deepEqual(domain.setup.map(({ key }) => key), ["dkim", "mail-from", "dmarc"]);
 			const page = await renderPage();
-			assert.doesNotMatch(page, /Website and links|website waiting|Waiting for DNS/);
-			assert.match(page, /Send from an address at your domain\.</);
+			assert.doesNotMatch(page, /Site e links|site à espera|À espera do DNS/);
+			assert.match(page, /Envia a partir de um endereço do teu domínio\.</);
 		});
 
 		const domain = await listDomain();
-		assert.equal(domain.status, "Sending ready, website waiting", "with a target, the archive subdomain counts again");
-		assert.equal(domain.setup.find(({ key }) => key === "archive").status, "Waiting for DNS");
-		assert.match(await renderPage(), /Website and links/);
+		assert.equal(domain.status, "Envio pronto, site à espera", "with a target, the archive subdomain counts again");
+		assert.equal(domain.setup.find(({ key }) => key === "archive").status, "À espera do DNS");
+		assert.match(await renderPage(), /Site e links/);
 	});
 });
 
@@ -403,7 +403,7 @@ describe("PostShiba sending", () => {
 		assert.equal(body.tenant, user.account.postshiba.tenantId);
 		assert.equal(body.from, '"Jane" <hello@ps-test.dev>');
 		assert.deepEqual(body.to, ["ps-test@example.com"]);
-		assert.equal(body.subject, "[Test] Issue 7");
+		assert.equal(body.subject, "[Teste] Issue 7");
 		assert.match(body.headers["List-Unsubscribe"], /\/api\/unsubscribe\?token=/);
 		assert.equal(body.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
 		assert.equal(body.headers["Feedback-ID"], `${id}:mc-${user.accountId}:test:impactmail`, "PostShiba writes its own in its place, led by the same mc-<accountId>");
@@ -515,8 +515,8 @@ describe("PostShiba sending", () => {
 		fake.fail({ method: "POST", path: /\/sends$/, status: 403, body: { error: "kyc_required", field: "to" } });
 		assert.match((await as(user, () => m.campaigns.sendTestCampaign(id))).error, /hasn't approved production sending/);
 		const toAdmins = platformEmails.slice(emailsBefore).filter(({ to }) => to.includes("admin@example.com"));
-		assert.deepEqual(toAdmins.map(({ subject }) => subject), ["[ImpactMail] PostShiba refuses ImpactMail's sends"], "the campaign and the test are the same problem");
-		assert.match(toAdmins[0].text, new RegExp(`Account ${user.accountId}: PostShiba hasn't approved production sending yet \\(kyc_required\\)\\.\\nReaders' emails are refused until PostShiba approves the team\\.`));
+		assert.deepEqual(toAdmins.map(({ subject }) => subject), ["[ImpactMail] PostShiba recusa os envios do ImpactMail"], "the campaign and the test are the same problem");
+		assert.match(toAdmins[0].text, new RegExp(`Conta ${user.accountId}: PostShiba hasn't approved production sending yet \\(kyc_required\\)\\.\\nOs emails para os leitores são recusados até a PostShiba aprovar a equipa\\.`));
 	});
 
 	test("a welcome email PostShiba throttles is retried later with the same Idempotency-Key", async () => {
@@ -692,7 +692,7 @@ describe("PostShiba blocks", () => {
 		assert.equal((await loadAccount(user)).postshiba.tenantStatus, "suspended");
 
 		const sendsBefore = fake.state.sends.length;
-		assert.match((await as(user, () => m.campaigns.sendTestCampaign(id))).error, /This account is blocked: Review/);
+		assert.match((await as(user, () => m.campaigns.sendTestCampaign(id))).error, /Esta conta está bloqueada: Review/);
 		assert.deepEqual(await welcomeNewContact(user, "paused-reader@example.org"), { skipped: "account is blocked" });
 		assert.equal(fake.state.sends.length, sendsBefore, "no call to a suspended tenant");
 
@@ -719,7 +719,7 @@ describe("PostShiba blocks", () => {
 
 		const admin = await signIn("admin@example.com");
 		const result = await as(admin, () => m.admin.unblockAccountAction(String(user.accountId)));
-		assert.match(result.error, /^Still blocked, the tenant wasn't resumed: .*holds this tenant \(operator_hold\)/);
+		assert.match(result.error, /^Continua bloqueada, o tenant não foi retomado: .*holds this tenant \(operator_hold\)/);
 		assert.equal((await loadAccount(user)).status, "paused");
 
 		fake.state.tenants.get(user.account.postshiba.tenantId).held = false;

@@ -38,8 +38,8 @@ test("misspellings and spam trap addresses are dropped from imports and refused 
 	for (const email of ["spamtrap@acme.com", "spam-trap.2@acme.com", "honeypot@acme.com", "the.honey_pot@acme.com"]) assert.equal(getDropReason(email), "trap", email);
 	assert.equal(getDropReason("jane.honeycutt@acme.com"), null);
 
-	assert.equal(getSignupEmailProblem("jane.doe@gmial.com"), "Did you mean jane.doe@gmail.com?");
-	assert.equal(getSignupEmailProblem("spamtrap@acme.com"), "This address can't be added");
+	assert.equal(getSignupEmailProblem("jane.doe@gmial.com"), "Querias dizer jane.doe@gmail.com?");
+	assert.equal(getSignupEmailProblem("spamtrap@acme.com"), "Este endereço não pode ser adicionado");
 	assert.equal(getSignupEmailProblem("info@acme.com"), null, "people sign up with these themselves");
 	assert.equal(getSignupEmailProblem("jane@mailinator.com"), null);
 	assert.equal(getSignupEmailProblem("jane@acme.com"), null);
@@ -101,7 +101,7 @@ describe("contact imports", () => {
 		const rows = [{ email: "reader@example.org", status: "active" }];
 		for (const consent of [undefined, false, "true"]) {
 			assert.deepEqual(await as(user, () => m.contacts.importContacts({ newsletterId: user.newsletterId, rows, consent })), {
-				error: "Confirm that these people agreed to receive your emails",
+				error: "Confirma que estas pessoas aceitaram receber os teus emails",
 			});
 		}
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId, email: "reader@example.org" }), 0);
@@ -143,7 +143,7 @@ describe("contact imports", () => {
 
 		const stored = await m.ContactImport.findOne({ accountId: user.accountId, _id: first.importId }).lean();
 		assert.equal(stored.consent, true);
-		assert.equal(stored.consentText, "These people agreed to receive my emails");
+		assert.equal(stored.consentText, "Estas pessoas aceitaram receber os meus emails");
 		assert.ok(stored.consentAt instanceof Date);
 		assert.equal(stored.userId.toString(), user.userId.toString());
 		assert.deepEqual({ rows: stored.rows, created: stored.created, existing: stored.existing }, { rows: 8, created: 2, existing: 1 });
@@ -164,7 +164,7 @@ describe("contact imports", () => {
 		const answer = await as(other, () =>
 			m.contacts.importContacts({ newsletterId: url.split("/").at(-1), consent: true, importId, rows: [{ email: "eve@example.org", status: "active" }] })
 		);
-		assert.deepEqual(answer, { error: "Import not found" });
+		assert.deepEqual(answer, { error: "Importação não encontrada" });
 	});
 
 	test("the same checks run without the dashboard, for the API and MCP", async () => {
@@ -218,11 +218,11 @@ describe("contact imports", () => {
 			return response;
 		};
 		for (const [email, message] of [
-			["jane.doe@gmial.com", "Did you mean jane.doe@gmail.com?"],
-			["Jane@Hotmial.com", "Did you mean jane@hotmail.com?"],
-			["spamtrap@acme.com", "This address can't be added"],
-			["jo@no-mail.example", "This email's domain can't receive email"],
-			["jane..doe@acme.com", "email is invalid"],
+			["jane.doe@gmial.com", "Querias dizer jane.doe@gmail.com?"],
+			["Jane@Hotmial.com", "Querias dizer jane@hotmail.com?"],
+			["spamtrap@acme.com", "Este endereço não pode ser adicionado"],
+			["jo@no-mail.example", "O domínio deste email não pode receber email"],
+			["jane..doe@acme.com", "o email é inválido"],
 		]) {
 			const response = await signup(email);
 			assert.equal(response.status, 400, email);
@@ -232,7 +232,7 @@ describe("contact imports", () => {
 		assert.equal((await signup("info@acme.com")).status, 201, "a role address someone signs up with");
 
 		const formResult = await anonymous(() => m.archive.subscribe(null, form({ newsletter: "signup-checks", email: "kim@yaho.com" })));
-		assert.deepEqual(formResult, { error: "Did you mean kim@yahoo.com?" });
+		assert.deepEqual(formResult, { error: "Querias dizer kim@yahoo.com?" });
 		assert.equal((await anonymous(() => m.archive.subscribe(null, form({ newsletter: "signup-checks", email: "kim@yahoo.com" })))).ok, true);
 
 		const emails = (await m.Contact.find({ accountId: user.accountId, newsletterId: newsletter }).lean()).map(({ email }) => email).sort();

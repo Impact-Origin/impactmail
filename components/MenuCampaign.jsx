@@ -32,9 +32,9 @@ export default function MenuCampaign({ id, status, subject, scheduledAt, pageUrl
 	async function copyLink() {
 		try {
 			await navigator.clipboard.writeText(pageUrl);
-			toast.success("Link copied");
+			toast.success("Link copiado");
 		} catch {
-			toast.error("Couldn't copy the link");
+			toast.error("Não foi possível copiar o link");
 		}
 	}
 
@@ -45,7 +45,7 @@ export default function MenuCampaign({ id, status, subject, scheduledAt, pageUrl
 					<Button
 						variant="ghost"
 						size="icon-sm"
-						aria-label={`Actions for ${subject || "Untitled"}`}
+						aria-label={`Ações para ${subject || "Sem título"}`}
 						disabled={isDuplicating}
 						className="relative z-10 text-muted-foreground hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground"
 					>
@@ -56,24 +56,24 @@ export default function MenuCampaign({ id, status, subject, scheduledAt, pageUrl
 					<DropdownMenuItem asChild>
 						<Link href={`/campaigns/${id}`}>
 							{isEditable ? <PenLine /> : <ChartColumn />}
-							{isEditable ? "Edit" : "Open report"}
+							{isEditable ? "Editar" : "Abrir relatório"}
 						</Link>
 					</DropdownMenuItem>
 					<DropdownMenuItem onSelect={duplicate}>
 						<Copy />
-						Duplicate
+						Duplicar
 					</DropdownMenuItem>
 					{pageUrl && (
 						<>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem onSelect={copyLink}>
 								<Link2 />
-								Copy link
+								Copiar link
 							</DropdownMenuItem>
 							<DropdownMenuItem asChild>
 								<a href={pageUrl} target="_blank" rel="noreferrer">
 									<ExternalLink />
-									View page
+									Ver página
 								</a>
 							</DropdownMenuItem>
 						</>
@@ -83,7 +83,7 @@ export default function MenuCampaign({ id, status, subject, scheduledAt, pageUrl
 							<DropdownMenuSeparator />
 							<DropdownMenuItem variant="destructive" onSelect={() => setIsDiscardOpen(true)}>
 								<Trash2 />
-								Discard
+								Descartar
 							</DropdownMenuItem>
 						</>
 					)}

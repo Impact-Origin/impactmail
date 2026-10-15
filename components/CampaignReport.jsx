@@ -57,7 +57,7 @@ export default function CampaignReport({
 	return (
 		<>
 			<HeaderPage
-				title={campaign.subject || "Untitled"}
+				title={campaign.subject || "Sem título"}
 				backHref="/campaigns"
 				icon={<AvatarNewsletter newsletter={newsletter} size={28} />}
 				meta={<BadgeStatus status={campaign.status} />}
@@ -74,17 +74,17 @@ export default function CampaignReport({
 				{campaign.status === "sending" && (
 					<ButtonCampaignAction action={pauseCampaign} id={id}>
 						<Pause data-icon="inline-start" />
-						Pause
+						Pausar
 					</ButtonCampaignAction>
 				)}
 				{campaign.status === "paused" && (
 					<ButtonCampaignAction
 						action={resumeCampaign}
 						id={id}
-						disabledReason={isBlocked ? "The account is blocked" : isSendingEnabled() ? null : "Sending is off"}
+						disabledReason={isBlocked ? "A conta está bloqueada" : isSendingEnabled() ? null : "O envio está desligado"}
 					>
 						<Play data-icon="inline-start" />
-						Resume
+						Retomar
 					</ButtonCampaignAction>
 				)}
 				{isOnArchive && (
@@ -92,18 +92,18 @@ export default function CampaignReport({
 						<Button variant="outline" asChild>
 							<a href={getArchiveUrls(newsletter).post(campaign.archiveSlug)} target="_blank" rel="noreferrer">
 								<ExternalLink data-icon="inline-start" />
-								View page
+								Ver página
 							</a>
 						</Button>
 						<ButtonCampaignAction action={toggleArchivePin} id={id}>
 							{campaign.archivePinned ? <PinOff data-icon="inline-start" /> : <Pin data-icon="inline-start" />}
-							{campaign.archivePinned ? "Unpin" : "Pin"}
+							{campaign.archivePinned ? "Desafixar" : "Afixar"}
 						</ButtonCampaignAction>
 					</>
 				)}
 				<ButtonCampaignAction action={duplicateCampaign} id={id}>
 					<Copy data-icon="inline-start" />
-					Duplicate
+					Duplicar
 				</ButtonCampaignAction>
 			</HeaderPage>
 
@@ -115,7 +115,7 @@ export default function CampaignReport({
 					<div className="flex flex-col gap-2 animate-enter">
 						<div className="flex justify-between text-sm tabular-nums">
 							<span className="text-muted-foreground">
-								{formatNumber(stats.sent)} of {formatNumber(stats.recipients)}
+								{formatNumber(stats.sent)} de {formatNumber(stats.recipients)}
 							</span>
 							<span>{Math.round(progress * 100)}%</span>
 						</div>
@@ -127,10 +127,10 @@ export default function CampaignReport({
 						</div>
 						{campaign.status === "sending" && campaign.firstSend?.held > 0 && !campaign.firstSend.checkedAt && (
 							<p className="text-xs text-pretty text-muted-foreground">
-								{formatNumber(campaign.firstSend.slice)} contacts who never got an email from you go first. The other{" "}
-								{formatNumber(campaign.firstSend.held)} follow {FIRST_SEND.waitMinutes / 60} hours after them if their bounces and
-								complaints stay low. If they don&apos;t, the rest waits for you to resume, and if they&apos;re far over, your account is
-								blocked.
+								{formatNumber(campaign.firstSend.slice)} contactos que nunca receberam um email teu vão primeiro. Os outros{" "}
+								{formatNumber(campaign.firstSend.held)} seguem {FIRST_SEND.waitMinutes / 60} horas depois, se as devoluções e as denúncias
+								se mantiverem baixas. Se não, os restantes esperam que retomes o envio e, se estiverem muito acima, a tua conta é
+								bloqueada.
 							</p>
 						)}
 					</div>
@@ -141,34 +141,34 @@ export default function CampaignReport({
 					className="grid grid-cols-2 gap-3 animate-enter sm:grid-cols-3 lg:grid-cols-6"
 				>
 					<CardStat
-						label="Delivered"
+						label="Entregues"
 						value={formatRate(stats.delivered, stats.sent)}
 						detail={formatNumber(stats.delivered)}
 					/>
 					<CardStat
-						label="Opened"
+						label="Abertos"
 						value={formatRate(stats.opened, reached)}
 						detail={formatNumber(stats.opened)}
 					/>
 					<CardStat
-						label="Clicked"
+						label="Clicados"
 						value={formatRate(stats.clicked, reached)}
 						detail={formatNumber(stats.clicked)}
 					/>
 					<CardStat
-						label="Bounced"
+						label="Devolvidos"
 						value={formatRate(stats.bounced, stats.sent, 2)}
 						detail={formatNumber(stats.bounced)}
 						tone={rateTone(stats.bounced, stats.sent, LIMITS.pause.bounceRate)}
 					/>
 					<CardStat
-						label="Complaints"
+						label="Denúncias"
 						value={formatRate(stats.complained, stats.sent, 3)}
 						detail={formatNumber(stats.complained)}
 						tone={rateTone(stats.complained, stats.sent, LIMITS.pause.complaintRate)}
 					/>
 					<CardStat
-						label="Unsubscribed"
+						label="Saíram"
 						value={formatRate(stats.unsubscribed, reached, 2)}
 						detail={formatNumber(stats.unsubscribed)}
 					/>
@@ -182,13 +182,13 @@ export default function CampaignReport({
 						<Table>
 							<TableHeader>
 								<TableRow className="hover:bg-transparent">
-									<TableHead className="pl-4">Inbox</TableHead>
-									<TableHead className="text-right">Sent</TableHead>
-									<TableHead className="text-right">Delivered</TableHead>
-									<TableHead className="text-right">Opened</TableHead>
-									<TableHead className="hidden text-right sm:table-cell">Clicked</TableHead>
-									<TableHead className="hidden text-right sm:table-cell">Bounced</TableHead>
-									<TableHead className="pr-4 text-right">Complaints</TableHead>
+									<TableHead className="pl-4">Caixa de correio</TableHead>
+									<TableHead className="text-right">Enviados</TableHead>
+									<TableHead className="text-right">Entregues</TableHead>
+									<TableHead className="text-right">Abertos</TableHead>
+									<TableHead className="hidden text-right sm:table-cell">Clicados</TableHead>
+									<TableHead className="hidden text-right sm:table-cell">Devolvidos</TableHead>
+									<TableHead className="pr-4 text-right">Denúncias</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -235,7 +235,7 @@ export default function CampaignReport({
 							urlBase={getArchiveUrls(newsletter).absolutePost("")}
 							isPublished
 						/>
-						<ButtonCopy value={getArchiveUrls(newsletter).absolutePost(campaign.archiveSlug)} label="Copy link" />
+						<ButtonCopy value={getArchiveUrls(newsletter).absolutePost(campaign.archiveSlug)} label="Copiar link" />
 					</div>
 				)}
 
@@ -263,7 +263,7 @@ export default function CampaignReport({
 function TextPauseReason({ reason }) {
 	return (
 		<p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-amber-500/10 px-4 py-3 text-sm animate-enter">
-			<span className="text-pretty">Paused: {reason}</span>
+			<span className="text-pretty">Em pausa: {reason}</span>
 		</p>
 	);
 }

@@ -39,14 +39,14 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 	return (
 		<form action={action} className="flex flex-col gap-5">
 			<DialogHeader>
-				<DialogTitle>Add a newsletter</DialogTitle>
+				<DialogTitle>Adicionar uma newsletter</DialogTitle>
 				<DialogDescription className="text-pretty">
-					{startsFrom && `It takes the sender name and postal address of ${startsFrom}. `}Its settings open next.
+					{startsFrom && `Fica com o nome do remetente e a morada postal de ${startsFrom}. `}As definições abrem a seguir.
 				</DialogDescription>
 			</DialogHeader>
 			<div className="flex flex-col gap-2">
 				<label htmlFor={`${id}-name`} className="text-sm font-medium">
-					Name
+					Nome
 				</label>
 				<Input
 					id={`${id}-name`}
@@ -54,7 +54,7 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 					value={name}
 					required
 					maxLength={100}
-					placeholder="Field notes"
+					placeholder="Notas de campo"
 					autoComplete="off"
 					autoFocus
 					className="h-10"
@@ -62,9 +62,9 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 				/>
 				{sharedDomain && (
 					<p className="text-sm text-muted-foreground wrap-anywhere">
-						It sends from{" "}
+						Envia a partir de{" "}
 						<span className="font-mono text-[13px] text-foreground">
-							{getSharedAddress(slugify(name) || "your-newsletter", sharedDomain)}
+							{getSharedAddress(slugify(name) || "a-tua-newsletter", sharedDomain)}
 						</span>
 					</p>
 				)}
@@ -72,7 +72,7 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 			<div className="flex flex-col gap-2">
 				<div className="flex items-baseline justify-between gap-3">
 					<label htmlFor={`${id}-description`} className="text-sm font-medium">
-						What it&apos;s about
+						Sobre o que é
 					</label>
 					<span className="text-xs text-muted-foreground tabular-nums">
 						{description.length}/{MAX_DESCRIPTION_LENGTH}
@@ -83,7 +83,7 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 					name="description"
 					value={description}
 					maxLength={MAX_DESCRIPTION_LENGTH}
-					placeholder="One idea about building things, every Sunday."
+					placeholder="Uma ideia sobre construir coisas, todos os domingos."
 					autoComplete="off"
 					className="h-10"
 					onChange={(event) => setDescription(event.target.value)}
@@ -92,7 +92,7 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 			{!sharedDomain && (
 				<div className="flex flex-col gap-2">
 					<label htmlFor={`${id}-from`} className="text-sm font-medium">
-						From email
+						Email do remetente
 					</label>
 					<span className="flex flex-wrap items-center gap-2">
 						<span className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 								id={`${id}-from`}
 								value={localPart}
 								required
-								placeholder="hi"
+								placeholder="ola"
 								autoComplete="off"
 								autoCapitalize="none"
 								spellCheck={false}
@@ -110,8 +110,8 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 							<span className="text-sm text-muted-foreground">@</span>
 						</span>
 						<Select value={domain} onValueChange={setDomain} disabled={domains.length === 0}>
-							<SelectTrigger className="h-10 min-w-0 flex-auto font-mono data-[size=default]:h-10" aria-label="From domain">
-								<SelectValue placeholder="Add a domain first" />
+							<SelectTrigger className="h-10 min-w-0 flex-auto font-mono data-[size=default]:h-10" aria-label="Domínio do remetente">
+								<SelectValue placeholder="Adiciona primeiro um domínio" />
 							</SelectTrigger>
 							<SelectContent>
 								{domains.map((item) => (
@@ -124,14 +124,14 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 					</span>
 					{domains.length === 0 && (
 						<p className="text-sm text-muted-foreground">
-							Add one on the{" "}
+							Adiciona um na{" "}
 							{/* The dialog belongs to the layout, so it would stay open over the Domains page. */}
 							<DialogClose asChild>
 								<Link href="/domains" className="font-medium text-foreground underline underline-offset-4">
-									Domains page
+									página Domínios
 								</Link>
 							</DialogClose>{" "}
-							to send from it.
+							para enviares a partir dele.
 						</p>
 					)}
 					<input type="hidden" name="fromEmail" value={domain ? `${localPart}@${domain}` : ""} />
@@ -144,7 +144,7 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 			)}
 			<DialogFooter>
 				<Button type="submit" disabled={isPending || !canCreate} className="h-10 sm:min-w-36">
-					{isPending ? <Loader2 className="animate-spin" /> : "Create newsletter"}
+					{isPending ? <Loader2 className="animate-spin" /> : "Criar newsletter"}
 				</Button>
 			</DialogFooter>
 		</form>

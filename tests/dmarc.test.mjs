@@ -33,10 +33,10 @@ test("a DMARC record is read as receivers read it: its strings joined, other TXT
 test("the DMARC row says what the last check found, and names the parent domain whose record covers it", () => {
 	const domain = { domain: "news.example.com", mailFromDomain: "rp.news.example.com", archiveHost: "letters.example.com", records: [] };
 	const dmarc = (fields) => getDomainSetup({ ...domain, ...fields }, { cnameTarget: null }).find(({ key }) => key === "dmarc").status;
-	assert.deepEqual(dmarc({}), { label: "Recommended", tone: "none" }, "never looked up");
-	assert.deepEqual(dmarc({ dmarc: { status: "missing" } }), { label: "Recommended", tone: "none" });
-	assert.deepEqual(dmarc({ dmarc: { status: "found", host: "news.example.com" } }), { label: "Found", tone: "good" });
-	assert.deepEqual(dmarc({ dmarc: { status: "found", host: "example.com" } }), { label: "Found on example.com", tone: "good" });
-	assert.deepEqual(dmarc({ dmarc: { status: "multiple", host: "example.com" } }), { label: "More than one record, keep one", tone: "bad" });
-	assert.deepEqual(dmarc({ dmarc: { status: "invalid", host: "news.example.com" } }), { label: "Not valid, check the record", tone: "bad" });
+	assert.deepEqual(dmarc({}), { label: "Recomendado", tone: "none" }, "never looked up");
+	assert.deepEqual(dmarc({ dmarc: { status: "missing" } }), { label: "Recomendado", tone: "none" });
+	assert.deepEqual(dmarc({ dmarc: { status: "found", host: "news.example.com" } }), { label: "Encontrado", tone: "good" });
+	assert.deepEqual(dmarc({ dmarc: { status: "found", host: "example.com" } }), { label: "Encontrado em example.com", tone: "good" });
+	assert.deepEqual(dmarc({ dmarc: { status: "multiple", host: "example.com" } }), { label: "Mais do que um registo, mantém só um", tone: "bad" });
+	assert.deepEqual(dmarc({ dmarc: { status: "invalid", host: "news.example.com" } }), { label: "Inválido, verifica o registo", tone: "bad" });
 });

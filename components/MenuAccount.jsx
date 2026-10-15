@@ -25,7 +25,7 @@ export default function MenuAccount({ accountId, email, blockedBy, blockReason, 
 		<>
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
-					<Button variant="ghost" size="icon-sm" aria-label="Actions">
+					<Button variant="ghost" size="icon-sm" aria-label="Ações">
 						<MoreHorizontal />
 					</Button>
 				</DropdownMenuTrigger>
@@ -33,12 +33,12 @@ export default function MenuAccount({ accountId, email, blockedBy, blockReason, 
 					{blockedBy ? (
 						<DropdownMenuItem onSelect={() => setDialog("unblock")}>
 							<ShieldCheck />
-							Unblock account
+							Desbloquear conta
 						</DropdownMenuItem>
 					) : (
 						<DropdownMenuItem variant="destructive" onSelect={() => setDialog("block")}>
 							<Ban />
-							Block account
+							Bloquear conta
 						</DropdownMenuItem>
 					)}
 				</DropdownMenuContent>
@@ -64,7 +64,7 @@ function FormBlock({ accountId, email, providerName, onDone }) {
 		startTransition(async () => {
 			const result = await blockAccountAction(accountId, reason);
 			if (result?.error) return toast.error(result.error);
-			toast.success("Account blocked");
+			toast.success("Conta bloqueada");
 			onDone();
 		});
 	}
@@ -72,19 +72,19 @@ function FormBlock({ accountId, email, providerName, onDone }) {
 	return (
 		<form onSubmit={block} className="flex flex-col gap-4">
 			<DialogHeader>
-				<DialogTitle>Block account?</DialogTitle>
+				<DialogTitle>Bloquear conta?</DialogTitle>
 				<DialogDescription>
-					{email ?? "This account"} sends nothing until you unblock it, welcome emails included, and can only read, pause and
-					cancel. Its {providerName} tenant is suspended.
+					{email ?? "Esta conta"} não envia nada até a desbloqueares, incluindo emails de boas-vindas, e só pode ler, pausar e
+					cancelar. O tenant na {providerName} fica suspenso.
 				</DialogDescription>
 			</DialogHeader>
-			<Input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Reason, shown to them" maxLength={200} />
+			<Input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Motivo, visível para o dono" maxLength={200} />
 			<DialogFooter>
 				<DialogClose asChild>
-					<Button variant="outline">Cancel</Button>
+					<Button variant="outline">Cancelar</Button>
 				</DialogClose>
 				<Button type="submit" variant="destructive" disabled={isPending} className="min-w-20">
-					{isPending ? <Loader2 className="animate-spin" /> : "Block"}
+					{isPending ? <Loader2 className="animate-spin" /> : "Bloquear"}
 				</Button>
 			</DialogFooter>
 		</form>
@@ -99,7 +99,7 @@ function FormUnblock({ accountId, email, blockedBy, blockReason, onDone }) {
 		startTransition(async () => {
 			const result = await unblockAccountAction(accountId);
 			if (result?.error) return toast.error(result.error);
-			toast.success("Account unblocked");
+			toast.success("Conta desbloqueada");
 			onDone();
 		});
 	}
@@ -107,9 +107,9 @@ function FormUnblock({ accountId, email, blockedBy, blockReason, onDone }) {
 	return (
 		<form onSubmit={unblock} className="flex flex-col gap-4">
 			<DialogHeader>
-				<DialogTitle>Unblock account?</DialogTitle>
+				<DialogTitle>Desbloquear conta?</DialogTitle>
 				<DialogDescription>
-					{email ?? "This account"} can send again. Its paused campaigns stay paused until its owner resumes them.
+					{email ?? "Esta conta"} pode voltar a enviar. As campanhas em pausa continuam em pausa até o dono as retomar.
 				</DialogDescription>
 			</DialogHeader>
 			<p className="rounded-lg bg-muted/60 px-3 py-2.5 text-sm text-pretty">
@@ -118,10 +118,10 @@ function FormUnblock({ accountId, email, blockedBy, blockReason, onDone }) {
 			</p>
 			<DialogFooter>
 				<DialogClose asChild>
-					<Button variant="outline">Cancel</Button>
+					<Button variant="outline">Cancelar</Button>
 				</DialogClose>
 				<Button type="submit" disabled={isPending} className="min-w-24">
-					{isPending ? <Loader2 className="animate-spin" /> : "Unblock"}
+					{isPending ? <Loader2 className="animate-spin" /> : "Desbloquear"}
 				</Button>
 			</DialogFooter>
 		</form>

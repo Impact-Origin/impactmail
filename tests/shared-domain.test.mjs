@@ -128,7 +128,7 @@ describe("hosts", () => {
 describe("reserved slugs", () => {
 	test("the dashboard, the REST API and MCP refuse a slug ImpactMail keeps, on create and on update", async () => {
 		const user = await customer("reserved@example.com", "reserved-news");
-		const refused = (slug) => ({ code: "validation_failed", message: `${slug} is reserved for ImpactMail, pick another slug` });
+		const refused = (slug) => ({ code: "validation_failed", message: `${slug} está reservado para o ImpactMail, escolhe outro slug` });
 		const save = (fields) => as(user, () => m.newsletters.saveNewsletter(null, form({ name: "Notes", postalAddress: "1 Main St, Paris", ...fields })));
 
 		assert.deepEqual(await save({ slug: "www" }), { error: refused("www").message });
@@ -214,7 +214,7 @@ describe("shared addresses", () => {
 		assert.equal(state.identities.has(old.domain), false);
 		assert.equal(hasRecordsFor(old.domain), false);
 		assert.ok(
-			platformEmails.some(({ subject, text }) => subject === "[ImpactMail] Shared address not set up" && text.includes("refused-new.mailcheap.ai")),
+			platformEmails.some(({ subject, text }) => subject === "[ImpactMail] Endereço partilhado não configurado" && text.includes("refused-new.mailcheap.ai")),
 			"the admins hear of it"
 		);
 

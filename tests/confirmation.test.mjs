@@ -34,7 +34,7 @@ test("unsubscribe and confirmation links can't stand in for each other", () => {
 
 test("the confirmation email carries a clean link in both versions", () => {
 	const content = getConfirmationContent({ name: "Field notes" });
-	assert.equal(content.subject, "Confirm your subscription to Field notes");
+	assert.equal(content.subject, "Confirma a tua subscrição de Field notes");
 	assert.ok(content.markdown.includes(CONFIRM_URL_PLACEHOLDER));
 
 	const email = buildRecipientEmail({
@@ -45,7 +45,7 @@ test("the confirmation email carries a clean link in both versions", () => {
 		confirmUrl: "https://mailcheap.test/confirm?token=abc",
 	});
 	assert.ok(email.html.includes('href="https://mailcheap.test/confirm?token=abc"'));
-	assert.ok(email.text.includes("Confirm my subscription (https://mailcheap.test/confirm?token=abc)"));
+	assert.ok(email.text.includes("Confirmar a minha subscrição (https://mailcheap.test/confirm?token=abc)"));
 	assert.ok(!email.html.includes("/c/") && !email.html.includes("/o/"), "no tracking redirect or pixel");
 	assert.ok(renderEmail(content).html.includes(CONFIRM_URL_PLACEHOLDER), "the link is filled per recipient");
 });
@@ -58,7 +58,7 @@ test("a newsletter's own confirmation email goes out with each subscriber's link
 
 Confirm your email to get the next issue:
 
-<a href="${CONFIRM_URL_PLACEHOLDER}" style="display:inline-block;">Confirm my subscription</a>
+<a href="${CONFIRM_URL_PLACEHOLDER}" style="display:inline-block;">Confirmar a minha subscrição</a>
 
 Every Sunday, you'll get:
 
@@ -78,7 +78,7 @@ Every Sunday, you'll get:
 	assert.ok(email.html.includes('href="https://mailcheap.test/confirm?token=xyz"'));
 	assert.ok(email.html.includes('src="https://mailcheap.test/email/banner.png"'));
 	assert.ok(email.html.includes("<li>One idea about building things</li>"));
-	assert.ok(email.text.includes("Confirm my subscription (https://mailcheap.test/confirm?token=xyz)"));
+	assert.ok(email.text.includes("Confirmar a minha subscrição (https://mailcheap.test/confirm?token=xyz)"));
 	assert.ok(!email.html.includes(CONFIRM_URL_PLACEHOLDER) && !email.text.includes(CONFIRM_URL_PLACEHOLDER));
 	assert.ok(!email.html.includes("/c/") && !email.html.includes("/o/"), "no tracking redirect or pixel");
 	assert.ok(email.headers["List-Unsubscribe"].includes("/api/unsubscribe?token="));
@@ -87,10 +87,10 @@ Every Sunday, you'll get:
 test("a confirmation email without its button can't be saved and never goes out", () => {
 	const builtIn = getConfirmationContent({ name: "Field notes" });
 	assert.equal(getConfirmationProblem(builtIn), null);
-	assert.equal(getConfirmationProblem({ ...builtIn, subject: " " }), "Confirmation email needs a subject");
+	assert.equal(getConfirmationProblem({ ...builtIn, subject: " " }), "O email de confirmação precisa de um assunto");
 
-	const buttonProblem = /^Confirmation email needs its button: a link like <a href="\{\{confirm_url\}\}">/;
-	assert.match(getConfirmationProblem({ ...builtIn, markdown: "Welcome to Field notes" }), buttonProblem);
+	const buttonProblem = /^O email de confirmação precisa do seu botão: um link como <a href="\{\{confirm_url\}\}">/;
+	assert.match(getConfirmationProblem({ ...builtIn, markdown: "Bem-vindo a Field notes" }), buttonProblem);
 	assert.match(
 		getConfirmationProblem({ ...builtIn, markdown: `[Confirm](${CONFIRM_URL_PLACEHOLDER})` }),
 		buttonProblem,
@@ -108,15 +108,15 @@ test("a confirmation email without its button can't be saved and never goes out"
 
 test("the built-in confirmation email says what the newsletter is about; one it wrote or saved stays as it is", () => {
 	const firstLine = (newsletter) => getConfirmationContent(newsletter).markdown.split("\n\n")[1];
-	assert.equal(firstLine({ name: "Field notes", description: " One idea\n\na week " }), "You asked to get Field notes. One idea a week.");
-	assert.equal(firstLine({ name: "Field notes", description: "Who's in?" }), "You asked to get Field notes. Who's in?");
+	assert.equal(firstLine({ name: "Field notes", description: " One idea\n\na week " }), "Pediste para receber Field notes. One idea a week.");
+	assert.equal(firstLine({ name: "Field notes", description: "Who's in?" }), "Pediste para receber Field notes. Who's in?");
 	assert.equal(
 		firstLine({ name: "Field notes" }),
-		"You asked to get Field notes. Confirm your email and the next issue lands in your inbox.",
+		"Pediste para receber Field notes. Confirma o teu email e a próxima edição chega à tua caixa de entrada.",
 		"no description, no change"
 	);
 	const described = getConfirmationContent({ name: "Field notes", description: "One idea a week." });
-	assert.ok(described.markdown.includes("\n\nConfirm your email and the next issue lands in your inbox.\n\n"));
+	assert.ok(described.markdown.includes("\n\nConfirma o teu email e a próxima edição chega à tua caixa de entrada.\n\n"));
 	assert.equal(getConfirmationProblem(described), null);
 
 	const saved = getConfirmationContent({ name: "Field notes" });
@@ -138,19 +138,19 @@ test("the built-in confirmation email sent back by the settings form is still th
 });
 
 test("newsletters that confirm signups send no welcome email; the others still do", () => {
-	const welcome = { enabled: true, subject: "Welcome to Field notes", markdown: "Hello" };
+	const welcome = { enabled: true, subject: "Bem-vindo a Field notes", markdown: "Hello" };
 	assert.equal(getWelcomeContent({ requireConfirmation: true, welcome }), null);
-	assert.equal(getWelcomeContent({ requireConfirmation: false, welcome }).subject, "Welcome to Field notes");
-	assert.equal(getWelcomeContent({ welcome }).subject, "Welcome to Field notes");
+	assert.equal(getWelcomeContent({ requireConfirmation: false, welcome }).subject, "Bem-vindo a Field notes");
+	assert.equal(getWelcomeContent({ welcome }).subject, "Bem-vindo a Field notes");
 });
 
 test("a welcome email switched on with no subject and no content starts from the description; anything written stays", () => {
 	const empty = { subject: "", previewText: "", markdown: " " };
 	const welcome = prefillWelcome(empty, { name: "Field notes", description: "One idea a week" });
-	assert.equal(welcome.subject, "Welcome to Field notes");
-	assert.equal(welcome.markdown.split("\n\n")[0], "Thanks for joining Field notes. One idea a week.");
+	assert.equal(welcome.subject, "Bem-vindo a Field notes");
+	assert.equal(welcome.markdown.split("\n\n")[0], "Obrigado por te juntares a Field notes. One idea a week.");
 	assert.ok(getWelcomeContent({ welcome: { ...welcome, enabled: true } }), "once saved, it can go out");
-	assert.equal(prefillWelcome(empty, { name: "Field notes" }).markdown.split("\n\n")[0], "Thanks for joining Field notes.");
+	assert.equal(prefillWelcome(empty, { name: "Field notes" }).markdown.split("\n\n")[0], "Obrigado por te juntares a Field notes.");
 	assert.equal(prefillWelcome({ ...empty, previewText: "Hey" }, { name: "Field notes" }).previewText, "Hey");
 
 	for (const written of [{ ...empty, subject: "Hi" }, { ...empty, markdown: "Hello" }]) {

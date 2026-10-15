@@ -12,15 +12,15 @@ export default function TableConnectedApps({ apps, mcpUrl }) {
 		return (
 			<div className="flex flex-col gap-3 rounded-xl px-4 py-3.5 shadow-border sm:flex-row sm:items-center sm:justify-between">
 				<p className="text-sm text-pretty text-muted-foreground">
-					ChatGPT, Claude and Grok Bot connect with your ImpactMail sign-in instead of a key. Add this URL to the app,{" "}
+					O ChatGPT, o Claude e o Grok Bot ligam-se com o teu início de sessão no ImpactMail em vez de uma chave. Adiciona este URL à app,{" "}
 					<Link href="/docs/mcp#chatgpt" className="text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground">
-						step by step
+						passo a passo
 					</Link>
 					.
 				</p>
 				<div className="flex shrink-0 items-center gap-1 rounded-lg bg-muted/60 py-1 pr-1 pl-3">
 					<code className="font-mono text-xs">{mcpUrl}</code>
-					<ButtonCopy value={mcpUrl} label="Copy URL" />
+					<ButtonCopy value={mcpUrl} label="Copiar URL" />
 				</div>
 			</div>
 		);
@@ -32,8 +32,8 @@ export default function TableConnectedApps({ apps, mcpUrl }) {
 				<TableHeader>
 					<TableRow className="hover:bg-transparent">
 						<TableHead className="pl-4">App</TableHead>
-						<TableHead className="hidden sm:table-cell">Connected</TableHead>
-						<TableHead className="hidden sm:table-cell">Last used</TableHead>
+						<TableHead className="hidden sm:table-cell">Ligada</TableHead>
+						<TableHead className="hidden sm:table-cell">Último uso</TableHead>
 						<TableHead className="w-24 pr-2" />
 					</TableRow>
 				</TableHeader>
@@ -53,14 +53,14 @@ export default function TableConnectedApps({ apps, mcpUrl }) {
 							</TableCell>
 							<TableCell className="hidden text-muted-foreground sm:table-cell">{formatDate(app.createdAt)}</TableCell>
 							<TableCell className="hidden text-muted-foreground sm:table-cell">
-								{app.lastUsedAt ? formatRelative(app.lastUsedAt) : "Never"}
+								{app.lastUsedAt ? formatRelative(app.lastUsedAt) : "Nunca"}
 							</TableCell>
 							<TableCell className="pr-2 text-right">
 								<ButtonRevoke
 									id={app.id}
 									revoke={revokeConnectedApp}
-									confirmMessage={`Disconnect ${app.name}? It loses access to your account now.`}
-									successMessage="App disconnected"
+									confirmMessage={`Desligar ${app.name}? Perde já o acesso à tua conta.`}
+									successMessage="App desligada"
 								/>
 							</TableCell>
 						</TableRow>

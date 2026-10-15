@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { LOCALE } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const DAYS_SHOWN = 14;
@@ -24,12 +25,12 @@ export default function PickerSendTime({ value, onChange, suggestions, history }
 	return (
 		<div className="flex flex-col gap-5">
 			{suggestions.length > 0 && (
-				<Field label="Suggested">
+				<Field label="Sugestões">
 					<ListSuggestions suggestions={suggestions} value={value} now={now} onChange={onChange} />
 				</Field>
 			)}
-			<Field label="Day">
-				<div role="radiogroup" aria-label="Day" className="grid grid-cols-7 gap-1">
+			<Field label="Dia">
+				<div role="radiogroup" aria-label="Dia" className="grid grid-cols-7 gap-1">
 					{days.map((day, index) => (
 						<ButtonDay
 							key={day.getTime()}
@@ -42,8 +43,8 @@ export default function PickerSendTime({ value, onChange, suggestions, history }
 					))}
 				</div>
 			</Field>
-			<Field label="Time">
-				<div role="radiogroup" aria-label="Time" className="flex flex-wrap items-center gap-1.5">
+			<Field label="Hora">
+				<div role="radiogroup" aria-label="Hora" className="flex flex-wrap items-center gap-1.5">
 					{times.map((time) => (
 						<ChipTime
 							key={time}
@@ -59,7 +60,7 @@ export default function PickerSendTime({ value, onChange, suggestions, history }
 						step={300}
 						value={toTimeValue(minutes)}
 						onChange={(event) => event.target.value && onChange(atMinutes(value, fromTimeValue(event.target.value)))}
-						aria-label="Other time"
+						aria-label="Outra hora"
 						className="h-8 rounded-full bg-transparent px-3 text-sm tabular-nums shadow-border outline-none [color-scheme:light_dark] focus-visible:ring-2 focus-visible:ring-ring/50"
 					/>
 				</div>
@@ -67,7 +68,7 @@ export default function PickerSendTime({ value, onChange, suggestions, history }
 			{(usualDays.size > 0 || usualMinutes.length > 0) && (
 				<p className="flex items-center gap-1.5 text-xs text-muted-foreground">
 					<DotUsual />
-					When past issues went out
+					Quando saíram as edições anteriores
 				</p>
 			)}
 		</div>
@@ -76,7 +77,7 @@ export default function PickerSendTime({ value, onChange, suggestions, history }
 
 function ListSuggestions({ suggestions, value, now, onChange }) {
 	return (
-		<div role="radiogroup" aria-label="Suggested times" className="overflow-hidden rounded-xl shadow-border">
+		<div role="radiogroup" aria-label="Horas sugeridas" className="overflow-hidden rounded-xl shadow-border">
 			{suggestions.map((suggestion) => {
 				const isSelected = suggestion.at.getTime() === value.getTime();
 				return (
@@ -97,8 +98,8 @@ function ListSuggestions({ suggestions, value, now, onChange }) {
 							</span>
 							<span className="block truncate text-xs text-muted-foreground">
 								{suggestion.isLastIssue
-									? "Same time as your last issue"
-									: `Like your ${formatShortDate(suggestion.lastUsedAt)} issue`}
+									? "À mesma hora da tua última edição"
+									: `Como a tua edição de ${formatShortDate(suggestion.lastUsedAt)}`}
 							</span>
 						</span>
 						{isSelected && <Check aria-hidden="true" className="size-4 shrink-0" />}
@@ -115,7 +116,7 @@ function ButtonDay({ day, isToday, isSelected, isUsual, onSelect }) {
 			type="button"
 			role="radio"
 			aria-checked={isSelected}
-			aria-label={day.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+			aria-label={day.toLocaleDateString(LOCALE, { weekday: "long", month: "long", day: "numeric" })}
 			onClick={onSelect}
 			className={cn(
 				"relative flex h-12 flex-col items-center justify-center gap-0.5 rounded-lg tabular-nums transition-colors duration-150",
@@ -123,7 +124,7 @@ function ButtonDay({ day, isToday, isSelected, isUsual, onSelect }) {
 			)}
 		>
 			<span className={cn("text-[11px] leading-none", !isSelected && "text-muted-foreground")}>
-				{isToday ? "Today" : day.toLocaleDateString("en-US", { weekday: "short" })}
+				{isToday ? "Hoje" : day.toLocaleDateString(LOCALE, { weekday: "short" })}
 			</span>
 			<span className="text-sm leading-none font-medium">{day.getDate()}</span>
 			{isUsual && <DotUsual className="absolute bottom-1" isInverted={isSelected} />}
@@ -205,16 +206,16 @@ function fromTimeValue(value) {
 }
 
 function formatTime(date) {
-	return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+	return date.toLocaleTimeString(LOCALE, { hour: "numeric", minute: "2-digit" });
 }
 
 function formatShortDate(date) {
-	return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+	return date.toLocaleDateString(LOCALE, { month: "short", day: "numeric" });
 }
 
 function formatDay(date, now) {
 	const days = Math.round((startOfDay(date) - startOfDay(now)) / (24 * 60 * 60 * 1000));
-	if (days === 0) return "Today";
-	if (days === 1) return "Tomorrow";
-	return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+	if (days === 0) return "Hoje";
+	if (days === 1) return "Amanhã";
+	return date.toLocaleDateString(LOCALE, { weekday: "short", month: "short", day: "numeric" });
 }

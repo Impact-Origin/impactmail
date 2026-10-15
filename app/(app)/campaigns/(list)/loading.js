@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
 	return (
 		<>
-			<HeaderPage title="Campaigns">
+			<HeaderPage title="Campanhas">
 				<Skeleton className="h-9 w-32 rounded-lg" />
 			</HeaderPage>
 			<SkeletonCampaigns rows={10} hasActions />

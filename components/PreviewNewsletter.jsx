@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 // The setup's right side: the newsletter's first issue in a Gmail inbox and opened, filled in as the form is,
 // from the user's picture (image). activeField marks what the current question changes.
 export default function PreviewNewsletter({ name, description, fromName, image, activeField }) {
-	const title = name || "Your newsletter";
-	const sender = fromName || name || "Your name";
+	const title = name || "A tua newsletter";
+	const sender = fromName || name || "O teu nome";
 
 	return (
 		<div className="absolute inset-0 flex flex-col justify-center px-12 xl:px-20">
@@ -16,7 +16,7 @@ export default function PreviewNewsletter({ name, description, fromName, image, 
 					<p className="flex items-center justify-between border-b border-border/60 px-4 py-2.5 text-[12px] font-medium">
 						<span className="flex items-center gap-2">
 							<IconBrand brand="gmail" className="size-6" />
-							Inbox
+							Caixa de entrada
 						</span>
 						<span className="text-muted-foreground tabular-nums">3</span>
 					</p>
@@ -38,7 +38,7 @@ export default function PreviewNewsletter({ name, description, fromName, image, 
 								</p>
 								<p className="truncate text-[12px] text-muted-foreground">
 									<Mark isActive={activeField === "description"} isEmpty={!description}>
-										{description || "What it's about, in one line"}
+										{description || "Sobre o que é, numa linha"}
 									</Mark>
 								</p>
 							</div>
@@ -71,7 +71,7 @@ export default function PreviewNewsletter({ name, description, fromName, image, 
 					</h2>
 					<p className="mt-2 text-[14px] leading-6 text-pretty text-muted-foreground">
 						<Mark isActive={activeField === "description"} isEmpty={!description}>
-							{description || "What it's about, in one line"}
+							{description || "Sobre o que é, numa linha"}
 						</Mark>
 					</p>
 					<div className="mt-5 flex flex-col gap-2.5">
@@ -80,7 +80,7 @@ export default function PreviewNewsletter({ name, description, fromName, image, 
 						))}
 					</div>
 					<p className="mt-6 text-[11px] text-muted-foreground">
-						Unsubscribe · <Mark isEmpty={!name}>{title}</Mark>
+						Cancelar subscrição · <Mark isEmpty={!name}>{title}</Mark>
 					</p>
 				</article>
 			</div>

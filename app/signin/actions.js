@@ -15,25 +15,25 @@ const CODES_PER_EMAIL = { name: "signin-code-email", limit: 5, window: "15 m" };
 // Each code also dies after 3 wrong tries (Better Auth's emailOTP).
 const CHECKS_PER_IP = { name: "signin-check-ip", limit: 30, window: "15 m" };
 const CODE_PATTERN = /^\d{6}$/;
-const OAUTH_EXPIRED_MESSAGE = "This sign-in link expired. Go back to the app and connect ImpactMail again.";
+const OAUTH_EXPIRED_MESSAGE = "Este link de início de sessão expirou. Volta à app e liga de novo o ImpactMail.";
 
 // The allowlist is checked after the rate limits, so the form can't be used to test addresses quickly.
 export async function sendSigninCode(_state, formData) {
 	const email = normalizeEmail(formData.get("email"));
-	if (!email) return { error: "Enter a valid email" };
+	if (!email) return { error: "Introduz um email válido" };
 
 	const ip = getClientIp(await headers());
 	// Counted per inbox: every dot and +tag of a Gmail address reaches the same one (lib/email-aliases.js).
 	const inbox = getCanonicalEmail(email) ?? email;
 	if ((await isRateLimited({ ...CODES_PER_IP, key: ip })) || (await isRateLimited({ ...CODES_PER_EMAIL, key: inbox }))) {
-		return { error: "Too many codes. Try again in 15 minutes." };
+		return { error: "Demasiados códigos. Tenta de novo daqui a 15 minutos." };
 	}
 	if (!isEmailAllowed(email)) return { error: SIGNIN_NOT_ALLOWED_MESSAGE };
 	try {
 		await sendSigninCodeEmail(email);
 	} catch (error) {
 		console.error("[signin] Could not send a code:", error.message);
-		return { error: "Couldn't send the code. Try again in a minute." };
+		return { error: "Não foi possível enviar o código. Tenta de novo daqui a um minuto." };
 	}
 	return { email };
 }
@@ -44,12 +44,12 @@ export async function sendSigninCode(_state, formData) {
 export async function verifySigninCode(_state, formData) {
 	const email = normalizeEmail(formData.get("email"));
 	const code = String(formData.get("code") ?? "").replace(/\s/g, "");
-	if (!email) return { error: "Enter a valid email" };
-	if (!CODE_PATTERN.test(code)) return { email, error: "Enter the 6-digit code" };
+	if (!email) return { error: "Introduz um email válido" };
+	if (!CODE_PATTERN.test(code)) return { email, error: "Introduz o código de 6 dígitos" };
 
 	const requestHeaders = await headers();
 	if (await isRateLimited({ ...CHECKS_PER_IP, key: getClientIp(requestHeaders) })) {
-		return { email, error: "Too many tries. Try again in 15 minutes." };
+		return { email, error: "Demasiadas tentativas. Tenta de novo daqui a 15 minutos." };
 	}
 	if (!isEmailAllowed(email)) return { email, error: SIGNIN_NOT_ALLOWED_MESSAGE };
 	const oauthQuery = readOAuthQueryField(formData.get("oauth_query"));
@@ -65,7 +65,7 @@ export async function verifySigninCode(_state, formData) {
 	} catch (error) {
 		const refusal = getSignupError(error?.body?.code);
 		if (refusal) return { email, error: refusal };
-		return { email, error: isExpiredOAuthQuery(error) ? OAUTH_EXPIRED_MESSAGE : "This code is wrong or expired" };
+		return { email, error: isExpiredOAuthQuery(error) ? OAUTH_EXPIRED_MESSAGE : "Este código está errado ou expirou" };
 	}
 	await notifyActivity(["New sign-in", email], { withUserAgent: true });
 	redirect(oauthNext ?? toSafeNextPath(formData.get("next")));

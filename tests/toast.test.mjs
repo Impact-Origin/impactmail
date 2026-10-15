@@ -50,9 +50,9 @@ describe("toasts", () => {
 
 	test("a toast shows its message, its description and its action's button", () => {
 		toast.success("Draft saved", { description: "It goes out on Monday at 9:00", action: { label: "View", onClick() {} } });
-		toast.error("Could not read this file");
+		toast.error("Não foi possível ler este ficheiro");
 		assert.deepEqual(readToasts(), [
-			{ text: "Could not read this file", action: null },
+			{ text: "Não foi possível ler este ficheiro", action: null },
 			{ text: "Draft saved It goes out on Monday at 9:00", action: "View" },
 		]);
 	});

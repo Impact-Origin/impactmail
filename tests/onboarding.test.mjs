@@ -59,16 +59,16 @@ describe("/welcome", () => {
 
 	test("a name is needed, and answers that aren't choices aren't kept", async () => {
 		const user = await signIn("blank@example.com");
-		assert.deepEqual(await as(user, () => m.welcome.completeOnboarding(null, form({ name: "  " }))), { error: "Name your newsletter" });
+		assert.deepEqual(await as(user, () => m.welcome.completeOnboarding(null, form({ name: "  " }))), { error: "Dá um nome à tua newsletter" });
 		assert.equal(await welcome(user, { name: "Notes", listSize: "huge", listSource: "Myspace" }), "/");
 		assert.equal((await loadAccount(user)).onboarding.listSize, undefined);
 	});
 
 	test("the list's source is beehiiv, Mailchimp, Substack or somewhere else, and a source saved from earlier choices stays", async () => {
-		assert.deepEqual([...m.onboarding.LIST_SOURCES, m.onboarding.OTHER_LIST_SOURCE], ["beehiiv", "Mailchimp", "Substack", "Somewhere else"]);
+		assert.deepEqual([...m.onboarding.LIST_SOURCES, m.onboarding.OTHER_LIST_SOURCE], ["beehiiv", "Mailchimp", "Substack", "Noutro sítio"]);
 		const user = await signIn("elsewhere@example.com");
-		assert.equal(await welcome(user, { name: "Elsewhere", listSize: "starter", listSource: "Somewhere else" }), "/");
-		assert.equal((await loadAccount(user)).onboarding.listSource, "Somewhere else");
+		assert.equal(await welcome(user, { name: "Elsewhere", listSize: "starter", listSource: "Noutro sítio" }), "/");
+		assert.equal((await loadAccount(user)).onboarding.listSource, "Noutro sítio");
 
 		const earlier = await signIn("from-kit@example.com");
 		assert.equal(await welcome(earlier, { name: "From Kit", listSize: "growth", listSource: "Kit" }), "/");

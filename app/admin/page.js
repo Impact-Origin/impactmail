@@ -17,7 +17,7 @@ import { formatNumber } from "@/lib/format";
 import { countGlobalSuppressions } from "@/lib/global-suppressions";
 import { serialize } from "@/lib/serialize";
 
-export const metadata = { title: "Accounts" };
+export const metadata = { title: "Contas" };
 
 export default async function AdminPage({ searchParams }) {
 	await requireAdmin();
@@ -28,30 +28,30 @@ export default async function AdminPage({ searchParams }) {
 
 	return (
 		<>
-			<HeaderPage title="Accounts" />
+			<HeaderPage title="Contas" />
 			<div className="flex flex-col gap-8">
 				<div className="grid gap-3 sm:grid-cols-2 animate-enter lg:grid-cols-3">
-					<CardStat label="Accounts" value={formatNumber(accounts.length)} detail="Newest 200 below" />
+					<CardStat label="Contas" value={formatNumber(accounts.length)} detail="As 200 mais recentes abaixo" />
 					<CardStat
-						label="Blocked"
+						label="Bloqueadas"
 						value={formatNumber(blocked.length)}
-						detail={blocked.length > 0 && "Unblock from an account's menu"}
+						detail={blocked.length > 0 && "Desbloqueia no menu de cada conta"}
 						tone={blocked.length > 0 ? "warn" : "default"}
 					/>
-					<CardStat label="Email provider" value={provider.name} detail={process.env.EMAIL_PROVIDER ? "Set by EMAIL_PROVIDER" : "The default"} />
+					<CardStat label="Fornecedor de email" value={provider.name} detail={process.env.EMAIL_PROVIDER ? "Definido em EMAIL_PROVIDER" : "O predefinido"} />
 				</div>
 
 				<section style={{ "--stagger": 1 }} className="flex flex-col gap-3 animate-enter">
-					<h2 className="text-sm font-medium text-muted-foreground">Accounts</h2>
+					<h2 className="text-sm font-medium text-muted-foreground">Contas</h2>
 					{accounts.length === 0 ? (
-						<StateEmpty icon={Users} title="No accounts yet" />
+						<StateEmpty icon={Users} title="Ainda não há contas" />
 					) : (
 						<TableAccounts accounts={serialize(accounts)} />
 					)}
 				</section>
 
 				<section style={{ "--stagger": 2 }} className="flex flex-col gap-3 animate-enter">
-					<h2 className="text-sm font-medium text-muted-foreground">Undeliverable addresses</h2>
+					<h2 className="text-sm font-medium text-muted-foreground">Endereços não entregáveis</h2>
 					<CardUndeliverable bounces={undeliverable.bounces} traps={undeliverable.traps} />
 				</section>
 
@@ -61,7 +61,7 @@ export default async function AdminPage({ searchParams }) {
 				</section>
 
 				<section style={{ "--stagger": 4 }} className="flex flex-col gap-3 animate-enter">
-					<h2 className="text-sm font-medium text-muted-foreground">Gmail spam rates</h2>
+					<h2 className="text-sm font-medium text-muted-foreground">Taxas de spam do Gmail</h2>
 					<Suspense fallback={<SkeletonSesAccount />}>
 						<CardPostmaster notice={typeof postmaster === "string" ? postmaster : undefined} />
 					</Suspense>

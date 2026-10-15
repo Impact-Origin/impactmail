@@ -88,10 +88,10 @@ describe("test emails", () => {
 		const { key } = await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })));
 		const id = await draft(user);
 		await repeat(30, async (index) => assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { ok: true }, String(index)));
-		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { error: "You can send a test email 30 times an hour. Try again later." });
+		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { error: "Atingiste o limite: 30 vezes por hora. Tenta mais tarde." });
 		await repeat(20, async (index) => assert.deepEqual(await as(user, () => m.newsletters.sendWelcomeTest(user.newsletterId)), { ok: true }, String(index)));
 		assert.deepEqual(await as(user, () => m.newsletters.sendWelcomeTest(user.newsletterId)), {
-			error: "You can send a test of the welcome email 20 times an hour. Try again later.",
+			error: "Atingiste o limite: 20 vezes por hora. Tenta mais tarde.",
 		});
 		assert.deepEqual(await m.Message.distinct("email", { accountId: user.accountId, kind: "test" }), ["tester@example.com"]);
 		assert.equal(await m.Message.countDocuments({ accountId: user.accountId, kind: "test" }), 50);
@@ -99,7 +99,7 @@ describe("test emails", () => {
 		const viaKey = await callApi("POST", `/api/v1/campaigns/${id}/test`, { key });
 		assert.deepEqual(
 			[viaKey.status, viaKey.body.error],
-			[429, { code: "rate_limited", message: "Too many send_test_email calls on this account, try again later" }],
+			[429, { code: "rate_limited", message: "Demasiadas chamadas a send_test_email nesta conta, tenta mais tarde" }],
 			"an API key gets what the account has left"
 		);
 		const other = await customer("other-tester@example.com");
@@ -116,7 +116,7 @@ describe("contacts", () => {
 		const { importId } = await importChunk("first@example.org");
 		await repeat(125, async (index) => assert.equal((await importChunk(`chunk${index}@example.org`, importId)).importId, importId, String(index)));
 		await repeat(119, async (index) => assert.ok((await importChunk(`file${index}@example.org`)).importId, String(index)));
-		assert.deepEqual(await importChunk("one-more@example.org"), { error: "You can import contacts 120 times an hour. Try again later." });
+		assert.deepEqual(await importChunk("one-more@example.org"), { error: "Atingiste o limite: 120 vezes por hora. Tenta mais tarde." });
 		assert.equal((await importChunk("last-chunk@example.org", importId)).importId, importId);
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 1 + 125 + 119 + 1);
 	});
@@ -125,7 +125,7 @@ describe("contacts", () => {
 		const user = await customer("by-hand@example.com");
 		const add = (email) => as(user, () => m.contacts.addContact(null, form({ newsletterId: user.newsletterId, email, consent: "on" })));
 		await repeat(600, async (index) => assert.equal((await add(`hand${index}@example.org`)).status, "active", String(index)));
-		assert.deepEqual(await add("one-more@example.org"), { error: "You can add 600 contacts an hour. Try again later." });
+		assert.deepEqual(await add("one-more@example.org"), { error: "Podes adicionar 600 contactos por hora. Tenta mais tarde." });
 		await flushAfter();
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 600);
 	});
@@ -143,7 +143,7 @@ describe("images and domains", () => {
 		await repeat(60, async (index) => assert.equal((await upload()).status, 200, String(index)));
 		const limited = await upload();
 		assert.equal(limited.status, 429);
-		assert.deepEqual(await limited.json(), { error: "You can upload an image 60 times an hour. Try again later.", code: "rate_limited" });
+		assert.deepEqual(await limited.json(), { error: "Atingiste o limite: 60 vezes por hora. Tenta mais tarde.", code: "rate_limited" });
 	});
 
 	test("10 domains added and 60 checks an hour per account", async () => {
@@ -153,12 +153,12 @@ describe("images and domains", () => {
 			assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain }))), { ok: true, domain });
 		});
 		assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain: "limit10.dev" }))), {
-			error: "You can add a domain 10 times an hour. Try again later.",
+			error: "Atingiste o limite: 10 vezes por hora. Tenta mais tarde.",
 		});
 		const id = String((await m.Domain.findOne({ accountId: user.accountId }).lean())._id);
 		await repeat(60, async (index) => assert.equal((await as(user, () => m.domains.checkDomainAction(id))).ok, true, String(index)));
 		assert.deepEqual(await as(user, () => m.domains.checkDomainAction(id)), {
-			error: "You can check a domain's DNS records 60 times an hour. Try again later.",
+			error: "Atingiste o limite: 60 vezes por hora. Tenta mais tarde.",
 		});
 	});
 });

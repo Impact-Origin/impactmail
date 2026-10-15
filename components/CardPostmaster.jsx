@@ -20,7 +20,7 @@ export default async function CardPostmaster({ notice }) {
 		return (
 			<Shell>
 				<p className="text-sm text-muted-foreground">
-					Set {missing.join(", ")} to read Gmail&apos;s spam rates from Google Postmaster Tools.
+					Define {missing.join(", ")} para ler as taxas de spam do Gmail no Google Postmaster Tools.
 				</p>
 			</Shell>
 		);
@@ -31,11 +31,11 @@ export default async function CardPostmaster({ notice }) {
 			<Shell message={message}>
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<p className="text-sm text-pretty text-muted-foreground">
-						Connect the Google account that has {domain} in Postmaster Tools. Google&apos;s OAuth client needs{" "}
-						<code className="rounded bg-muted px-1 py-0.5 text-xs text-foreground">{redirectUri}</code> as a redirect URI, and the
-						project the Postmaster Tools API.
+						Liga a conta Google que tem {domain} no Postmaster Tools. O cliente OAuth do Google precisa de{" "}
+						<code className="rounded bg-muted px-1 py-0.5 text-xs text-foreground">{redirectUri}</code> como URI de redirecionamento, e o
+						projeto da API Postmaster Tools.
 					</p>
-					<ButtonConnect label="Connect" />
+					<ButtonConnect label="Ligar" />
 				</div>
 			</Shell>
 		);
@@ -44,10 +44,10 @@ export default async function CardPostmaster({ notice }) {
 	const { lastRun, problem } = connection;
 	const flagged = lastRun?.flagged ?? [];
 	const items = [
-		{ label: "Google account", value: connection.email ?? "Connected" },
-		{ label: "Gmail spam rate", value: lastRun ? `${formatSpamRate(lastRun.spamRate)} on ${formatDay(lastRun.day)}` : "No data yet" },
-		{ label: "Flagged by Gmail", value: lastRun ? formatFlagged(flagged.length) : "No data yet" },
-		{ label: "Last checked", value: connection.checkedAt ? formatRelative(connection.checkedAt) : "Not yet, daily" },
+		{ label: "Conta Google", value: connection.email ?? "Ligada" },
+		{ label: "Taxa de spam do Gmail", value: lastRun ? `${formatSpamRate(lastRun.spamRate)} a ${formatDay(lastRun.day)}` : "Ainda sem dados" },
+		{ label: "Assinalados pelo Gmail", value: lastRun ? formatFlagged(flagged.length) : "Ainda sem dados" },
+		{ label: "Última verificação", value: connection.checkedAt ? formatRelative(connection.checkedAt) : "Ainda não, diária" },
 	];
 
 	return (
@@ -66,8 +66,8 @@ export default async function CardPostmaster({ notice }) {
 				<p className="flex items-start gap-2 text-sm text-pretty text-muted-foreground">
 					<TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
 					<span>
-						Postmaster Tools refused: {problem.message}. Check that {connection.email ?? "this Google account"} has {domain} in Postmaster Tools
-						and that the Postmaster Tools API is on, then connect again.
+						O Postmaster Tools recusou: {problem.message}. Verifica se {connection.email ?? "esta conta Google"} tem {domain} no Postmaster Tools
+						e se a API Postmaster Tools está ativa, e depois liga de novo.
 					</span>
 				</p>
 			)}
@@ -85,7 +85,7 @@ export default async function CardPostmaster({ notice }) {
 				</ul>
 			)}
 			<div className="flex justify-end">
-				<ButtonConnect label="Connect again" variant="outline" />
+				<ButtonConnect label="Ligar de novo" variant="outline" />
 			</div>
 		</Shell>
 	);
@@ -118,31 +118,31 @@ function formatDay(day) {
 }
 
 function formatSpamRate(rate) {
-	return typeof rate === "number" ? formatRate(rate) : "None reported";
+	return typeof rate === "number" ? formatRate(rate) : "Nenhuma reportada";
 }
 
 function formatFlagged(count) {
-	return count > 0 ? `${count} feedback ID${count === 1 ? "" : "s"}` : "None";
+	return count > 0 ? `${count} ${count === 1 ? "feedback ID" : "feedback IDs"}` : "Nenhum";
 }
 
 const NOTICES = {
-	connected: { isGood: true, text: "Connected. Gmail's spam rates are read once a day." },
-	denied: { text: "Google's consent screen was canceled: nothing changed." },
-	scope: { text: "Tick Postmaster Tools on Google's consent screen, then connect again." },
-	expired: { text: "That connection expired or started in another browser: connect again." },
-	failed: { text: "Google didn't finish the connection: connect again." },
-	missing: { text: "Postmaster Tools isn't set up on this server yet." },
+	connected: { isGood: true, text: "Ligado. As taxas de spam do Gmail são lidas uma vez por dia." },
+	denied: { text: "O ecrã de consentimento do Google foi cancelado: nada mudou." },
+	scope: { text: "Marca o Postmaster Tools no ecrã de consentimento do Google e liga de novo." },
+	expired: { text: "Essa ligação expirou ou começou noutro browser: liga de novo." },
+	failed: { text: "O Google não concluiu a ligação: liga de novo." },
+	missing: { text: "O Postmaster Tools ainda não está configurado neste servidor." },
 };
 
 const ACTION_LABELS = {
-	blocked: "Blocked",
-	paused: "Paused",
-	warned: "Owner warned",
-	skipped: "Skipped",
-	skip: "Skipped",
-	none: "Under the pause level",
-	wide: "Every account",
-	unknown: "No account",
+	blocked: "Bloqueada",
+	paused: "Em pausa",
+	warned: "Dono avisado",
+	skipped: "Ignorado",
+	skip: "Ignorado",
+	none: "Abaixo do nível de pausa",
+	wide: "Todas as contas",
+	unknown: "Sem conta",
 };
 
 // BadgeStatus's statuses, for their dot's color.

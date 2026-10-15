@@ -21,7 +21,7 @@ export default async function PanelGetStarted({ account }) {
 		<ShellGetStarted done={doneCount} total={steps.length} isFinished={isFinished}>
 			<header className="px-3 pt-2.5 pb-3">
 				<h2 id="get-started-title" className="pr-16 font-semibold tracking-tight">
-					Get started
+					Primeiros passos
 				</h2>
 				<ProgressSteps done={doneCount} total={steps.length} />
 			</header>
@@ -52,7 +52,7 @@ function ItemStep({ step, number, isNext, link, newsletterId }) {
 			<li className="flex h-10 items-center gap-3 px-3 text-sm text-muted-foreground">
 				<CircleStep isDone />
 				<span className="truncate">{title}</span>
-				<span className="sr-only">(done)</span>
+				<span className="sr-only">(feito)</span>
 			</li>
 		);
 	}
@@ -71,7 +71,7 @@ function ItemStep({ step, number, isNext, link, newsletterId }) {
 						<p className="text-sm text-muted-foreground">{description}</p>
 					</div>
 					{step.id === "write" ? (
-						<ButtonNewCampaign newsletterId={newsletterId} label="New draft" size="sm" />
+						<ButtonNewCampaign newsletterId={newsletterId} label="Novo rascunho" size="sm" />
 					) : (
 						<Button asChild size="sm">
 							<Link href={link.href} target={target}>
@@ -98,7 +98,7 @@ function ItemStep({ step, number, isNext, link, newsletterId }) {
 				{step.id === "agent" && <IconsAgents />}
 				{step.isOptional && (
 					<span className="inline-flex h-5 shrink-0 items-center rounded-full px-2 text-xs text-muted-foreground inset-ring inset-ring-foreground/10">
-						Optional
+						Opcional
 					</span>
 				)}
 				<Arrow className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
@@ -138,11 +138,11 @@ function ProgressSteps({ done, total }) {
 		<div className="mt-2.5 flex items-center gap-3">
 			<div
 				role="progressbar"
-				aria-label="Steps done"
+				aria-label="Passos feitos"
 				aria-valuemin={0}
 				aria-valuemax={total}
 				aria-valuenow={done}
-				aria-valuetext={`${done} of ${total}`}
+				aria-valuetext={`${done} de ${total}`}
 				className="flex flex-1 gap-1"
 			>
 				{Array.from({ length: total }, (_, index) => (
@@ -156,29 +156,29 @@ function ProgressSteps({ done, total }) {
 				))}
 			</div>
 			<span aria-hidden="true" className="text-sm text-muted-foreground tabular-nums">
-				{done} of {total}
+				{done} de {total}
 			</span>
 		</div>
 	);
 }
 
 function getLink(id, draftId) {
-	if (id === "send" && draftId) return { href: `/campaigns/${draftId}`, label: "Open draft" };
+	if (id === "send" && draftId) return { href: `/campaigns/${draftId}`, label: "Abrir rascunho" };
 	return { href: STEPS[id].href, label: STEPS[id].action };
 }
 
 const STEPS = {
 	write: {
-		title: "Write your first issue",
-		description: "Start a draft in the editor. It saves as you type.",
+		title: "Escreve a tua primeira edição",
+		description: "Começa um rascunho no editor. Fica guardado enquanto escreves.",
 		href: "/campaigns",
-		action: "Open campaigns",
+		action: "Abrir campanhas",
 	},
 	subscribers: {
-		title: "Add your subscribers",
+		title: "Adiciona os teus subscritores",
 		description: (
 			<>
-				Import a CSV from beehiiv, Substack or Mailchimp, or add them with the{" "}
+				Importa um CSV do beehiiv, Substack ou Mailchimp, ou adiciona-os com a{" "}
 				<Link
 					href="/docs/api#add-contact"
 					target="_blank"
@@ -190,24 +190,24 @@ const STEPS = {
 			</>
 		),
 		href: "/contacts",
-		action: "Import",
+		action: "Importar",
 	},
 	agent: {
-		title: "Connect your AI agent",
-		description: "Write, test and schedule issues from ChatGPT, Claude, Cursor, Codex or Grok Bot.",
+		title: "Liga o teu agente de IA",
+		description: "Escreve, testa e agenda edições a partir do ChatGPT, Claude, Cursor, Codex ou Grok Bot.",
 		href: "/docs/mcp",
-		action: "Connect",
+		action: "Ligar",
 	},
 	domain: {
-		title: "Send from your domain",
-		description: "Add its DNS records, then send from your address.",
+		title: "Envia a partir do teu domínio",
+		description: "Adiciona os registos DNS e depois envia a partir do teu endereço.",
 		href: "/domains",
-		action: "Add a domain",
+		action: "Adicionar um domínio",
 	},
 	send: {
-		title: "Send your first issue",
-		description: "Open your draft, then send it now or schedule it.",
+		title: "Envia a tua primeira edição",
+		description: "Abre o rascunho e envia-o já ou agenda-o.",
 		href: "/campaigns",
-		action: "Open campaigns",
+		action: "Abrir campanhas",
 	},
 };

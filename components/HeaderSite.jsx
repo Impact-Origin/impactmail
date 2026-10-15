@@ -46,6 +46,6 @@ export default function HeaderSite() {
 }
 
 const LINKS = [
-	{ href: "/docs", label: "Docs" },
-	{ href: "/signin", label: "Sign in" },
+	{ href: "/docs", label: "Documentação" },
+	{ href: "/signin", label: "Iniciar sessão" },
 ];

@@ -53,6 +53,6 @@ test("only https links on the standard port, and never an IP address that isn't 
 		await assert.rejects(fetchRemoteImage(link, { maxBytes: 1000 }), { code: "validation_failed" }, link);
 	}
 	for (const link of ["https://127.0.0.1/a.png", "https://169.254.169.254/latest/meta-data", "https://[::1]/a.png", "https://10.0.0.5/a.png"]) {
-		await assert.rejects(fetchRemoteImage(link, { maxBytes: 1000 }), /can't reach/, link);
+		await assert.rejects(fetchRemoteImage(link, { maxBytes: 1000 }), /não consegue alcançar/, link);
 	}
 });

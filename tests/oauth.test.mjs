@@ -492,7 +492,7 @@ describe("connecting with the official MCP client", () => {
 		const tampered = new URL(start.headers.get("location"), APP_URL).search.slice(1).replace("state-123", "state-999");
 		await as(user, () => m.signin.sendSigninCode(null, form({ email })));
 		const result = await as(user, () => m.signin.verifySigninCode(null, form({ email, code: signInCode(email), oauth_query: tampered })));
-		assert.equal(result.error, "This sign-in link expired. Go back to the app and connect ImpactMail again.");
+		assert.equal(result.error, "Este link de início de sessão expirou. Volta à app e liga de novo o ImpactMail.");
 		assert.equal(user.jar.size, 0, "no session");
 	});
 
@@ -833,13 +833,13 @@ describe("tokens", () => {
 		assert.equal((await callTool(token, "add_contact", { email: "from-the-app@example.org" })).structuredContent.created, true);
 		assert.equal((await callTool(key, "add_contact", { email: "from-the-site@example.org" })).structuredContent.created, true, "the 600th");
 
-		const refused = { code: "rate_limited", message: "Too many signups on this account, try again later" };
+		const refused = { code: "rate_limited", message: "Demasiadas inscrições nesta conta, tenta mais tarde" };
 		assert.deepEqual(toolError(await callTool(token, "add_contact", { email: "app-again@example.org" })), refused);
 		assert.deepEqual(toolError(await callTool(key, "add_contact", { email: "site-again@example.org" })), refused);
-		assert.deepEqual(await byHand("hand-again@example.org"), { error: "You can add 600 contacts an hour. Try again later." });
+		assert.deepEqual(await byHand("hand-again@example.org"), { error: "Podes adicionar 600 contactos por hora. Tenta mais tarde." });
 		await flushAfter();
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 600);
-		assert.equal(platformEmails.filter(({ to, subject }) => to.includes(user.email) && subject === "[ImpactMail] Signups paused").length, 1);
+		assert.equal(platformEmails.filter(({ to, subject }) => to.includes(user.email) && subject === "[ImpactMail] Inscrições em pausa").length, 1);
 	});
 });
 
@@ -889,7 +889,7 @@ describe("connected apps", () => {
 		const [own] = (await callTool(token, "list_connected_apps")).structuredContent.connectedApps;
 
 		const strangerTry = await as(users.stranger, () => m.apiKeys.revokeConnectedApp(own.id));
-		assert.equal(strangerTry.error, "App not found");
+		assert.equal(strangerTry.error, "App não encontrada");
 		const revoked = await callTool(token, "revoke_connected_app", { id: own.id });
 		assert.deepEqual(revoked.structuredContent, { id: own.id, revoked: true });
 		assert.equal((await mcpRequest(token)).status, 401);
@@ -905,7 +905,7 @@ describe("API keys", () => {
 		assert.deepEqual((await mcpRequest(signupKey)).body.result.tools.map(({ name }) => name), ["add_contact"]);
 		const revoked = await mcpRequest(`mc_${"y".repeat(43)}`);
 		assert.equal(revoked.status, 401);
-		assert.equal(revoked.body.error.message, "Send a valid API key: Authorization: Bearer <key>");
+		assert.equal(revoked.body.error.message, "Envia uma chave de API válida: Authorization: Bearer <chave>");
 	});
 });
 

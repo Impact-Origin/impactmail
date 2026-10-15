@@ -12,7 +12,7 @@ import { hasGoogleSignIn } from "@/lib/accounts";
 import { requireAccount } from "@/lib/auth";
 import { MAX_NAME_LENGTH } from "@/lib/profile";
 
-export const metadata = { title: "Account" };
+export const metadata = { title: "Conta" };
 
 // The whole account, apart from any newsletter: who signs in, and deleting it.
 export default async function AccountPage() {
@@ -21,14 +21,14 @@ export default async function AccountPage() {
 
 	return (
 		<LayoutNarrow>
-			<HeaderPage title="Account" icon={<AvatarUser name={user.name} email={user.email} image={user.image} size={32} />} />
+			<HeaderPage title="Conta" icon={<AvatarUser name={user.name} email={user.email} image={user.image} size={32} />} />
 			<div className="flex flex-col gap-4">
 				<FormProfile name={user.name ?? ""} image={user.image ?? ""} maxNameLength={MAX_NAME_LENGTH} />
 				<CardSettings title="Email" stagger={1}>
-					<RowSettings label="Address" hint={hasGoogle ? "You sign in with Google or with a code sent here." : "You sign in with a code sent here."}>
+					<RowSettings label="Endereço" hint={hasGoogle ? "Inicias sessão com o Google ou com um código enviado para aqui." : "Inicias sessão com um código enviado para aqui."}>
 						<span className="flex h-9 items-center justify-between gap-3 rounded-lg bg-muted/60 px-2.5 text-sm">
 							<span className="truncate">{user.email}</span>
-							<Lock aria-label="Can't be changed" className="size-3.5 shrink-0 text-muted-foreground" />
+							<Lock aria-label="Não pode ser alterado" className="size-3.5 shrink-0 text-muted-foreground" />
 						</span>
 					</RowSettings>
 				</CardSettings>
@@ -40,13 +40,13 @@ export default async function AccountPage() {
 
 function CardDelete({ email, blockers }) {
 	return (
-		<CardSettings title="Delete account" stagger={3} className="mt-6">
+		<CardSettings title="Eliminar conta" stagger={3} className="mt-6">
 			<p className="px-4 py-3 text-sm text-pretty text-muted-foreground">
-				Your account stops at once. {DELETION_GRACE_DAYS} days later, its newsletters, contacts, campaigns and images are deleted
-				for good. Signing in before then restores it.
+				A tua conta para de imediato. {DELETION_GRACE_DAYS} dias depois, as newsletters, contactos, campanhas e imagens são
+				eliminados de vez. Iniciar sessão antes disso restaura-a.
 			</p>
 			{blockers?.campaigns.length > 0 && (
-				<RowBlocker icon={Send} title="Stop your campaigns first" text="Pause the ones sending, and cancel the scheduled ones.">
+				<RowBlocker icon={Send} title="Para primeiro as tuas campanhas" text="Pausa as que estão a ser enviadas e cancela as agendadas.">
 					<ul className="flex flex-col gap-1">
 						{blockers.campaigns.map((campaign) => (
 							<li key={String(campaign._id)}>
@@ -54,7 +54,7 @@ function CardDelete({ email, blockers }) {
 									href={`/campaigns/${campaign._id}`}
 									className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors duration-150 hover:bg-muted"
 								>
-									<span className="truncate">{campaign.subject || "Untitled"}</span>
+									<span className="truncate">{campaign.subject || "Sem título"}</span>
 									<BadgeStatus status={campaign.status} />
 								</Link>
 							</li>

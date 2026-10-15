@@ -88,7 +88,7 @@ export async function selectNewsletter(id, pathname) {
 // open, so it can send once its settings look right; without a shared domain, the form also asks for its address.
 export async function createNewsletter(_state, formData) {
 	const name = readText(formData, "name");
-	if (!name) return { error: "Name your newsletter" };
+	if (!name) return { error: "Dá um nome à tua newsletter" };
 	const { selected } = await getSelectedNewsletter();
 	const fromEmail = readText(formData, "fromEmail");
 	const { output, failure } = await runDashboardAction("create_newsletter", {

@@ -4,7 +4,7 @@ import SkeletonDomains from "@/components/SkeletonDomains";
 export default function Loading() {
 	return (
 		<>
-			<HeaderPage title="Domains" />
+			<HeaderPage title="Domínios" />
 			<SkeletonDomains />
 		</>
 	);

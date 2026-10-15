@@ -66,7 +66,7 @@ export default function PreviewEmail({
 							<span className="text-muted-foreground">&lt;{sender.fromEmail}&gt;</span>
 						</p>
 						<p className="truncate">
-							<span className="font-medium">{subject || "No subject"}</span>
+							<span className="font-medium">{subject || "Sem assunto"}</span>
 							{previewText && <span className="text-muted-foreground"> — {previewText}</span>}
 						</p>
 					</div>
@@ -76,7 +76,7 @@ export default function PreviewEmail({
 			<div className="flex min-h-0 flex-1 justify-center bg-muted/50 p-3 sm:p-5">
 				<iframe
 					ref={frameRef}
-					title="Email preview"
+					title="Pré-visualização do email"
 					// Same origin lets the report read the email's height; without allow-scripts nothing in it runs.
 					sandbox={isContentFit ? "allow-same-origin" : ""}
 					srcDoc={html}
@@ -98,6 +98,6 @@ export default function PreviewEmail({
 }
 
 const DEVICES = [
-	{ id: "desktop", label: "Desktop", icon: Monitor },
-	{ id: "mobile", label: "Mobile", icon: Smartphone },
+	{ id: "desktop", label: "Computador", icon: Monitor },
+	{ id: "mobile", label: "Telemóvel", icon: Smartphone },
 ];

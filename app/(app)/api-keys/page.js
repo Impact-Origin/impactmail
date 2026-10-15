@@ -26,9 +26,9 @@ import { formatDate, formatRelative } from "@/lib/format";
 import { listConnectedApps } from "@/lib/oauth";
 import { cn } from "@/lib/utils";
 
-export const metadata = { title: "API keys" };
+export const metadata = { title: "Chaves de API" };
 
-const LEVEL_LABELS = { full: "Full access", signups: "Signups only" };
+const LEVEL_LABELS = { full: "Acesso total", signups: "Só inscrições" };
 
 export default async function ApiKeysPage() {
 	const { account } = await requireAccount();
@@ -38,10 +38,10 @@ export default async function ApiKeysPage() {
 
 	return (
 		<>
-			<HeaderPage title="API keys">
+			<HeaderPage title="Chaves de API">
 				<Button asChild variant="outline">
 					<Link href="/docs">
-						Docs
+						Documentação
 						<ArrowUpRight data-icon="inline-end" className="opacity-60" />
 					</Link>
 				</Button>
@@ -50,17 +50,17 @@ export default async function ApiKeysPage() {
 
 			<div className="flex flex-col gap-8">
 				{apiKeys.length === 0 ? (
-					<StateEmpty icon={KeyRound} title="No API keys yet" />
+					<StateEmpty icon={KeyRound} title="Ainda não há chaves de API" />
 				) : (
 					<div className="overflow-hidden rounded-xl shadow-border animate-enter">
 						<Table>
 							<TableHeader>
 								<TableRow className="hover:bg-transparent">
-									<TableHead className="pl-4">Name</TableHead>
-									<TableHead>Key</TableHead>
-									<TableHead className="hidden md:table-cell">Access</TableHead>
-									<TableHead className="hidden sm:table-cell">Created</TableHead>
-									<TableHead className="hidden sm:table-cell">Last used</TableHead>
+									<TableHead className="pl-4">Nome</TableHead>
+									<TableHead>Chave</TableHead>
+									<TableHead className="hidden md:table-cell">Acesso</TableHead>
+									<TableHead className="hidden sm:table-cell">Criada</TableHead>
+									<TableHead className="hidden sm:table-cell">Último uso</TableHead>
 									<TableHead className="w-24 pr-2" />
 								</TableRow>
 							</TableHeader>
@@ -76,7 +76,7 @@ export default async function ApiKeysPage() {
 											{formatDate(apiKey.createdAt)}
 										</TableCell>
 										<TableCell className="hidden text-muted-foreground sm:table-cell">
-											{apiKey.lastUsedAt ? formatRelative(apiKey.lastUsedAt) : "Never"}
+											{apiKey.lastUsedAt ? formatRelative(apiKey.lastUsedAt) : "Nunca"}
 										</TableCell>
 										<TableCell className="pr-2 text-right">
 											{apiKey.revokedAt ? (
@@ -85,8 +85,8 @@ export default async function ApiKeysPage() {
 												<ButtonRevoke
 													id={apiKey._id.toString()}
 													revoke={revokeApiKey}
-													confirmMessage={`Revoke "${apiKey.name}"? Apps using it stop working.`}
-													successMessage="Key revoked"
+													confirmMessage={`Revogar "${apiKey.name}"? As apps que a usam deixam de funcionar.`}
+													successMessage="Chave revogada"
 												/>
 											)}
 										</TableCell>
@@ -98,7 +98,7 @@ export default async function ApiKeysPage() {
 				)}
 
 				<section style={{ "--stagger": 1 }} className="flex flex-col gap-3 animate-enter">
-					<h2 className="text-sm font-medium text-muted-foreground">Connected apps</h2>
+					<h2 className="text-sm font-medium text-muted-foreground">Apps ligadas</h2>
 					<TableConnectedApps apps={connectedApps} mcpUrl={getMcpUrl(appUrl)} />
 				</section>
 
@@ -113,15 +113,15 @@ function CardAgents({ agents }) {
 		<section style={{ "--stagger": 2 }} className="@container rounded-xl bg-card p-4 shadow-border animate-enter sm:p-5">
 			<div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
 				<div className="max-w-lg">
-					<h2 className="font-semibold tracking-tight">Run your newsletter with your AI agent</h2>
-					<p className="mt-1 text-sm text-muted-foreground">Connect ImpactMail to your AI agent. It writes, schedules and sends for you.</p>
+					<h2 className="font-semibold tracking-tight">Gere a tua newsletter com o teu agente de IA</h2>
+					<p className="mt-1 text-sm text-muted-foreground">Liga o ImpactMail ao teu agente de IA. Ele escreve, agenda e envia por ti.</p>
 				</div>
 				<Link
 					href="/docs/api"
 					target="_blank"
 					className="relative -my-1 inline-flex items-center gap-1 py-1 text-sm text-muted-foreground transition-colors duration-150 after:absolute after:-inset-x-2 after:-inset-y-2 hover:text-foreground"
 				>
-					API docs
+					Documentação da API
 					<ArrowUpRight className="size-3.5" />
 				</Link>
 			</div>

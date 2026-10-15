@@ -40,7 +40,7 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 			<header className="flex h-9 items-center justify-between gap-3">
 				<LogoWordmark />
 				<form action={signOut}>
-					<ButtonSignout>Sign out</ButtonSignout>
+					<ButtonSignout>Terminar sessão</ButtonSignout>
 				</form>
 			</header>
 
@@ -55,12 +55,12 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 							type="button"
 							onClick={() => setStep(step - 1)}
 							disabled={step === 0}
-							aria-label="Back"
+							aria-label="Voltar"
 							className="-ml-2 grid size-8 place-items-center rounded-lg text-muted-foreground transition-[color,background-color,opacity] duration-150 hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-0"
 						>
 							<ArrowLeft className="size-4" />
 						</button>
-						<ol aria-label={`Step ${step + 1} of ${STEPS.length}`} className="flex flex-1 gap-1.5">
+						<ol aria-label={`Passo ${step + 1} de ${STEPS.length}`} className="flex flex-1 gap-1.5">
 							{STEPS.map(({ key }, index) => (
 								<li key={key} className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
 									<span
@@ -83,8 +83,8 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 								<Input
 									value={values.name}
 									onChange={update("name")}
-									placeholder="Field notes"
-									aria-label="Newsletter name"
+									placeholder="Notas de campo"
+									aria-label="Nome da newsletter"
 									maxLength={100}
 									required
 									autoFocus
@@ -96,8 +96,8 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 									<Input
 										value={values.description}
 										onChange={update("description")}
-										placeholder="One idea about building things, every Sunday."
-										aria-label="What it's about"
+										placeholder="Uma ideia sobre construir coisas, todos os domingos."
+										aria-label="Sobre o que é"
 										maxLength={MAX_DESCRIPTION_LENGTH}
 										autoFocus
 										className="h-12 text-lg md:text-lg"
@@ -111,8 +111,8 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 								<Input
 									value={values.fromName}
 									onChange={update("fromName")}
-									placeholder="Jane"
-									aria-label="Sender name"
+									placeholder="Joana"
+									aria-label="Nome do remetente"
 									maxLength={100}
 									autoFocus
 									className="h-12 text-lg md:text-lg"
@@ -121,7 +121,7 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 							{current.key === "list" && (
 								<div className="flex flex-col gap-7">
 									<fieldset className="grid grid-cols-2 gap-2">
-										<legend className="sr-only">Subscribers</legend>
+										<legend className="sr-only">Subscritores</legend>
 										{listSizes.map(({ id, label }) => (
 											<OptionChoice
 												key={id}
@@ -136,7 +136,7 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 									</fieldset>
 									{values.listSize && values.listSize !== "none" && (
 										<fieldset className="flex flex-col gap-3 animate-enter">
-											<legend className="mb-3 text-sm font-medium">Where are they now?</legend>
+											<legend className="mb-3 text-sm font-medium">Onde estão agora?</legend>
 											<div className="grid grid-cols-3 gap-2">
 												{listSources.map((source) => (
 													<OptionChoice
@@ -166,12 +166,12 @@ export default function FormOnboarding({ defaultFromName, image, listSizes, list
 					)}
 					<div className="mt-8 flex items-center gap-2">
 						<Button type="submit" size="lg" disabled={isPending} className="h-11 min-w-36 px-5 text-[15px]">
-							{isPending ? <Loader2 className="animate-spin" /> : isLast ? "Create newsletter" : "Continue"}
+							{isPending ? <Loader2 className="animate-spin" /> : isLast ? "Criar newsletter" : "Continuar"}
 							{!isPending && <ArrowRight data-icon="inline-end" />}
 						</Button>
 						{current.isOptional && (
 							<Button type="button" variant="ghost" size="lg" onClick={() => setStep(step + 1)} className="h-11 text-muted-foreground">
-								Skip
+								Saltar
 							</Button>
 						)}
 					</div>
@@ -198,8 +198,8 @@ function OptionChoice({ name, value, label, icon, checked, onChange, required })
 }
 
 const STEPS = [
-	{ key: "name", title: "What's your newsletter called?", hint: "You can change it later." },
-	{ key: "description", title: "What's it about?", hint: "One line, under its name on your signup form and website.", isOptional: true },
-	{ key: "fromName", title: "Who's it from?", hint: "The name your readers see in their inbox." },
-	{ key: "list", title: "Do you have subscribers already?", hint: "You import them later." },
+	{ key: "name", title: "Como se chama a tua newsletter?", hint: "Podes mudar depois." },
+	{ key: "description", title: "Sobre o que é?", hint: "Uma linha, por baixo do nome no formulário de inscrição e no site.", isOptional: true },
+	{ key: "fromName", title: "Quem a envia?", hint: "O nome que os leitores veem na caixa de entrada." },
+	{ key: "list", title: "Já tens subscritores?", hint: "Importa-los depois." },
 ];

@@ -8,7 +8,7 @@ export default function ButtonSubscribe() {
 
 	return (
 		<Button size="sm" onClick={() => open()} className="h-8 px-3">
-			Subscribe
+			Subscrever
 		</Button>
 	);
 }

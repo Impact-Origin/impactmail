@@ -8,7 +8,7 @@ import { findNewsletterAnywhere } from "@/lib/public-newsletters";
 
 // The URL carries the keep token: keep it out of search results and referrer headers.
 export const metadata = {
-	title: "Keep getting the newsletter",
+	title: "Continuar a receber a newsletter",
 	robots: { index: false, follow: false },
 	referrer: "no-referrer",
 };
@@ -28,8 +28,8 @@ export default async function KeepPage({ searchParams }) {
 					archiveUrl={newsletter.archiveEnabled ? getArchiveUrls(newsletter).siteIndex : null}
 				/>
 			) : (
-				<CardNotice icon={Link2Off} title="This link doesn't work">
-					It may be older than 90 days. Sign up again to keep getting the newsletter.
+				<CardNotice icon={Link2Off} title="Este link não funciona">
+					Pode ter mais de 90 dias. Inscreve-te de novo para continuares a receber a newsletter.
 				</CardNotice>
 			)}
 		</main>

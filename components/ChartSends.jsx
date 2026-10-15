@@ -14,8 +14,8 @@ export default function ChartSends({ hours }) {
 		x: xOf(hour),
 		title: `${formatHour(hour)} – ${formatHour((hour + 1) % 24)}`,
 		rows: [
-			today !== null && { label: "Today", value: formatNumber(today), swatch: "bar" },
-			{ label: "Yesterday", value: formatNumber(yesterday), swatch: "ghost" },
+			today !== null && { label: "Hoje", value: formatNumber(today), swatch: "bar" },
+			{ label: "Ontem", value: formatNumber(yesterday), swatch: "ghost" },
 		].filter(Boolean),
 	}));
 	const xLabels = [0, 6, 12, 18, 23].map((hour) => ({
@@ -28,7 +28,7 @@ export default function ChartSends({ hours }) {
 		<ChartFrame scale={scale} xLabels={xLabels} className="h-36 sm:h-44">
 			<div
 				role="img"
-				aria-label={`${formatNumber(sentToday)} emails sent today`}
+				aria-label={`${formatNumber(sentToday)} emails enviados hoje`}
 				className="absolute inset-0 flex items-end gap-[3px] sm:gap-1.5"
 			>
 				{hours.map(({ hour, today, yesterday }) => (

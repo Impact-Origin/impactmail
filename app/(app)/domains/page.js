@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import Domain from "@/models/Domain";
 import Newsletter from "@/models/Newsletter";
 
-export const metadata = { title: "Domains" };
+export const metadata = { title: "Domínios" };
 
 // The account's domains, which any of its newsletters can send from. "Check now" asks the email provider and DNS again.
 export default async function DomainsPage() {
@@ -55,7 +55,7 @@ export default async function DomainsPage() {
 
 	return (
 		<>
-			<HeaderPage title="Domains" />
+			<HeaderPage title="Domínios" />
 			<div className="flex flex-col gap-6">
 				<FormAddDomain fromLocalPart={getOwnDomainLocalPart(current?.fromEmail, sharedDomain)} hasArchiveHost={Boolean(cnameTarget)} />
 				{domains.map((domain, index) => (
@@ -76,7 +76,7 @@ export default async function DomainsPage() {
 								href="https://postmaster.google.com/v2/"
 								icon={<Image src="/logos/postmaster-tools.webp" alt="" width={20} height={20} loading="lazy" unoptimized />}
 								label="Postmaster Tools"
-								detail="See how Gmail rates your domain"
+								detail="Vê como o Gmail avalia o teu domínio"
 								end={<ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />}
 								stagger={domains.length + 1}
 							/>
@@ -85,7 +85,7 @@ export default async function DomainsPage() {
 							<RowNote
 								key={String(newsletter._id)}
 								icon={<Mail className="size-4 text-muted-foreground" />}
-								label="Shared address"
+								label="Endereço partilhado"
 								detail={<span className="font-mono text-xs">{getSharedAddress(newsletter.slug, sharedDomain)}</span>}
 								end={<TextStatus {...getSharedStatus(newsletter, { sharedDomain, isProviderSetUp })} className="shrink-0 text-xs" />}
 								stagger={domains.length + 2 + index}
@@ -99,9 +99,9 @@ export default async function DomainsPage() {
 }
 
 function getSharedStatus(newsletter, { sharedDomain, isProviderSetUp }) {
-	if (!isOnSharedDomain(newsletter.fromEmail, sharedDomain)) return { label: "Not in use", tone: "none" };
-	if (!isProviderSetUp) return { label: "Email provider not set up", tone: "none" };
-	return isSharedSenderReady(newsletter, { sharedDomain }) ? { label: "Used until you switch", tone: "good" } : { label: "Setting up", tone: "wait" };
+	if (!isOnSharedDomain(newsletter.fromEmail, sharedDomain)) return { label: "Não está a ser usado", tone: "none" };
+	if (!isProviderSetUp) return { label: "Fornecedor de email não configurado", tone: "none" };
+	return isSharedSenderReady(newsletter, { sharedDomain }) ? { label: "Em uso até mudares", tone: "good" } : { label: "A configurar", tone: "wait" };
 }
 
 function RowNote({ href, icon, label, detail, end, stagger }) {
@@ -164,7 +164,7 @@ function CardDomain({ domain, newsletters, current, sharedDomain, cnameTarget, s
 			</ol>
 			{fullNameExample && (
 				<p className="border-t border-border/60 px-4 py-3 text-xs text-pretty text-muted-foreground">
-					If your DNS provider asks for the full name, use <span className="font-mono wrap-anywhere">{fullNameExample}</span>
+					Se o teu fornecedor de DNS pedir o nome completo, usa <span className="font-mono wrap-anywhere">{fullNameExample}</span>
 				</p>
 			)}
 		</section>
@@ -185,9 +185,9 @@ function RowsSender({ domain, newsletters, current, sharedDomain }) {
 				>
 					{domain.verified && <Check className="size-4 shrink-0 text-foreground" />}
 					<span className="min-w-0">
-						<span className="font-medium text-foreground">{newsletter.name}</span> sends from{" "}
+						<span className="font-medium text-foreground">{newsletter.name}</span> envia a partir de{" "}
 						<span className="font-mono text-[13px] wrap-anywhere text-foreground">{newsletter.fromEmail}</span>
-						{!domain.verified && " once it's verified"}
+						{!domain.verified && " depois de verificado"}
 					</span>
 				</p>
 			))}
@@ -202,7 +202,7 @@ function RowsSender({ domain, newsletters, current, sharedDomain }) {
 					/>
 				) : (
 					<p className="border-t border-border/60 bg-muted/40 px-4 py-3 text-sm text-pretty text-muted-foreground">
-						Once it&apos;s verified, you can send <span className="font-medium text-foreground">{current.name}</span> from it here.
+						Depois de verificado, podes enviar <span className="font-medium text-foreground">{current.name}</span> a partir dele aqui.
 					</p>
 				))}
 		</>
@@ -216,9 +216,9 @@ function TableRecords({ records }) {
 			<table className="w-full text-sm">
 				<thead>
 					<tr className="text-left text-xs text-muted-foreground">
-						<th className="w-16 py-2 pl-3 font-normal">Type</th>
+						<th className="w-16 py-2 pl-3 font-normal">Tipo</th>
 						<th className="w-[46%] py-2 pr-2 font-normal">Host</th>
-						<th className="py-2 pr-3 font-normal">Value</th>
+						<th className="py-2 pr-3 font-normal">Valor</th>
 					</tr>
 				</thead>
 				<tbody className="divide-y divide-border/60 border-t border-border/60">
@@ -228,13 +228,13 @@ function TableRecords({ records }) {
 							<td className="max-w-0 py-2 pr-2 align-middle">
 								<div className="flex items-center gap-1">
 									<span className="truncate font-mono text-xs">{record.host}</span>
-									<ButtonCopy value={record.host} label="Copy host" />
+									<ButtonCopy value={record.host} label="Copiar host" />
 								</div>
 							</td>
 							<td className="max-w-0 py-2 pr-3 align-middle">
 								<div className="flex items-center gap-1">
 									<span className="truncate font-mono text-xs">{record.value}</span>
-									<ButtonCopy value={record.value} label="Copy value" />
+									<ButtonCopy value={record.value} label="Copiar valor" />
 								</div>
 							</td>
 						</tr>

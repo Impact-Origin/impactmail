@@ -14,10 +14,10 @@ export default function BannerBlocked({ account }) {
 		>
 			<Ban aria-hidden className="size-4 shrink-0" />
 			<p className="line-clamp-2 min-w-0 text-[13px] leading-snug font-medium text-pretty md:truncate md:text-sm" title={reason}>
-				Account blocked{reason && `: ${reason}`}
-				<span className="hidden font-normal text-white/75 xl:inline"> · Nothing is sent until it&apos;s unblocked</span>
+				Conta bloqueada{reason && `: ${reason}`}
+				<span className="hidden font-normal text-white/75 xl:inline"> · Nada é enviado até ser desbloqueada</span>
 			</p>
-			<span className="hidden shrink-0 text-[13px] text-white/75 sm:inline">An admin can unblock it</span>
+			<span className="hidden shrink-0 text-[13px] text-white/75 sm:inline">Um administrador pode desbloqueá-la</span>
 		</div>
 	);
 }

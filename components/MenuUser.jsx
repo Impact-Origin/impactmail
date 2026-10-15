@@ -59,14 +59,14 @@ export default function MenuUser({ name, email, image, status }) {
 				<DropdownMenuItem asChild>
 					<Link href="/account">
 						<UserRound />
-						Account
+						Conta
 					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuSub>
 					<DropdownMenuSubTrigger>
 						<Sun className="dark:hidden" />
 						<Moon className="hidden dark:block" />
-						Theme
+						Tema
 					</DropdownMenuSubTrigger>
 					<DropdownMenuPortal>
 						<DropdownMenuSubContent className="w-36">
@@ -77,7 +77,7 @@ export default function MenuUser({ name, email, image, status }) {
 				<DropdownMenuSeparator />
 				<DropdownMenuItem disabled={isSigningOut} onSelect={signOutAfterAsking}>
 					<LogOut />
-					Sign out
+					Terminar sessão
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -3,7 +3,7 @@ import FormOnboarding from "@/components/FormOnboarding";
 import { requireAccount } from "@/lib/auth";
 import { LIST_SIZES, LIST_SOURCES, OTHER_LIST_SOURCE, needsOnboarding } from "@/lib/onboarding";
 
-export const metadata = { title: "Set up your newsletter" };
+export const metadata = { title: "Configurar a tua newsletter" };
 
 // Where the dashboard sends an account without a newsletter (app/(app)/layout.js).
 export default async function WelcomePage() {

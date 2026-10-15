@@ -8,7 +8,7 @@ import { platformSent, sent as sesEmails } from "./stubs/ses.mjs";
 // Who carries ImpactMail's own emails (sign-in codes, alerts): Resend when it's set up, else the provider. Customers'
 // emails (issues, welcome, confirmation, last-chance, tests) always go through the provider.
 const SELF_HOSTED = { EMAIL_FROM: "ImpactMail <login@mail.selfhost.dev>" };
-const CODE_SUBJECT = /^\d{6} is your ImpactMail code$/;
+const CODE_SUBJECT = /^\d{6} é o teu código do ImpactMail$/;
 
 let app;
 let fake;
@@ -71,7 +71,7 @@ describe("customers' emails", () => {
 		assert.deepEqual(await as(user, () => m.campaigns.sendTestCampaign(id)), { ok: true });
 		assert.deepEqual(added(before), { resend: 0, ses: 0, postshiba: 0, customer: 1 });
 		assert.equal(sesEmails.at(-1).tenantName, `mc-${user.accountId}`, "in the account's own tenant");
-		assert.equal(sesEmails.at(-1).subject, "[Test] Issue");
+		assert.equal(sesEmails.at(-1).subject, "[Teste] Issue");
 	});
 });
 
@@ -103,7 +103,7 @@ describe("sign-in codes and alerts", () => {
 		const env = { ...SELF_HOSTED, ...POSTSHIBA_ENV, RESEND_API_KEY: "", ALLOWED_EMAILS: "self-ps@example.com" };
 		await withEnv(env, async () => {
 			const { result, logged } = await capturingErrors(() => requestCode("self-ps@example.com"));
-			assert.equal(result.error, "Couldn't send the code. Try again in a minute.");
+			assert.equal(result.error, "Não foi possível enviar o código. Tenta de novo daqui a um minuto.");
 			assert.match(logged, /PostShiba can't send from mail\.selfhost\.dev yet: add CNAME ps1\._domainkey\.mail\.selfhost\.dev \S+ and CNAME rp\.mail\.selfhost\.dev \S+ to its DNS/);
 
 			const tenants = [...fake.state.tenants.values()].filter(({ slug }) => slug === "mc-platform");
@@ -132,7 +132,7 @@ describe("sign-in codes and alerts", () => {
 		const before = counts();
 		await withEnv({ ...SELF_HOSTED, EMAIL_FROM: "", ALLOWED_EMAILS: "no-from@example.com" }, async () => {
 			const { result, logged } = await capturingErrors(() => requestCode("no-from@example.com"));
-			assert.equal(result.error, "Couldn't send the code. Try again in a minute.");
+			assert.equal(result.error, "Não foi possível enviar o código. Tenta de novo daqui a um minuto.");
 			assert.match(logged, /EMAIL_FROM is not set/);
 			assert.equal(m.platform.canSendPlatformEmail(), false);
 		});

@@ -126,7 +126,7 @@ describe("the open newsletter", () => {
 	test("a forged ID is refused: another account's newsletter, or none, never opens", async () => {
 		await select(jane, alpha, "/domains");
 		for (const id of [strangerNewsletter, "000000000000000000000000", "not-an-id", ""]) {
-			assert.deepEqual(await select(jane, id, "/contacts"), { error: "Newsletter not found" }, id);
+			assert.deepEqual(await select(jane, id, "/contacts"), { error: "Newsletter não encontrada" }, id);
 			assert.equal(await catchNotFound(open(jane, id, "/contacts")), true, id);
 		}
 		assert.equal(jane.jar.get(m.rules.NEWSLETTER_COOKIE), alpha, "the cookie didn't change");
@@ -183,9 +183,9 @@ describe("each newsletter's pages only show its own", () => {
 		assert.equal(await m.Contact.countDocuments({ accountId: jane.accountId, newsletterId: alpha, email: "b2@example.org" }), 0);
 
 		const before = await m.Contact.countDocuments({ accountId: stranger.accountId });
-		assert.deepEqual(await as(jane, () => m.campaigns.createCampaign(strangerNewsletter)), { error: "Newsletter not found" });
-		assert.deepEqual(await importReaders(jane, strangerNewsletter, ["spam@example.net"]), { error: "Newsletter not found" });
-		assert.deepEqual(await as(jane, () => m.contacts.exportContacts({ newsletterId: strangerNewsletter })), { error: "Newsletter not found" });
+		assert.deepEqual(await as(jane, () => m.campaigns.createCampaign(strangerNewsletter)), { error: "Newsletter não encontrada" });
+		assert.deepEqual(await importReaders(jane, strangerNewsletter, ["spam@example.net"]), { error: "Newsletter não encontrada" });
+		assert.deepEqual(await as(jane, () => m.contacts.exportContacts({ newsletterId: strangerNewsletter })), { error: "Newsletter não encontrada" });
 		assert.equal(await m.Contact.countDocuments({ accountId: stranger.accountId }), before);
 		assert.equal(await m.Campaign.countDocuments({ accountId: jane.accountId, newsletterId: strangerNewsletter }), 0);
 	});
@@ -215,7 +215,7 @@ describe("up to 3 newsletters", () => {
 		await createNewsletter(user, "three-two");
 		await createNewsletter(user, "three-three");
 		const limit = m.rules.NEWSLETTER_LIMIT_MESSAGE;
-		assert.equal(limit, "An account has up to 3 newsletters");
+		assert.equal(limit, "Uma conta pode ter até 3 newsletters");
 
 		const fourth = await as(user, () => m.newsletters.saveNewsletter(null, form({ name: "Four", slug: "three-four" })));
 		assert.deepEqual(fourth, { error: limit });
@@ -239,7 +239,7 @@ describe("Add a newsletter's dialog", () => {
 		const open = await createNewsletter(user, "short-open");
 		await m.Newsletter.updateOne({ accountId: user.accountId, _id: open }, { $set: { fromName: "Jo", postalAddress: "2 Side St, Lyon" } });
 		assert.deepEqual(await select(user, open, "/domains"), { ok: true });
-		assert.deepEqual(await as(user, () => m.newsletters.createNewsletter(null, form({ name: " " }))), { error: "Name your newsletter" });
+		assert.deepEqual(await as(user, () => m.newsletters.createNewsletter(null, form({ name: " " }))), { error: "Dá um nome à tua newsletter" });
 
 		const url = await as(user, () => catchRedirect(m.newsletters.createNewsletter(null, form({ name: "Third letter", description: "Two ideas." }))));
 		assert.equal(url, "/newsletters");
@@ -258,7 +258,7 @@ describe("Add a newsletter's dialog", () => {
 		await addVerifiedDomain(user, "own-domain.dev");
 		await withEnv({ SHARED_DOMAIN: "" }, async () => {
 			const add = (fields) => as(user, () => m.newsletters.createNewsletter(null, form(fields)));
-			assert.deepEqual(await add({ name: "Own notes" }), { error: "From email is invalid" });
+			assert.deepEqual(await add({ name: "Own notes" }), { error: "O email do remetente é inválido" });
 			assert.equal(await catchRedirect(add({ name: "Own notes", fromEmail: "notes@own-domain.dev" })), "/newsletters");
 		});
 		const created = await m.Newsletter.findOne({ accountId: user.accountId, slug: "own-notes" }).lean();
@@ -296,7 +296,7 @@ describe("the REST API and MCP with several newsletters", () => {
 		const ambiguous = await api(jane.key, "GET", "/contacts/both%40example.org");
 		assert.equal(ambiguous.status, 400);
 		assert.equal(ambiguous.body.error.code, "validation_failed");
-		assert.match(ambiguous.body.error.message, /several newsletters/);
+		assert.match(ambiguous.body.error.message, /várias newsletters/);
 		assert.equal((await api(jane.key, "GET", "/contacts/both%40example.org?newsletter=beta-letter")).body.newsletterId, beta);
 		const unsubscribed = await api(jane.key, "PATCH", "/contacts/both%40example.org", { newsletter: "alpha", status: "unsubscribed" });
 		assert.equal(unsubscribed.body.newsletterId, alpha);

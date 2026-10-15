@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 // unsaved changes, with Discard and Save (or ⌘S, Ctrl+S), then Saved for a moment. Its place stays at the end of the
 // page, whose bottom padding it takes back (LayoutDashboard's), so the form's end never hides under it. The
 // get-started pill steps aside while it shows (app/globals.css). savedAt: the last save's time, null after a discard.
-export default function BarSave({ isDirty, isSaving, savedAt, onDiscard, label = "Save" }) {
+export default function BarSave({ isDirty, isSaving, savedAt, onDiscard, label = "Guardar" }) {
 	const slotRef = useRef(null);
 	const saveRef = useRef(null);
 	const [fadedAt, setFadedAt] = useState(null);
@@ -57,15 +57,15 @@ export default function BarSave({ isDirty, isSaving, savedAt, onDiscard, label =
 					{isSaved ? (
 						<span key={savedAt} className="flex items-center gap-1.5">
 							<Check className="size-3.5 shrink-0 animate-icon-in" />
-							Saved
+							Guardado
 						</span>
 					) : (
-						"Unsaved changes"
+						"Alterações por guardar"
 					)}
 				</p>
 				<div inert={isSaved} className={cn("flex shrink-0 items-center gap-1 transition-opacity duration-150", isSaved && "opacity-0")}>
 					<Button type="button" variant="ghost" size="sm" disabled={isSaving} onClick={onDiscard}>
-						Discard
+						Descartar
 					</Button>
 					<Button ref={saveRef} type="submit" size="sm" disabled={isSaving} aria-keyshortcuts="Meta+S Control+S" className="relative">
 						<span className={cn(isSaving && "opacity-0")}>{label}</span>
@@ -128,4 +128,4 @@ function useLeaveWarning(isDirty) {
 }
 
 const SAVED_MS = 1500;
-const LEAVE_QUESTION = "Leave without saving your changes?";
+const LEAVE_QUESTION = "Sair sem guardar as alterações?";

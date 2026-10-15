@@ -16,7 +16,7 @@ test("markdown emails get a footer with the unsubscribe placeholder and address"
 	assert.ok(html.includes(UNSUBSCRIBE_PLACEHOLDER));
 	assert.ok(html.includes("1 Main St, Paris"));
 	assert.ok(text.includes("link (https://example.com)"));
-	assert.ok(text.includes(`Unsubscribe: ${UNSUBSCRIBE_PLACEHOLDER}`));
+	assert.ok(text.includes(`Cancelar subscrição: ${UNSUBSCRIBE_PLACEHOLDER}`));
 	assert.ok(bytes > 0);
 });
 
@@ -56,8 +56,8 @@ test("emails link to their web version at the top, the web version doesn't", () 
 	const webUrl = "https://news.example.com/p/issue-12";
 	const markdownEmail = renderEmail({ markdown: "Hello", subject: "Hi", newsletter, webUrl });
 	assert.ok(markdownEmail.html.indexOf(`href="${webUrl}"`) < markdownEmail.html.indexOf("Hello"));
-	assert.ok(markdownEmail.html.includes(">Read online</a>"));
-	assert.ok(markdownEmail.text.startsWith(`Read online: ${webUrl}\n\nHello`));
+	assert.ok(markdownEmail.html.includes(">Ler online</a>"));
+	assert.ok(markdownEmail.text.startsWith(`Ler online: ${webUrl}\n\nHello`));
 
 	const htmlEmail = renderEmail({
 		format: "html",
@@ -67,7 +67,7 @@ test("emails link to their web version at the top, the web version doesn't", () 
 		webUrl,
 	});
 	assert.match(htmlEmail.html, /<body><div style="display:none[^]*?<\/div><div[^>]*><a href="https:\/\/news\.example\.com\/p\/issue-12"/);
-	assert.ok(htmlEmail.text.startsWith(`Read online (${webUrl})`), "the hidden preview text stays out of the text part");
+	assert.ok(htmlEmail.text.startsWith(`Ler online (${webUrl})`), "the hidden preview text stays out of the text part");
 	assert.ok(!htmlEmail.text.includes("&zwnj;"));
 
 	assert.ok(!renderEmail({ markdown: "Hello", newsletter, webUrl, isWebVersion: true }).html.includes("Read online"));

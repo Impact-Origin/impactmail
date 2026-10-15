@@ -84,7 +84,7 @@ export default function MenuNewsletter({ newsletters, selectedId, savedId, isCom
 					<span className="grid size-6 shrink-0 place-items-center rounded-md bg-muted">
 						<Plus className="size-3.5" />
 					</span>
-					<span className="truncate text-sm font-medium">Add a newsletter</span>
+					<span className="truncate text-sm font-medium">Adicionar uma newsletter</span>
 				</button>
 				{dialog}
 			</>
@@ -129,13 +129,13 @@ export default function MenuNewsletter({ newsletters, selectedId, savedId, isCom
 					{newsletters.length < MAX_NEWSLETTERS_PER_ACCOUNT ? (
 						<DropdownMenuItem className={ITEM} onSelect={() => setAdding(true)}>
 							<Plus />
-							Add a newsletter
+							Adicionar uma newsletter
 						</DropdownMenuItem>
 					) : (
 						<div className="px-2 py-1.5">
 							<DropdownMenuItem disabled className="h-auto gap-2.5 p-0 text-muted-foreground">
 								<Plus />
-								Add a newsletter
+								Adicionar uma newsletter
 							</DropdownMenuItem>
 							<p className="mt-1 text-xs text-pretty text-muted-foreground">{NEWSLETTER_LIMIT_MESSAGE}</p>
 						</div>
@@ -143,7 +143,7 @@ export default function MenuNewsletter({ newsletters, selectedId, savedId, isCom
 					<DropdownMenuItem asChild className={ITEM}>
 						<Link href="/newsletters">
 							<Settings />
-							Newsletter settings
+							Definições da newsletter
 						</Link>
 					</DropdownMenuItem>
 				</DropdownMenuContent>

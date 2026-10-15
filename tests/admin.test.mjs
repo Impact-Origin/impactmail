@@ -38,7 +38,7 @@ test("blocking and unblocking an account", async () => {
 	assert.equal(account.pauseReason, "Complaints spike");
 	assert.equal(account.pausedBy, "admin");
 	assert.ok(account.pausedAt instanceof Date);
-	assert.deepEqual(await as(admin, () => m.actions.blockAccountAction(id, "again")), { error: "Already blocked" });
+	assert.deepEqual(await as(admin, () => m.actions.blockAccountAction(id, "again")), { error: "Já está bloqueada" });
 
 	assert.deepEqual(await as(admin, () => m.actions.unblockAccountAction(id)), { ok: true });
 	account = await m.Account.findById(id).lean();
@@ -46,7 +46,7 @@ test("blocking and unblocking an account", async () => {
 	assert.equal(account.pausedAt, undefined);
 	assert.equal(account.pauseReason, undefined);
 	assert.equal(account.pausedBy, undefined);
-	assert.deepEqual(await as(admin, () => m.actions.unblockAccountAction(id)), { error: "Not blocked" });
+	assert.deepEqual(await as(admin, () => m.actions.unblockAccountAction(id)), { error: "Não está bloqueada" });
 });
 
 test("the account list shows each owner, status, usage and creation date, newest first", async () => {

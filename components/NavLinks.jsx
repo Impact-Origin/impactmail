@@ -42,15 +42,15 @@ export default function NavLinks({ isAdmin, onNavigate }) {
 }
 
 const NEWSLETTER_ITEMS = [
-	{ href: "/", label: "Overview", icon: LayoutGrid },
-	{ href: "/campaigns", label: "Campaigns", icon: Send },
-	{ href: "/contacts", label: "Contacts", icon: Users },
-	{ href: "/newsletters", label: "Settings", icon: Settings },
+	{ href: "/", label: "Visão geral", icon: LayoutGrid },
+	{ href: "/campaigns", label: "Campanhas", icon: Send },
+	{ href: "/contacts", label: "Contactos", icon: Users },
+	{ href: "/newsletters", label: "Definições", icon: Settings },
 ];
 
 const ACCOUNT_ITEMS = [
-	{ href: "/domains", label: "Domains", icon: Globe },
-	{ href: "/api-keys", label: "API keys", icon: KeyRound },
+	{ href: "/domains", label: "Domínios", icon: Globe },
+	{ href: "/api-keys", label: "Chaves de API", icon: KeyRound },
 ];
 
 const ADMIN_ITEM = { href: "/admin", label: "Admin", icon: Shield };

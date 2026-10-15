@@ -8,7 +8,7 @@ export default function StatusSaved({ savedAt }) {
 			{savedAt && (
 				<span key={savedAt} className="flex items-center gap-1.5 animate-saved">
 					<Check className="size-3.5 animate-icon-in" />
-					Saved
+					Guardado
 				</span>
 			)}
 		</span>

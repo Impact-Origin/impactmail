@@ -8,7 +8,7 @@ export default function HeaderPage({ title, backHref, children, meta, icon }) {
 				{backHref && (
 					<Link
 						href={backHref}
-						aria-label="Back"
+						aria-label="Voltar"
 						className="-ml-2 grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
 					>
 						<ChevronLeft className="size-5" />
