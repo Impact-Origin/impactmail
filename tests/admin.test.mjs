@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { activate, as, catchNotFound, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, catchNotFound, form, signIn, startTestApp } from "./helpers/app.mjs";
 
 let app;
 let m;
@@ -18,7 +18,6 @@ before(async () => {
 	};
 	admin = await signIn("ops@example.com");
 	customer = await signIn("customer@example.com");
-	await activate(customer, { plan: "growth" });
 });
 
 after(() => app?.stop());
@@ -27,13 +26,8 @@ test("admin actions answer 404 to anyone outside ADMIN_EMAILS, and change nothin
 	const id = String(customer.accountId);
 	assert.equal(await as(customer, () => catchNotFound(m.actions.blockAccountAction(id, "nope"))), true);
 	assert.equal(await as(customer, () => catchNotFound(m.actions.unblockAccountAction(id))), true);
-	assert.equal(
-		await as(customer, () => catchNotFound(m.actions.saveLimits(null, form({ accountId: id, emailsPerMonth: "999999" })))),
-		true
-	);
 	const untouched = await m.Account.findById(customer.accountId).lean();
 	assert.equal(untouched.status, "active");
-	assert.equal(untouched.limitOverrides?.emailsPerMonth, undefined);
 });
 
 test("blocking and unblocking an account", async () => {
@@ -55,27 +49,7 @@ test("blocking and unblocking an account", async () => {
 	assert.deepEqual(await as(admin, () => m.actions.unblockAccountAction(id)), { error: "Not blocked" });
 });
 
-test("limit overrides replace the plan's numbers, and empty fields bring the plan's back", async () => {
-	const id = String(customer.accountId);
-	const saved = await as(admin, () => m.actions.saveLimits(null, form({ accountId: id, emailsPerMonth: "150,000", subscribers: "" })));
-	assert.equal(saved.ok, true);
-	let account = await m.Account.findById(id).lean();
-	assert.equal(account.limitOverrides.emailsPerMonth, 150_000);
-	assert.equal(account.limitOverrides.subscribers, undefined);
-
-	assert.deepEqual(await as(admin, () => m.actions.saveLimits(null, form({ accountId: id, emailsPerMonth: "-5" }))), {
-		error: "Use whole numbers, or leave empty for the plan's",
-	});
-	assert.deepEqual(await as(admin, () => m.actions.saveLimits(null, form({ accountId: id, emailsPerMonth: "1.5" }))), {
-		error: "Use whole numbers, or leave empty for the plan's",
-	});
-
-	await as(admin, () => m.actions.saveLimits(null, form({ accountId: id, emailsPerMonth: "", subscribers: "" })));
-	account = await m.Account.findById(id).lean();
-	assert.equal(account.limitOverrides?.emailsPerMonth, undefined);
-});
-
-test("the account list shows each owner, plan, status, usage and creation date, newest first", async () => {
+test("the account list shows each owner, status, usage and creation date, newest first", async () => {
 	const url = await as(customer, async () => {
 		const { catchRedirect } = await import("./helpers/app.mjs");
 		return catchRedirect(
@@ -89,8 +63,6 @@ test("the account list shows each owner, plan, status, usage and creation date, 
 	const accounts = await m.accounts.listAccountsForAdmin();
 	assert.deepEqual(accounts.map(({ ownerEmail }) => ownerEmail), ["customer@example.com", "ops@example.com"]);
 	const [listed] = accounts;
-	assert.equal(listed.plan, "growth");
-	assert.equal(listed.subscriptionStatus, "active");
 	assert.equal(listed.activeContacts, 1);
 	assert.equal(listed.usage.emailsSent, 0);
 	assert.ok(listed.createdAt instanceof Date);

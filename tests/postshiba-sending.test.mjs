@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { decryptSecret } from "../lib/credentials.js";
-import { activate, as, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { as, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 import { POSTSHIBA, POSTSHIBA_ENV, createFakePostshiba } from "./helpers/postshiba.mjs";
 import { cnames, txts } from "./stubs/dns-check.mjs";
 import { published } from "./stubs/qstash.mjs";
@@ -31,13 +31,6 @@ async function welcomeNewContact(user, email) {
 	const contact = await m.Contact.create({ accountId: user.accountId, newsletterId: user.newsletterId, email, status: "active" });
 	return m.sending.queueWelcomeEmail({ newsletter, contact });
 }
-
-const subscription = (id) => ({
-	id: `sub_${id}`,
-	status: "active",
-	customer: `cus_${id}`,
-	items: { data: [{ price: { lookup_key: "starter_month" }, current_period_start: 1_790_000_000, current_period_end: 1_792_600_000 }] },
-});
 
 async function createNewsletter(user, slug, fields = {}) {
 	const url = await as(user, () =>
@@ -81,7 +74,6 @@ function postWebhook(event) {
 // A paying customer whose newsletter sends from its own domain, verified at PostShiba.
 async function customer(email, slug) {
 	const user = await signIn(email);
-	await activate(user);
 	await createNewsletter(user, slug);
 	const domain = `${slug}.dev`;
 	assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain }))), { ok: true, domain });
@@ -116,7 +108,6 @@ before(async () => {
 		sending: await import("../lib/sending.js"),
 		sendBatchRoute: await import("../app/api/jobs/send-batch/route.js"),
 		webhookRoute: await import("../app/api/webhooks/postshiba/route.js"),
-		billing: await import("../lib/billing.js"),
 		accounts: await import("../lib/accounts.js"),
 		tenants: await import("../lib/tenants.js"),
 		providers: await import("../lib/email-provider/index.js"),
@@ -137,10 +128,10 @@ afterEach(() => fake.state.failures.splice(0));
 after(() => app?.stop());
 
 describe("PostShiba tenants", () => {
-	test("a plan starting creates one tenant with a credential on each cluster, and the SMTP password stays encrypted", async () => {
+	test("one tenant is created with a credential on each cluster, and the SMTP password stays encrypted", async () => {
 		const user = await signIn("ps-tenant@example.com");
-		await m.billing.applySubscription(await loadAccount(user), subscription("ps-tenant"));
-		await m.billing.applySubscription(await loadAccount(user), subscription("ps-tenant"));
+		await m.tenants.ensureTenant(await loadAccount(user));
+		await m.tenants.ensureTenant(await loadAccount(user));
 
 		const slug = `mc-${user.accountId}`;
 		const tenants = [...fake.state.tenants.values()].filter((tenant) => tenant.slug === slug);
@@ -187,9 +178,8 @@ describe("PostShiba tenants", () => {
 	test("a setup that failed halfway finishes later, with no second tenant", async () => {
 		const user = await signIn("ps-retry@example.com");
 		fake.fail({ method: "POST", path: /\/smtp_credentials$/, status: 503, body: { error: "unavailable" } });
-		await m.billing.applySubscription(await loadAccount(user), subscription("ps-retry"));
+		await assert.rejects(m.tenants.ensureTenant(await loadAccount(user)));
 		let account = await loadAccount(user);
-		assert.equal(account.subscriptionStatus, "active", "the plan starts anyway");
 		assert.ok(account.postshiba.tenantId);
 		assert.equal(account.postshiba.provisionedAt, undefined);
 
@@ -207,7 +197,6 @@ describe("PostShiba tenants", () => {
 describe("PostShiba domains", () => {
 	test("an own domain gets PostShiba's DKIM and rp. CNAMEs, in the account's tenant, and Check now stays within the budget", async () => {
 		const user = await signIn("ps-domain@example.com");
-		await activate(user);
 		assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain: "letters.dev" }))), { ok: true, domain: "letters.dev" });
 		const domain = await m.Domain.findOne({ accountId: user.accountId }).lean();
 		const atPostshiba = fake.state.domains.get(domain.providerDomainId);
@@ -277,7 +266,6 @@ describe("PostShiba domains", () => {
 
 	test("every check looks up DMARC on the domain, else its parent, and a lookup that fails keeps the last answer", async () => {
 		const user = await signIn("ps-dmarc@example.com");
-		await activate(user);
 		assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain: "mail.dmarc-parent.dev" }))), { ok: true, domain: "mail.dmarc-parent.dev" });
 		const { _id } = await m.Domain.findOne({ accountId: user.accountId }).lean();
 		async function check() {
@@ -302,7 +290,6 @@ describe("PostShiba domains", () => {
 
 	test("a return path PostShiba verifies after a check shows on the Domains page without another, and Check now still verifies", async () => {
 		const user = await signIn("ps-refresh@example.com");
-		await activate(user);
 		assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain: "refresh.dev" }))), { ok: true, domain: "refresh.dev" });
 		const { _id, providerDomainId } = await m.Domain.findOne({ accountId: user.accountId }).lean();
 		const atPostshiba = fake.state.domains.get(providerDomainId);
@@ -340,7 +327,6 @@ describe("PostShiba domains", () => {
 
 	test("the Domains page leaves a domain alone once PostShiba verified it and DMARC is found, and the archive to Check now", async () => {
 		const user = await signIn("ps-settled@example.com");
-		await activate(user);
 		assert.deepEqual(await as(user, () => m.domains.addDomainAction(null, form({ domain: "settled.dev" }))), { ok: true, domain: "settled.dev" });
 		const { _id, providerDomainId } = await m.Domain.findOne({ accountId: user.accountId }).lean();
 		const reads = () => fake.callsTo("GET", new RegExp(`/sending_domains/${providerDomainId}$`)).length;
@@ -641,7 +627,6 @@ describe("clusters", () => {
 describe("the shared address on PostShiba", () => {
 	test("a newsletter without its own domain gets its own subdomain in its own tenant, with PostShiba's CNAMEs on Vercel DNS", async () => {
 		const user = await signIn("ps-shared@example.com");
-		await activate(user);
 		await createNewsletter(user, "ps-shared");
 		const newsletter = await m.Newsletter.findOne({ accountId: user.accountId }).lean();
 		const subdomain = "ps-shared.mailcheapmail.com";
@@ -668,25 +653,8 @@ describe("the shared address on PostShiba", () => {
 		assert.equal((await m.Newsletter.findOne({ accountId: user.accountId }).lean()).sharedSender.verified, true);
 	});
 
-	test("a newsletter set up before the plan gets nothing at PostShiba or in DNS, then its subdomain when the plan starts", async () => {
-		const user = await signIn("ps-early@example.com");
-		const before = { tenants: fake.state.tenants.size, domains: fake.state.domains.size, records: dnsRecords.size };
-		await createNewsletter(user, "ps-early");
-		let newsletter = await m.Newsletter.findOne({ accountId: user.accountId }).lean();
-		assert.equal(newsletter.fromEmail, "hello@ps-early.mailcheapmail.com");
-		assert.equal(newsletter.sharedSender?.domain, undefined);
-		assert.deepEqual({ tenants: fake.state.tenants.size, domains: fake.state.domains.size, records: dnsRecords.size }, before);
-
-		await m.billing.applySubscription(await loadAccount(user), subscription("ps-early"));
-		newsletter = await m.Newsletter.findOne({ accountId: user.accountId }).lean();
-		assert.equal(newsletter.sharedSender.domain, "ps-early.mailcheapmail.com");
-		assert.equal(fake.state.domains.get(newsletter.sharedSender.providerDomainId).tenant_id, (await loadAccount(user)).postshiba.tenantId);
-		assert.equal(newsletter.sharedSender.dnsRecordIds.length, 3);
-	});
-
 	test("a setup that failed is done again by the next send, which waits until PostShiba finds the records", async () => {
 		const user = await signIn("ps-waiting@example.com");
-		await activate(user);
 		fake.fail({ method: "POST", path: /\/sending_domains$/, status: 503, body: { error: "unavailable" } });
 		await createNewsletter(user, "ps-waiting");
 		assert.equal((await m.Newsletter.findOne({ accountId: user.accountId }).lean()).sharedSender, undefined, "the newsletter is saved anyway");

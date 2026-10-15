@@ -6,7 +6,7 @@ import { getAccountRateProblem } from "../lib/sending-rules.js";
 import { getSesEventPlan } from "../lib/ses-event-mapping.js";
 import { buildSigningString } from "../lib/sns.js";
 import { getTenantEventPlan, getTenantName } from "../lib/tenant-event-rules.js";
-import { activate, as, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
 import { state } from "./stubs/ses.mjs";
 
 const TENANT_ARN = (name) => `arn:aws:ses:us-east-1:111122223333:tenant/${name}/tn-0123`;
@@ -79,7 +79,6 @@ describe("per-account events", () => {
 
 	async function customer(email, slug) {
 		const user = await signIn(email);
-		await activate(user);
 		const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St" }))));
 		user.newsletterId = url.split("/").at(-1);
 		await m.tenants.provisionTenant(user.accountId);

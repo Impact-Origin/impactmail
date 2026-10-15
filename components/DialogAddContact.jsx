@@ -14,9 +14,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ERROR_CODES } from "@/lib/account-state";
 import { toast } from "@/lib/toast";
-import { usePaywall } from "@/lib/use-paywall";
 
 // Into the newsletter the page shows.
 export default function DialogAddContact({ newsletter, variant = "outline", size }) {
@@ -44,15 +42,11 @@ export default function DialogAddContact({ newsletter, variant = "outline", size
 }
 
 function FormContact({ newsletter, onClose }) {
-	const paywall = usePaywall();
 	const [email, setEmail] = useState("");
 	const [hasConsent, setHasConsent] = useState(false);
 	const [state, action, isPending] = useActionState(async (previous, formData) => {
 		const result = await addContact(previous, formData);
-		if (result?.code === ERROR_CODES.subscriptionRequired && paywall) {
-			onClose();
-			paywall.open("contact");
-		} else if (!result?.error) {
+		if (!result?.error) {
 			onClose();
 			toast.success(getAddedMessage(result));
 		}

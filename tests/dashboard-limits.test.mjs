@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, as, callApi, catchRedirect, form, mockStripe, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 
 // The dashboard counts the API's hourly limits per account on what costs something each call: test emails and
-// sends, imports, uploads, domains and Stripe. Each account counts on its own, and its API keys count against it too.
+// sends, imports, uploads and domains. Each account counts on its own, and its API keys count against it too.
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
 let app;
 let m;
@@ -18,7 +18,6 @@ before(async () => {
 		domains: await import("../app/(app)/domains/actions.js"),
 		newsletters: await import("../app/(app)/newsletters/actions.js"),
 		apiKeys: await import("../app/(app)/api-keys/actions.js"),
-		billing: await import("../app/(account)/billing/actions.js"),
 		uploadsRoute: await import("../app/api/uploads/route.js"),
 		Contact: (await import("../models/Contact.js")).default,
 		Domain: (await import("../models/Domain.js")).default,
@@ -28,10 +27,9 @@ before(async () => {
 
 after(() => app?.stop());
 
-// A paying account with a newsletter that can send, and a welcome email saved but off.
+// An account with a newsletter that can send, and a welcome email saved but off.
 async function customer(email) {
 	const user = await signIn(email);
-	await activate(user);
 	const slug = email.split("@")[0];
 	const settings = { name: slug, slug, postalAddress: "1 Main St, Paris", welcomeSubject: "Welcome", welcomeMarkdown: "Glad you're here." };
 	const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form(settings))));
@@ -59,11 +57,9 @@ test("the dashboard counts the hourly limits of what costs something each call",
 			.sort(),
 		[
 			"add_domain",
-			"change_plan",
 			"check_domain",
 			"check_newsletter_slug",
 			"import_contacts",
-			"open_billing_portal",
 			"resume_campaign",
 			"schedule_campaign",
 			"send_campaign",
@@ -135,7 +131,7 @@ describe("contacts", () => {
 	});
 });
 
-describe("images, domains and billing", () => {
+describe("images and domains", () => {
 	test("the editor uploads 60 images an hour per account, and the 61st answers 429 with what its toast says", async () => {
 		const user = await customer("uploader@example.com");
 		const upload = () =>
@@ -164,17 +160,5 @@ describe("images, domains and billing", () => {
 		assert.deepEqual(await as(user, () => m.domains.checkDomainAction(id)), {
 			error: "You can check a domain's DNS records 60 times an hour. Try again later.",
 		});
-	});
-
-	test("past 30 billing portal links an hour, the billing page says so instead of blaming Stripe", async () => {
-		const user = await customer("billing-limit@example.com");
-		const portal = { id: "bps_1", object: "billing_portal.session", url: "https://billing.stripe.com/p/session/bps_1" };
-		mockStripe(({ method, path }) =>
-			method === "POST" && path === "/v1/billing_portal/sessions"
-				? portal
-				: { status: 404, error: { type: "invalid_request_error", message: `No mock for ${method} ${path}` } }
-		);
-		await repeat(30, async (index) => assert.equal(await as(user, () => catchRedirect(m.billing.openBillingPortal())), portal.url, String(index)));
-		assert.equal(await as(user, () => catchRedirect(m.billing.openBillingPortal())), "/billing?error=rate_limited");
 	});
 });

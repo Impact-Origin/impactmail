@@ -5,11 +5,9 @@ import ButtonCopy from "@/components/ButtonCopy";
 import DialogRemoveDomain from "@/components/DialogRemoveDomain";
 import FormAddDomain from "@/components/FormAddDomain";
 import FormSwitchToDomain from "@/components/FormSwitchToDomain";
-import GatePlan from "@/components/GatePlan";
 import HeaderPage from "@/components/HeaderPage";
 import ImageFavicon from "@/components/ImageFavicon";
 import { scoped } from "@/lib/account-scope";
-import { hasActiveSubscription } from "@/lib/account-state";
 import { getArchiveCnameTarget, getSharedDomain } from "@/lib/config";
 import { getDomainSetup, getDomainSummary } from "@/lib/domain-records";
 import { refreshDomains } from "@/lib/domains";
@@ -39,14 +37,12 @@ export default async function DomainsPage() {
 		Newsletter.find(scoped(account)).sort({ createdAt: 1, _id: 1 }).select({ name: 1, slug: 1, fromEmail: 1, sharedSender: 1 }).lean(),
 	]);
 	const sharedDomain = getSharedDomain();
-	const hasPlan = hasActiveSubscription(account);
-	// A domain or a shared address still being set up is looked at again, at most once a minute. Without a plan
-	// there's no shared address yet, and domains wait.
+	// A domain or a shared address still being set up is looked at again, at most once a minute.
 	const [refreshed, newsletters] = await Promise.all([
-		hasPlan ? refreshDomains(account, stored) : stored,
+		refreshDomains(account, stored),
 		Promise.all(
 			saved.map((newsletter) =>
-				!hasPlan || isSharedSenderReady(newsletter, { sharedDomain }) ? newsletter : refreshSharedSender(account, newsletter)
+				isSharedSenderReady(newsletter, { sharedDomain }) ? newsletter : refreshSharedSender(account, newsletter)
 			)
 		),
 	]);
@@ -61,15 +57,13 @@ export default async function DomainsPage() {
 		<>
 			<HeaderPage title="Domains" />
 			<div className="flex flex-col gap-6">
-				<GatePlan reason="domain">
-					<FormAddDomain fromLocalPart={getOwnDomainLocalPart(current?.fromEmail, sharedDomain)} hasArchiveHost={Boolean(cnameTarget)} />
-				</GatePlan>
+				<FormAddDomain fromLocalPart={getOwnDomainLocalPart(current?.fromEmail, sharedDomain)} hasArchiveHost={Boolean(cnameTarget)} />
 				{domains.map((domain, index) => (
 					<CardDomain
 						key={String(domain._id)}
 						domain={domain}
-						newsletters={hasPlan ? newsletters : []}
-						current={hasPlan ? current : null}
+						newsletters={newsletters}
+						current={current}
 						sharedDomain={sharedDomain}
 						cnameTarget={cnameTarget}
 						stagger={index + 1}
@@ -93,7 +87,7 @@ export default async function DomainsPage() {
 								icon={<Mail className="size-4 text-muted-foreground" />}
 								label="Shared address"
 								detail={<span className="font-mono text-xs">{getSharedAddress(newsletter.slug, sharedDomain)}</span>}
-								end={<TextStatus {...getSharedStatus(newsletter, { sharedDomain, isProviderSetUp, hasPlan })} className="shrink-0 text-xs" />}
+								end={<TextStatus {...getSharedStatus(newsletter, { sharedDomain, isProviderSetUp })} className="shrink-0 text-xs" />}
 								stagger={domains.length + 2 + index}
 							/>
 						))}
@@ -104,10 +98,9 @@ export default async function DomainsPage() {
 	);
 }
 
-function getSharedStatus(newsletter, { sharedDomain, isProviderSetUp, hasPlan }) {
+function getSharedStatus(newsletter, { sharedDomain, isProviderSetUp }) {
 	if (!isOnSharedDomain(newsletter.fromEmail, sharedDomain)) return { label: "Not in use", tone: "none" };
 	if (!isProviderSetUp) return { label: "Email provider not set up", tone: "none" };
-	if (!hasPlan) return { label: "Starts with a plan", tone: "none" };
 	return isSharedSenderReady(newsletter, { sharedDomain }) ? { label: "Used until you switch", tone: "good" } : { label: "Setting up", tone: "wait" };
 }
 

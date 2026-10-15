@@ -3,18 +3,15 @@ import { notFound } from "next/navigation";
 import CampaignReport from "@/components/CampaignReport";
 import FormCampaign from "@/components/FormCampaign";
 import { scoped } from "@/lib/account-scope";
-import { getAccountSendProblem, hasActiveSubscription, isBlocked } from "@/lib/account-state";
+import { getAccountSendProblem, isBlocked } from "@/lib/account-state";
 import { getArchiveUrls } from "@/lib/archive-hosts";
-import { countNewContacts, getSendVolumes, sendTimesPipeline } from "@/lib/campaign-queries";
+import { countNewContacts, sendTimesPipeline } from "@/lib/campaign-queries";
 import { isSendingEnabled } from "@/lib/config";
 import { MESSAGE_STATS_GROUP } from "@/lib/message-stats";
 import { getPostalAddress } from "@/lib/postal-address";
 import { getSelectedNewsletter, openNewsletter } from "@/lib/selected-newsletter";
-import { getPace } from "@/lib/send-spread";
 import { serialize } from "@/lib/serialize";
 import { loadSender } from "@/lib/sender";
-import { siteExtensions } from "@/lib/site-extensions";
-import { countEmailsInFlight, getUsage } from "@/lib/usage";
 import Campaign from "@/models/Campaign";
 import Contact from "@/models/Contact";
 import Message from "@/models/Message";
@@ -33,8 +30,7 @@ export default async function CampaignPage({ params }) {
 	const stored = await Newsletter.findOne(scoped(account, { _id: campaign.newsletterId })).lean();
 	if (!stored) notFound();
 	// The previews and the checks show the address its emails print.
-	const newsletter = { ...stored, postalAddress: getPostalAddress(stored, siteExtensions.defaultPostalAddress) };
-	const plan = await getPlanState(account);
+	const newsletter = { ...stored, postalAddress: getPostalAddress(stored) };
 
 	if (!["draft", "scheduled"].includes(campaign.status)) {
 		const [providers, remainingCount] = await Promise.all([
@@ -42,27 +38,23 @@ export default async function CampaignPage({ params }) {
 			countRemaining(campaign),
 		]);
 		// Only a next step needs them, for what its dialog says.
-		const [volumes, newContacts] =
-			remainingCount > 0 ? await Promise.all([getSendVolumes(account), countNewContacts(account, newsletter._id)]) : [];
+		const newContacts = remainingCount > 0 ? await countNewContacts(account, newsletter._id) : 0;
 		return (
 			<CampaignReport
 				campaign={serialize(campaign)}
 				newsletter={serialize(newsletter)}
 				providers={providers}
 				remainingCount={remainingCount}
-				emailsLeft={plan.emailsLeft}
 				isBlocked={isBlocked(account)}
-				pace={getPace(account, volumes)}
 				newContacts={newContacts}
 			/>
 		);
 	}
 
-	const [audienceCount, sender, sendTimes, volumes, newContacts] = await Promise.all([
+	const [audienceCount, sender, sendTimes, newContacts] = await Promise.all([
 		Contact.countDocuments(scoped(account, { newsletterId: newsletter._id, status: "active" })),
 		loadSender(account, newsletter),
 		getSendTimes(campaign),
-		getSendVolumes(account),
 		countNewContacts(account, newsletter._id),
 	]);
 
@@ -76,30 +68,10 @@ export default async function CampaignPage({ params }) {
 			testEmail={user.email}
 			sendTimes={sendTimes}
 			archiveUrlBase={newsletter.archiveEnabled ? getArchiveUrls(newsletter).absolutePost("") : null}
-			planProblem={plan.problem}
-			emailsLeft={plan.emailsLeft}
-			pace={getPace(account, volumes)}
+			accountProblem={getAccountSendProblem(account)?.message ?? null}
 			newContacts={newContacts}
 		/>
 	);
-}
-
-// What the send dialogs need: emails left after the sends already going out (null: no limit), and what
-// blocks any send. Without a plan, the send buttons open the paywall instead.
-async function getPlanState(account) {
-	if (!hasActiveSubscription(account)) return { emailsLeft: null, problem: null };
-	const [usage, inFlight] = await Promise.all([getUsage(account), countEmailsInFlight(account._id)]);
-	const accountProblem = getAccountSendProblem(account)?.message ?? null;
-	if (usage.emailsLimit === null) return { emailsLeft: null, problem: accountProblem };
-	const emailsLeft = Math.max(0, usage.emailsLimit - usage.emailsSent - inFlight);
-	const problem =
-		accountProblem ??
-		(usage.subscribers > usage.subscribersLimit
-			? "Over your plan's subscriber limit"
-			: emailsLeft === 0
-				? "This month's emails are used up"
-				: null);
-	return { emailsLeft, problem };
 }
 
 // A newsletter's first issue borrows the times the account's other newsletters go out.

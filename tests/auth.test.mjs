@@ -75,12 +75,13 @@ test("a wrong code doesn't sign in and doesn't set a session", async () => {
 });
 
 test("without a Resend key the code only shows in the console, and only in development", async () => {
-	const previous = { key: process.env.RESEND_API_KEY, env: process.env.NODE_ENV };
+	const previous = { key: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM, env: process.env.NODE_ENV };
 	const logged = [];
 	const info = console.info;
 	console.info = (...args) => logged.push(args.join(" "));
 	try {
 		delete process.env.RESEND_API_KEY;
+		process.env.EMAIL_FROM = "";
 		process.env.NODE_ENV = "development";
 		const user = { email: "dev@example.com", jar: new Map(), ip: "198.51.100.202" };
 		assert.deepEqual(await as(user, () => actions.sendSigninCode(null, form({ email: user.email }))), { email: user.email });
@@ -94,6 +95,7 @@ test("without a Resend key the code only shows in the console, and only in devel
 	} finally {
 		console.info = info;
 		process.env.RESEND_API_KEY = previous.key;
+		process.env.EMAIL_FROM = previous.from;
 		process.env.NODE_ENV = previous.env;
 	}
 });

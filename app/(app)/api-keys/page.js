@@ -4,7 +4,6 @@ import { revokeApiKey } from "@/app/(app)/api-keys/actions";
 import BadgeStatus from "@/components/BadgeStatus";
 import ButtonRevoke from "@/components/ButtonRevoke";
 import DialogCreateApiKey from "@/components/DialogCreateApiKey";
-import GatePlan from "@/components/GatePlan";
 import HeaderPage from "@/components/HeaderPage";
 import IconBrand, { AGENTS } from "@/components/IconBrand";
 import StateEmpty from "@/components/StateEmpty";
@@ -46,9 +45,7 @@ export default async function ApiKeysPage() {
 						<ArrowUpRight data-icon="inline-end" className="opacity-60" />
 					</Link>
 				</Button>
-				<GatePlan reason="apiKey">
-					<DialogCreateApiKey />
-				</GatePlan>
+				<DialogCreateApiKey />
 			</HeaderPage>
 
 			<div className="flex flex-col gap-8">

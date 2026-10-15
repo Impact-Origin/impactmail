@@ -1,5 +1,5 @@
 import { scoped } from "@/lib/account-scope";
-import { ERROR_CODES, hasActiveSubscription } from "@/lib/account-state";
+import { ERROR_CODES, isAccountActive } from "@/lib/account-state";
 import { contactSearchFilter } from "@/lib/contacts";
 import { getCsvHeader, toCsvRow } from "@/lib/contacts-csv";
 import { connectDb } from "@/lib/db";
@@ -21,7 +21,7 @@ export async function GET(request) {
 
 	await connectDb();
 	const account = await Account.findById(link.accountId).lean();
-	if (!hasActiveSubscription(account)) return fail(402, ERROR_CODES.subscriptionRequired, "The account has no active plan");
+	if (!isAccountActive(account)) return fail(409, ERROR_CODES.accountDeleting, "This account is being deleted");
 	const newsletters = new Map(
 		(await Newsletter.find(scoped(account)).select({ slug: 1 }).lean()).map(({ _id, slug }) => [String(_id), slug])
 	);

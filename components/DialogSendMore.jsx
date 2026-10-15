@@ -7,8 +7,6 @@ import { sendCampaignToMore } from "@/app/(app)/campaigns/actions";
 import InputAudienceLimit, { countRecipients } from "@/components/InputAudienceLimit";
 import ListCleanupPreview from "@/components/ListCleanupPreview";
 import NoticeFirstSend from "@/components/NoticeFirstSend";
-import NoticeWarmup from "@/components/NoticeWarmup";
-import TextPlanLimit from "@/components/TextPlanLimit";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -27,7 +25,7 @@ import { toast } from "@/lib/toast";
 import { useToastError } from "@/lib/use-toast-error";
 import { useCleanupPreview } from "@/lib/use-cleanup-preview";
 
-export default function DialogSendMore({ campaignId, sentCount, remainingCount, emailsLeft, isCleanupEnabled, pace, newContacts = 0 }) {
+export default function DialogSendMore({ campaignId, sentCount, remainingCount, isCleanupEnabled, newContacts = 0 }) {
 	const router = useRouter();
 	const toastError = useToastError();
 	const [isOpen, setIsOpen] = useState(false);
@@ -40,7 +38,6 @@ export default function DialogSendMore({ campaignId, sentCount, remainingCount, 
 	const remaining = preview?.enabled ? Math.max(0, preview.issue - sentCount) : remainingCount;
 	const recipients = countRecipients(more, remaining);
 	const emails = recipients + (summary?.lastChance ?? 0);
-	const isOverPlan = emailsLeft !== null && emails > emailsLeft;
 
 	function changeOpen(nextIsOpen) {
 		if (nextIsOpen && isCleanupEnabled) loadPreview();
@@ -73,16 +70,14 @@ export default function DialogSendMore({ campaignId, sentCount, remainingCount, 
 						{formatNumber(sentCount)} got it so far. The next most engaged contacts get it, and nobody receives it twice.
 					</DialogDescription>
 				</DialogHeader>
-				<NoticeWarmup pace={pace} emails={emails} newContacts={newContacts} />
 				{newContacts > FIRST_SEND.minSlice && <NoticeFirstSend count={newContacts} />}
 				<InputAudienceLimit label="How many more" value={more} onChange={setMore} audienceCount={remaining} />
 				{isCleanupEnabled && <ListCleanupPreview summary={summary} isCounting={isCounting} error={preview?.error} />}
-				{isOverPlan && <TextPlanLimit emailsLeft={emailsLeft} />}
 				<DialogFooter>
 					<DialogClose asChild>
 						<Button variant="outline">Cancel</Button>
 					</DialogClose>
-					<Button onClick={send} disabled={isSending || emails === 0 || isOverPlan} className="min-w-20">
+					<Button onClick={send} disabled={isSending || emails === 0} className="min-w-20">
 						{isSending ? <Loader2 className="animate-spin" /> : "Send"}
 					</Button>
 				</DialogFooter>

@@ -1,20 +1,16 @@
 import FooterSite from "@/components/FooterSite";
 import HeaderSite from "@/components/HeaderSite";
-import { SiteAnalytics, SiteBand } from "@/components/SiteExtensions";
-import { getAppUrl, isCloud } from "@/lib/config";
+import { getAppUrl } from "@/lib/config";
 import { newsreader } from "@/lib/fonts";
 import { SITE_OPEN_GRAPH } from "@/lib/site";
-import { siteExtensions } from "@/lib/site-extensions";
 import { cn } from "@/lib/utils";
-
-const TWITTER_CREATOR = isCloud() ? siteExtensions.twitterCreator : null;
 
 export const metadata = {
 	metadataBase: new URL(getAppUrl()),
 	robots: { index: true, follow: true },
 	manifest: "/site.webmanifest",
 	openGraph: SITE_OPEN_GRAPH,
-	twitter: { card: "summary_large_image", ...(TWITTER_CREATOR && { creator: TWITTER_CREATOR }) },
+	twitter: { card: "summary_large_image" },
 };
 
 // The docs need a wider page than the rest; the header and footer follow whichever page is open.
@@ -28,9 +24,7 @@ export default function SiteLayout({ children }) {
 		>
 			<HeaderSite />
 			<div className="flex-1">{children}</div>
-			{isCloud() && SiteBand && <SiteBand />}
 			<FooterSite />
-			{SiteAnalytics && <SiteAnalytics />}
 		</div>
 	);
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 import { dnsRecords } from "./stubs/dns-broker.mjs";
 import { state } from "./stubs/ses.mjs";
 
@@ -27,7 +27,6 @@ after(() => app?.stop());
 // A paying account with a newsletter on the shared address, named after the email, and a full access key.
 async function customer(email) {
 	const user = await signIn(email);
-	await activate(user);
 	const slug = email.split("@")[0];
 	const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris" }))));
 	user.newsletterId = url.split("/").at(-1);

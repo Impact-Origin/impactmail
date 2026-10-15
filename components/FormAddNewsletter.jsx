@@ -29,7 +29,7 @@ export default function FormAddNewsletter({ sharedDomain, domains, startsFrom, i
 			<>
 				<DialogHeader>
 					<DialogTitle>{NEWSLETTER_LIMIT_MESSAGE}</DialogTitle>
-					<DialogDescription className="text-pretty">They share your plan&apos;s emails and subscribers.</DialogDescription>
+					<DialogDescription className="text-pretty">Each one has its own list, settings and website.</DialogDescription>
 				</DialogHeader>
 				<DialogFooter showCloseButton />
 			</>

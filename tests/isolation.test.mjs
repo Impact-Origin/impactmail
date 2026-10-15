@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 import { sent as sesEmails } from "./stubs/ses.mjs";
 
@@ -79,8 +79,6 @@ before(async () => {
 
 	alice = await signIn("alice@example.com");
 	bob = await signIn("bob@example.com");
-	await activate(alice);
-	await activate(bob);
 
 	const newsletterId = await createNewsletter(bob, { name: "Bob weekly", slug: "bob-weekly" });
 	const imported = await as(bob, () =>

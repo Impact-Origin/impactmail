@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import mongoose from "mongoose";
-import { activate, as, form, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { as, form, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 
 // The account page's profile, and the account menu at the bottom of the sidebar.
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
@@ -103,12 +103,11 @@ describe("the profile", () => {
 describe("the account menu", () => {
 	test("shows whether the account sends, and what to do when it doesn't", async () => {
 		const user = await signIn("status@example.com");
-		assert.deepEqual(m.state.getSendingStatus(user.account), { label: "No plan", hint: "Pick a plan to send", tone: "gray" });
-		const paid = await activate(user);
+		const paid = user.account;
 		assert.deepEqual(m.state.getSendingStatus(paid), { label: "Sending on", hint: null, tone: "green" });
 		assert.deepEqual(m.state.getSendingStatus({ ...paid, status: "paused", pauseReason: "Review" }), {
 			label: "Account blocked",
-			hint: "This account is blocked: Review. Chat with us to unblock it.",
+			hint: "This account is blocked: Review. An admin can unblock it on the admin page.",
 			tone: "red",
 		});
 		assert.equal(await withEnv({ SENDING_ENABLED: "false" }, () => m.state.getSendingStatus(paid).label), "Sending off");
@@ -147,10 +146,9 @@ describe("the account menu", () => {
 		}
 	});
 
-	test("holds Account, Billing, the theme menu and Sign out, so the newsletter navigation has no Billing", async () => {
+	test("holds Account, the theme menu and Sign out", async () => {
 		const menu = await readFile(join(ROOT, "components/MenuUser.jsx"), "utf8");
-		for (const item of ['href="/account"', 'href="/billing"', "<RadioGroupTheme />", "Sign out"]) assert.ok(menu.includes(item), item);
-		assert.doesNotMatch(await readFile(join(ROOT, "components/NavLinks.jsx"), "utf8"), /\/billing/);
+		for (const item of ['href="/account"', "<RadioGroupTheme />", "Sign out"]) assert.ok(menu.includes(item), item);
 	});
 });
 

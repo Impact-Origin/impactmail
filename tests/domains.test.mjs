@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, addVerifiedDomain, as, callApi, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { addVerifiedDomain, as, callApi, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 import { cnames } from "./stubs/dns-check.mjs";
 import { published } from "./stubs/qstash.mjs";
 import { calls, sent, state } from "./stubs/ses.mjs";
@@ -45,7 +45,6 @@ async function draft(user) {
 
 async function customer(email, slug) {
 	const user = await signIn(email);
-	await activate(user);
 	await createNewsletter(user, slug);
 	return user;
 }
@@ -93,7 +92,7 @@ before(async () => {
 		ButtonCopy: (await import("../components/ButtonCopy.jsx")).default,
 		apiKeys: await import("../app/(app)/api-keys/actions.js"),
 		sendBatchRoute: await import("../app/api/jobs/send-batch/route.js"),
-		billing: await import("../lib/billing.js"),
+		tenants: await import("../lib/tenants.js"),
 		hostRouting: await import("../lib/host-routing.js"),
 		Account: (await import("../models/Account.js")).default,
 		Campaign: (await import("../models/Campaign.js")).default,
@@ -106,17 +105,10 @@ before(async () => {
 after(() => app?.stop());
 
 describe("SES tenants", () => {
-	test("a plan starting creates the account's tenant once, with its configuration set", async () => {
+	test("the account's tenant is created once, with its configuration set", async () => {
 		const user = await signIn("tenant@example.com");
-		const subscription = {
-			id: "sub_tenant",
-			status: "active",
-			customer: "cus_tenant",
-			items: { data: [{ price: { lookup_key: "starter_month" }, current_period_start: 1_790_000_000, current_period_end: 1_792_600_000 }] },
-		};
-		const account = await m.Account.findById(user.accountId).lean();
-		await m.billing.applySubscription(account, subscription);
-		await m.billing.applySubscription(await m.Account.findById(user.accountId).lean(), subscription);
+		await m.tenants.ensureTenant(await m.Account.findById(user.accountId).lean());
+		await m.tenants.ensureTenant(await m.Account.findById(user.accountId).lean());
 
 		const name = `mc-${user.accountId}`;
 		const { ses } = await m.Account.findById(user.accountId).lean();
@@ -128,17 +120,11 @@ describe("SES tenants", () => {
 		assert.deepEqual([...state.associations.get(name)], [`configuration-set/${name}`], "no shared domain: each newsletter gets its own subdomain");
 	});
 
-	test("a failed setup doesn't stop the plan, and the first send finishes it", async () => {
+	test("a failed setup is finished by the first send", async () => {
 		const user = await signIn("tenant-retry@example.com");
 		state.failNext = { name: "createTenant", error: new Error("Throttled") };
-		await m.billing.applySubscription(await m.Account.findById(user.accountId).lean(), {
-			id: "sub_retry",
-			status: "active",
-			customer: "cus_retry",
-			items: { data: [{ price: { lookup_key: "starter_month" } }] },
-		});
+		await assert.rejects(m.tenants.ensureTenant(await m.Account.findById(user.accountId).lean()), /Throttled/);
 		const account = await m.Account.findById(user.accountId).lean();
-		assert.equal(account.subscriptionStatus, "active");
 		assert.equal(account.ses?.provisionedAt, undefined);
 
 		await createNewsletter(user, "retry-news");
@@ -411,8 +397,5 @@ describe("hosts", () => {
 		assert.deepEqual(await resolve("localhost:3000"), { isArchiveHost: false, slug: null });
 		assert.deepEqual(await resolve("mailcheap-git-main.vercel.app"), { isArchiveHost: false, slug: null });
 
-		// Unsubscribe and tracking keep working after the plan ends.
-		await m.Account.updateOne({ _id: user.accountId }, { $set: { subscriptionStatus: "canceled" } });
-		assert.deepEqual(await resolve("hosts-news.mailcheapmail.com"), { isArchiveHost: true, slug: "hosts-news" });
 	});
 });

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { createUnsubscribeToken } from "../lib/unsubscribe.js";
-import { activate, anonymous, as, callApi, catchRedirect, form, jsonRequest, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchRedirect, form, jsonRequest, signIn, startTestApp } from "./helpers/app.mjs";
 import { runWithRequest } from "./stubs/next-headers.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 import { published } from "./stubs/qstash.mjs";
@@ -31,7 +31,6 @@ async function createNewsletter(user, slug) {
 
 async function customer(email) {
 	const user = await signIn(email);
-	await activate(user);
 	user.slug = email.split("@")[0];
 	user.newsletterId = await createNewsletter(user, user.slug);
 	user.key = (await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })))).key;
@@ -256,7 +255,7 @@ describe("limits", () => {
 		await m.blocks.blockAccount(user.accountId, { reason: "Review" });
 
 		assert.deepEqual(await as(user, () => m.contacts.deleteContact(String(reader._id))), {
-			error: "This account is blocked: Review. Chat with us to unblock it.",
+			error: "This account is blocked: Review. An admin can unblock it on the admin page.",
 			code: "account_blocked",
 		});
 		const viaApi = await api(user, "DELETE", `/contacts/${reader._id}`);

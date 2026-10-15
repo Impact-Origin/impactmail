@@ -2,11 +2,9 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { findUserByEmail } from "@/lib/accounts";
 import { notifyActivity } from "@/lib/alerts";
-import { SIGNIN_NOT_ALLOWED_MESSAGE, SIGNUP_ERRORS, getAuth, getAuthCallContext, getSignupError, isGoogleEnabled, sendSigninCodeEmail } from "@/lib/auth";
-import { isCloud, isEmailAllowed } from "@/lib/config";
-import { isDisposableDomain } from "@/lib/disposable-domains";
+import { SIGNIN_NOT_ALLOWED_MESSAGE, getAuth, getAuthCallContext, getSignupError, isGoogleEnabled, sendSigninCodeEmail } from "@/lib/auth";
+import { isEmailAllowed } from "@/lib/config";
 import { getCanonicalEmail } from "@/lib/email-aliases";
 import { isExpiredOAuthQuery, readOAuthQueryField } from "@/lib/oauth-rules";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
@@ -31,10 +29,6 @@ export async function sendSigninCode(_state, formData) {
 		return { error: "Too many codes. Try again in 15 minutes." };
 	}
 	if (!isEmailAllowed(email)) return { error: SIGNIN_NOT_ALLOWED_MESSAGE };
-	// No code to a throwaway inbox that can't sign up anyway; one that has an account from before still signs in.
-	if (isCloud() && isDisposableDomain(email.split("@")[1]) && !(await findUserByEmail(email))) {
-		return { error: SIGNUP_ERRORS.email_disposable };
-	}
 	try {
 		await sendSigninCodeEmail(email);
 	} catch (error) {

@@ -1,12 +1,9 @@
-import { Ban, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { siteExtensions } from "@/lib/site-extensions";
+import { Ban } from "lucide-react";
 
-// Across the top of every dashboard page while the account is blocked (lib/account-blocks.js), instead of
-// BannerPlan: why, and who unblocks it.
+// Across the top of every dashboard page while the account is blocked (lib/account-blocks.js): why, and who
+// unblocks it.
 export default function BannerBlocked({ account }) {
 	const reason = account.pauseReason?.trim().replace(/\.$/, "");
-	const { supportChatPath } = siteExtensions;
 
 	return (
 		<div
@@ -20,16 +17,7 @@ export default function BannerBlocked({ account }) {
 				Account blocked{reason && `: ${reason}`}
 				<span className="hidden font-normal text-white/75 xl:inline"> · Nothing is sent until it&apos;s unblocked</span>
 			</p>
-			{supportChatPath ? (
-				<Button asChild size="sm" variant="secondary" className="shrink-0">
-					<a href={supportChatPath}>
-						<MessageCircle data-icon="inline-start" />
-						Chat with us
-					</a>
-				</Button>
-			) : (
-				<span className="hidden shrink-0 text-[13px] text-white/75 sm:inline">An admin can unblock it</span>
-			)}
+			<span className="hidden shrink-0 text-[13px] text-white/75 sm:inline">An admin can unblock it</span>
 		</div>
 	);
 }

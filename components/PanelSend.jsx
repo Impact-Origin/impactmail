@@ -6,10 +6,8 @@ import CardSettings from "@/components/CardSettings";
 import InputCampaignSlug from "@/components/InputCampaignSlug";
 import ListCleanupPreview from "@/components/ListCleanupPreview";
 import NoticeFirstSend from "@/components/NoticeFirstSend";
-import NoticeWarmup from "@/components/NoticeWarmup";
 import PickerSendTime from "@/components/PickerSendTime";
 import RowCampaign from "@/components/RowCampaign";
-import TextPlanLimit from "@/components/TextPlanLimit";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -22,12 +20,11 @@ import {
 } from "@/components/ui/dialog";
 import { FIRST_SEND } from "@/lib/config";
 import { formatCount, formatNumber, formatSendTime } from "@/lib/format";
-import { getPaceHours } from "@/lib/send-spread";
 import { slugify } from "@/lib/slug";
 import { useIsClient } from "@/lib/use-is-client";
 import { cn } from "@/lib/utils";
 
-// The send step: who gets the issue and how fast it goes out, then now or at a time. Its button is in the editor's
+// The send step: who gets the issue, then now or at a time. Its button is in the editor's
 // bar, and lib/use-send-campaign.js holds what it does.
 export default function PanelSend({
 	sending,
@@ -35,8 +32,6 @@ export default function PanelSend({
 	newsletter,
 	subject,
 	audienceCount,
-	emailsLeft,
-	pace,
 	newContacts,
 	archiveUrlBase,
 }) {
@@ -45,11 +40,7 @@ export default function PanelSend({
 	// The browser's time zone, which the server doesn't know.
 	const scheduledTime = scheduledAt && isClient ? formatSendTime(scheduledAt) : null;
 	const isNow = sending.choice === "now";
-	// As the send and schedule dialogs counted them: a send with its last-chance emails, a schedule its contacts.
-	const paceEmails = isNow ? sending.sendEmails : sending.scheduleRecipients;
-	const isPaced = Boolean(pace?.warmup) || getPaceHours(pace, { emails: paceEmails, newContacts }) > 0;
 	const isCleanupEnabled = Boolean(newsletter.cleanup?.enabled);
-	const isOverPlan = isNow && emailsLeft !== null && sending.sendEmails > emailsLeft;
 	const from = newsletter.fromName ? `${newsletter.fromName} <${newsletter.fromEmail}>` : newsletter.fromEmail;
 
 	return (
@@ -142,15 +133,12 @@ export default function PanelSend({
 						</div>
 					</div>
 				)}
-				{(isPaced || newContacts > FIRST_SEND.minSlice) && (
+				{newContacts > FIRST_SEND.minSlice && (
 					<div className="flex flex-col gap-2 p-3">
-						<NoticeWarmup pace={pace} emails={paceEmails} newContacts={newContacts} />
-						{newContacts > FIRST_SEND.minSlice && <NoticeFirstSend count={newContacts} />}
+						<NoticeFirstSend count={newContacts} />
 					</div>
 				)}
 			</CardSettings>
-
-			{isOverPlan && <TextPlanLimit emailsLeft={emailsLeft} />}
 
 			<Dialog open={sending.isConfirmOpen} onOpenChange={sending.setIsConfirmOpen}>
 				<DialogContent className="sm:max-w-sm">

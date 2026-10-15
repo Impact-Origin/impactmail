@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, addVerifiedDomain, as, catchRedirect, form, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { addVerifiedDomain, as, catchRedirect, form, platformEmails, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 import { POSTSHIBA, POSTSHIBA_ENV, createFakePostshiba } from "./helpers/postshiba.mjs";
+import { flushAfter } from "./stubs/next-server.mjs";
 import { platformSent, sent as sesEmails } from "./stubs/ses.mjs";
 
-// Who carries MailCheap's own emails (sign-in codes, alerts): on MailCheap Cloud always Resend, never the
-// email provider; on a self-hosted server Resend when it's set up, else the provider. Customers' emails
-// (issues, welcome, confirmation, last-chance, tests) always go through the provider.
-const SELF_HOSTED = { MAILCHEAP_CLOUD: "", EMAIL_FROM: "MailCheap <login@mail.selfhost.dev>" };
+// Who carries MailCheap's own emails (sign-in codes, alerts): Resend when it's set up, else the provider. Customers'
+// emails (issues, welcome, confirmation, last-chance, tests) always go through the provider.
+const SELF_HOSTED = { EMAIL_FROM: "MailCheap <login@mail.selfhost.dev>" };
 const CODE_SUBJECT = /^\d{6} is your MailCheap code$/;
 
 let app;
@@ -56,35 +56,9 @@ before(async () => {
 
 after(() => app?.stop());
 
-describe("MailCheap Cloud", () => {
-	test("sign-in codes and alerts go through Resend, never through the email provider, even with SES or PostShiba set up", async () => {
-		const before = counts();
-		assert.deepEqual(await requestCode("cloud@example.com"), { email: "cloud@example.com" });
-		await m.alerts.sendAlert({ accountId: null, key: "cloud-split", title: "Cloud alert", detail: "For the admins" });
-		await withEnv(POSTSHIBA_ENV, async () => assert.deepEqual(await requestCode("cloud-ps@example.com"), { email: "cloud-ps@example.com" }));
-		assert.deepEqual(added(before), { resend: 3, ses: 0, postshiba: 0, customer: 0 });
-		assert.deepEqual(platformEmails.at(-3).to, ["cloud@example.com"]);
-		assert.equal(platformEmails.at(-3).from, "MailCheap <hello@r.mailcheap.ai>", "from a subdomain, apart from mailcheap.ai");
-		assert.equal(platformEmails.at(-3).reply_to, "hello@mailcheap.ai", "replies reach support");
-		assert.deepEqual(platformEmails.at(-2).to, ["admin@example.com"]);
-		assert.equal(platformEmails.at(-2).subject, "[MailCheap] Cloud alert");
-	});
-
-	test("without RESEND_API_KEY nothing goes out: the cloud never falls back to the email provider", async () => {
-		const before = counts();
-		await withEnv({ RESEND_API_KEY: "" }, async () => {
-			const { result, logged } = await capturingErrors(() => requestCode("no-resend@example.com"));
-			assert.equal(result.error, "Couldn't send the code. Try again in a minute.");
-			assert.match(logged, /RESEND_API_KEY is not set: MailCheap Cloud sends its own emails through Resend only/);
-			assert.equal(m.platform.canSendPlatformEmail(), false, "alerts stay in the logs");
-			await m.alerts.sendAlert({ accountId: null, key: "cloud-no-resend", title: "Unsent", detail: "Logged only" });
-		});
-		assert.deepEqual(added(before), { resend: 0, ses: 0, postshiba: 0, customer: 0 });
-	});
-
+describe("customers' emails", () => {
 	test("a customer's test email goes through the email provider, not Resend", async () => {
 		const user = await signIn("customer@example.com");
-		await activate(user);
 		await addVerifiedDomain(user, "customer-news.dev");
 		const url = await as(user, () =>
 			catchRedirect(m.newsletters.saveNewsletter(null, form({ name: "News", slug: "customer-news", fromName: "Jo", fromEmail: "hello@customer-news.dev", postalAddress: "1 Main St, Paris" })))
@@ -101,7 +75,7 @@ describe("MailCheap Cloud", () => {
 	});
 });
 
-describe("self-hosted server", () => {
+describe("sign-in codes and alerts", () => {
 	test("with RESEND_API_KEY, Resend sends them from EMAIL_FROM", async () => {
 		const before = counts();
 		await withEnv({ ...SELF_HOSTED, ALLOWED_EMAILS: "self-resend@example.com" }, async () => {
@@ -109,7 +83,7 @@ describe("self-hosted server", () => {
 		});
 		assert.deepEqual(added(before), { resend: 1, ses: 0, postshiba: 0, customer: 0 });
 		assert.equal(platformEmails.at(-1).from, "MailCheap <login@mail.selfhost.dev>");
-		assert.equal(platformEmails.at(-1).reply_to, undefined, "no MailCheap support address on a self-hosted server");
+		assert.equal(platformEmails.at(-1).reply_to, undefined, "no support address");
 	});
 
 	test("without it, codes and alerts go through SES outside every tenant, even with sending off", async () => {
@@ -139,6 +113,8 @@ describe("self-hosted server", () => {
 			assert.equal([...fake.state.domains.values()].find(({ name }) => name === "mail.selfhost.dev").tenant_id, tenants[0].id);
 
 			fake.verifyDomain("mail.selfhost.dev");
+			// The admins' alert about the failed code goes out first, once the form has answered.
+			await flushAfter();
 			const before = counts();
 			assert.deepEqual(await requestCode("self-ps@example.com"), { email: "self-ps@example.com" });
 			assert.deepEqual(added(before), { resend: 0, ses: 0, postshiba: 1, customer: 0 });

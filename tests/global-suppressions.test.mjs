@@ -6,7 +6,7 @@ import { getDeliveryEmail } from "../lib/email-aliases.js";
 import { getEventPlan } from "../lib/email-event-rules.js";
 import { normalizePostshibaEvent } from "../lib/email-provider/postshiba-events.js";
 import { getSesEventPlan } from "../lib/ses-event-mapping.js";
-import { activate, anonymous, as, callApi, catchNotFound, catchRedirect, form, jsonRequest, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchNotFound, catchRedirect, form, jsonRequest, signIn, startTestApp } from "./helpers/app.mjs";
 import { POSTSHIBA } from "./helpers/postshiba.mjs";
 import { runWithRequest } from "./stubs/next-headers.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
@@ -103,7 +103,6 @@ describe("the never-email list", () => {
 	// A paying customer with a newsletter, a full access key and a PostShiba tenant its events name.
 	async function customer(email) {
 		const user = await signIn(email);
-		await activate(user);
 		user.slug = email.split("@")[0];
 		const url = await as(user, () =>
 			catchRedirect(m.newsletters.saveNewsletter(null, form({ name: `${user.slug} news`, slug: user.slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" })))

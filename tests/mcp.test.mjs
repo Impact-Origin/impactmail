@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, anonymous, as, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 
 // The MCP server through its route handler, the way Claude Code, Codex and Cursor reach it today: 2025-era
 // Streamable HTTP (initialize, then tools/list and tools/call), each request carrying the API key.
@@ -40,7 +40,6 @@ function parseError(result) {
 
 async function customer(email, slug) {
 	const user = await signIn(email);
-	await activate(user);
 	const url = await as(user, () =>
 		catchRedirect(m.newsletters.saveNewsletter(null, form({ name: `${slug} news`, slug, postalAddress: "1 Main St, Paris" })))
 	);
@@ -118,8 +117,8 @@ describe("connecting", () => {
 			await client.connect(transport);
 			const { tools } = await client.listTools();
 			assert.equal(tools.length, m.registry.ACTIONS.length, JSON.stringify(mode));
-			const result = await client.callTool({ name: "get_billing", arguments: {} });
-			assert.equal(result.structuredContent.plan.id, "starter", "the client checked it against the output schema too");
+			const result = await client.callTool({ name: "get_overview", arguments: {} });
+			assert.equal(typeof result.structuredContent.usage.emailsSent, "number", "the client checked it against the output schema too");
 			await client.close();
 		}
 	});

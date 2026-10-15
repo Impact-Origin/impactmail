@@ -6,7 +6,6 @@ import { checkSlug, saveNewsletter, sendWelcomeTest } from "@/app/(app)/newslett
 import BarSave from "@/components/BarSave";
 import ButtonCopy from "@/components/ButtonCopy";
 import InputImage from "@/components/InputImage";
-import NoticeWelcomePaused from "@/components/NoticeWelcomePaused";
 import PreviewEmail from "@/components/PreviewEmail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,34 +30,27 @@ import { UNSUBSCRIBE_PLACEHOLDER, renderEmail } from "@/lib/render-email";
 import { getSharedAddress } from "@/lib/sender-rules";
 import { slugify } from "@/lib/slug";
 import { toast } from "@/lib/toast";
-import { usePaywall } from "@/lib/use-paywall";
 import { cn } from "@/lib/utils";
 import { prefillWelcome } from "@/lib/welcome-content";
 
 const IMAGE_PREVIEW_PATTERN = /^(https:\/\/\S+\.\S{2,}\/\S+|\/\S+\.\w{3,4})$/;
 
-// welcomePause: the notice to show while the month's emails are used up and welcome emails are skipped. It saves from
-// onSubmit, not a form action: React resets a form after its action, which turned the switches back to how the page
+// It saves from onSubmit, not a form action: React resets a form after its action, which turned the switches back to how the page
 // opened and dropped what an error refused. Discard goes back to what the newsletter has saved.
-// defaultPostalAddress: what its emails print until it has its own (lib/postal-address.js); the editor's checks link
-// to the field with #postal-address. hasArchiveHost: the server hosts websites on customers' own subdomains.
+// The editor's checks link to the postal address field with #postal-address. hasArchiveHost: the server hosts websites on customers' own subdomains.
 export default function FormNewsletter({
 	newsletter,
 	domains,
 	sharedDomain,
 	appUrl,
 	hasArchiveHost,
-	defaultPostalAddress,
 	isSendingEnabled,
 	testEmail,
 	cleanupTotals,
-	welcomePause,
 }) {
-	const paywall = usePaywall();
-	const hasPlan = paywall?.hasPlan ?? true;
 	const slugId = useId();
 	const postalAddressRef = useRef(null);
-	const [draft, setDraft] = useState(() => getNewsletterDraft({ newsletter, domains, sharedDomain, defaultPostalAddress }));
+	const [draft, setDraft] = useState(() => getNewsletterDraft({ newsletter, domains, sharedDomain }));
 	const draftKey = getDraftKey(draft, { newsletter, sharedDomain });
 	const [savedKey, setSavedKey] = useState(draftKey);
 	const [savedAt, setSavedAt] = useState(null);
@@ -169,7 +161,7 @@ export default function FormNewsletter({
 	}
 
 	function discard() {
-		const saved = getNewsletterDraft({ newsletter, domains, sharedDomain, defaultPostalAddress });
+		const saved = getNewsletterDraft({ newsletter, domains, sharedDomain });
 		setDraft(saved);
 		setSavedKey(getDraftKey(saved, { newsletter, sharedDomain }));
 		setSavedAt(null);
@@ -177,7 +169,6 @@ export default function FormNewsletter({
 	}
 
 	function sendTest() {
-		if (!hasPlan) return paywall.open("test");
 		startTesting(async () => {
 			const result = await sendWelcomeTest(newsletter._id);
 			if (result?.error) toast.error(result.error);
@@ -296,27 +287,9 @@ export default function FormNewsletter({
 					label="Postal address"
 					htmlFor={POSTAL_ADDRESS_ID}
 					hint={
-						defaultPostalAddress && postalAddress === defaultPostalAddress ? (
-							"MailCheap's address is used by default. Replace it with yours anytime."
-						) : postalAddress.trim() ? (
-							"Shown in the footer of every email. Anti-spam laws require one."
-						) : (
-							<>
-								Shown in the footer of every email. Anti-spam laws require one, so sending waits for it.
-								{defaultPostalAddress && (
-									<>
-										{" "}
-										<button
-											type="button"
-											onClick={() => set("postalAddress", defaultPostalAddress)}
-											className="font-medium text-foreground underline decoration-foreground/30 underline-offset-2 transition-colors duration-150 hover:decoration-foreground"
-										>
-											Use MailCheap&apos;s address
-										</button>
-									</>
-								)}
-							</>
-						)
+						postalAddress.trim()
+							? "Shown in the footer of every email. Anti-spam laws require one."
+							: "Shown in the footer of every email. Anti-spam laws require one, so sending waits for it."
 					}
 				>
 					<Textarea
@@ -406,7 +379,6 @@ export default function FormNewsletter({
 					/>
 				}
 			>
-				{welcomePause && isWelcomeEnabled && <NoticeWelcomePaused {...welcomePause} className="px-4 py-3" />}
 				<Field label="Subject">
 					<Input name="welcomeSubject" value={welcome.subject} onChange={updateWelcome("subject")} />
 				</Field>
@@ -440,9 +412,9 @@ export default function FormNewsletter({
 				{newsletter && (
 					<div className="flex items-center justify-between gap-3 px-4 py-3">
 						<p className="text-xs wrap-anywhere text-muted-foreground">
-							{isSendingEnabled || !hasPlan ? `Sends the saved version to ${testEmail}` : "Sending is off"}
+							{isSendingEnabled ? `Sends the saved version to ${testEmail}` : "Sending is off"}
 						</p>
-						<Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={(hasPlan && !isSendingEnabled) || isTesting}>
+						<Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={!isSendingEnabled || isTesting}>
 							{isTesting ? <Loader2 className="animate-spin" /> : <FlaskConical />}
 							Send test
 						</Button>
@@ -532,24 +504,13 @@ export default function FormNewsletter({
 					hint={
 						!isArchiveEnabled ? (
 							"Your website is off. Turn it on above to give every issue you send a page."
-						) : !hasPlan ? (
-							<>
-								It goes online once you pick a plan.{" "}
-								<button
-									type="button"
-									onClick={() => paywall.open("website")}
-									className="font-medium text-foreground underline decoration-foreground/30 underline-offset-2 transition-colors duration-150 hover:decoration-foreground"
-								>
-									Pick a plan
-								</button>
-							</>
 						) : !newsletter?.archiveEnabled ? (
 							"It goes online when you save."
 						) : null
 					}
 				>
 					<span className="flex min-w-0 items-center gap-1.5 sm:min-h-9">
-						{isArchiveEnabled && hasPlan && newsletter?.archiveEnabled ? (
+						{isArchiveEnabled && newsletter?.archiveEnabled ? (
 							<a
 								href={websiteAddress}
 								target="_blank"

@@ -3,7 +3,6 @@ import { ArrowUpRight, Users } from "lucide-react";
 import BlockCode from "@/components/BlockCode";
 import DialogAddContact from "@/components/DialogAddContact";
 import DialogImportContacts from "@/components/DialogImportContacts";
-import GatePlan from "@/components/GatePlan";
 import IconBrand from "@/components/IconBrand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -45,9 +44,7 @@ export default function CardAddContacts({ newsletter, curl }) {
 						))}
 					</ul>
 					<div className="flex items-center">
-						<GatePlan reason="import">
-							<DialogImportContacts newsletter={newsletter} label="Import contacts" variant="default" />
-						</GatePlan>
+						<DialogImportContacts newsletter={newsletter} label="Import contacts" variant="default" />
 					</div>
 				</ColumnWay>
 				<ColumnWay

@@ -1,14 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppWindow, ArrowLeftRight, Check } from "lucide-react";
 import { switchAccount } from "@/app/oauth/consent/actions";
 import ButtonSignout from "@/components/ButtonSignout";
 import FormConsent from "@/components/FormConsent";
 import LogoMailcheap from "@/components/LogoMailcheap";
-import { SiteAnalytics } from "@/components/SiteExtensions";
-import { hasActiveSubscription, isDeletionPending } from "@/lib/account-state";
+import { isDeletionPending } from "@/lib/account-state";
 import { getCurrentAccount } from "@/lib/auth";
-import { isCloud } from "@/lib/config";
 import { readOAuthRequest } from "@/lib/oauth";
 import { isLoopbackRedirect } from "@/lib/oauth-rules";
 
@@ -32,7 +29,6 @@ export default async function ConsentPage({ searchParams }) {
 	const { client, query, redirectUri, scopes } = oauthRequest;
 	const redirectHost = getHost(redirectUri);
 	const access = scopes.some((scope) => scope === "email" || scope === "profile") ? [...ACCESS, "See your name and email address"] : ACCESS;
-	const hasPlan = hasActiveSubscription(current.account);
 
 	return (
 		<main className="flex min-h-dvh items-center justify-center px-4 py-16">
@@ -79,19 +75,6 @@ export default async function ConsentPage({ searchParams }) {
 						This app runs on your computer ({redirectHost}). Allow it only if you started this connection.
 					</p>
 				)}
-				{isCloud() && !hasPlan && (
-					<p className="mt-4 text-center text-sm text-pretty text-muted-foreground">
-						Your account has no plan yet. {client.name} can open checkout for you, or{" "}
-						<Link
-							href="/billing"
-							target="_blank"
-							className="text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
-						>
-							pick one here
-						</Link>
-						.
-					</p>
-				)}
 
 				<div className="mt-6">
 					<FormConsent oauthQuery={query} />
@@ -100,7 +83,6 @@ export default async function ConsentPage({ searchParams }) {
 					Then you go back to {redirectHost}. Disconnect it anytime on the API keys page.
 				</p>
 			</div>
-			{SiteAnalytics && <SiteAnalytics />}
 		</main>
 	);
 }
@@ -113,7 +95,6 @@ function Expired() {
 				<h1 className="text-lg font-semibold tracking-tight">This request expired</h1>
 				<p className="text-sm text-pretty text-muted-foreground">Go back to the app and connect MailCheap again.</p>
 			</div>
-			{SiteAnalytics && <SiteAnalytics />}
 		</main>
 	);
 }

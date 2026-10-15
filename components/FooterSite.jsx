@@ -1,18 +1,13 @@
 import Link from "next/link";
 import ButtonThemeToggle from "@/components/ButtonThemeToggle";
 import LogoWordmark from "@/components/LogoWordmark";
-import { FooterCredit, FooterNote } from "@/components/SiteExtensions";
-import { isCloud } from "@/lib/config";
 import { currentYear } from "@/lib/format";
 import { SOURCE_URL } from "@/lib/site";
-import { siteExtensions } from "@/lib/site-extensions";
 import { cn } from "@/lib/utils";
 
-// A self-hosted server keeps the link to the source: the AGPL asks it to offer its users the code it runs. On
-// MailCheap Cloud the marketing site's columns, credit and company take its place.
+// The link to the source stays: the AGPL asks the server to offer its users the code it runs.
 export default function FooterSite() {
-	const cloudFooter = isCloud() ? siteExtensions.footer : null;
-	const { tagline, columns, company } = cloudFooter ?? SELF_HOSTED_FOOTER;
+	const { tagline, columns, company } = FOOTER;
 	return (
 		<footer className="border-t border-border/60">
 			<div className="mx-auto max-w-(--site-width) px-4 pt-12 pb-8 sm:px-6 lg:px-8">
@@ -20,8 +15,6 @@ export default function FooterSite() {
 					<div className="flex flex-col items-start gap-4">
 						<LogoWordmark href="/" className="-ml-1 rounded-lg px-1 py-1" />
 						<p className="max-w-xs text-sm text-pretty text-muted-foreground">{tagline}</p>
-						{cloudFooter && FooterNote && <FooterNote />}
-						{cloudFooter && FooterCredit && <FooterCredit />}
 					</div>
 					<nav aria-label="Footer" className={cn("grid gap-x-12 gap-y-8", columns.length > 1 && "grid-cols-2 sm:grid-cols-3")}>
 						{columns.map(({ title, links }) => (
@@ -59,7 +52,7 @@ export default function FooterSite() {
 	);
 }
 
-const SELF_HOSTED_FOOTER = {
+const FOOTER = {
 	tagline: "Newsletters sent from your own server.",
 	columns: [
 		{

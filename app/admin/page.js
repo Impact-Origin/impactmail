@@ -9,16 +9,13 @@ import StateEmpty from "@/components/StateEmpty";
 import StripPostshibaClusters from "@/components/StripPostshibaClusters";
 import StripSesAccount from "@/components/StripSesAccount";
 import TableAccounts from "@/components/TableAccounts";
-import { hasActiveSubscription, isBlocked } from "@/lib/account-state";
+import { isBlocked } from "@/lib/account-state";
 import { listAccountsForAdmin } from "@/lib/accounts";
 import { requireAdmin } from "@/lib/auth";
-import { isCloud } from "@/lib/config";
 import { getEmailProvider } from "@/lib/email-provider";
 import { formatNumber } from "@/lib/format";
 import { countGlobalSuppressions } from "@/lib/global-suppressions";
-import { isOnFreePlan } from "@/lib/plans";
 import { serialize } from "@/lib/serialize";
-import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Accounts" };
 
@@ -26,9 +23,6 @@ export default async function AdminPage({ searchParams }) {
 	await requireAdmin();
 	const { postmaster } = await searchParams;
 	const [accounts, undeliverable] = await Promise.all([listAccountsForAdmin(), countGlobalSuppressions()]);
-	// Self-hosted, every account counts as paying.
-	const withPlan = accounts.filter(hasActiveSubscription);
-	const onFreePlan = withPlan.filter((account) => isOnFreePlan(account));
 	const blocked = accounts.filter(isBlocked);
 	const provider = getEmailProvider();
 
@@ -36,15 +30,8 @@ export default async function AdminPage({ searchParams }) {
 		<>
 			<HeaderPage title="Accounts" />
 			<div className="flex flex-col gap-8">
-				<div className={cn("grid gap-3 sm:grid-cols-2 animate-enter", isCloud() ? "lg:grid-cols-4" : "lg:grid-cols-3")}>
+				<div className="grid gap-3 sm:grid-cols-2 animate-enter lg:grid-cols-3">
 					<CardStat label="Accounts" value={formatNumber(accounts.length)} detail="Newest 200 below" />
-					{isCloud() && (
-						<CardStat
-							label="Paying"
-							value={formatNumber(withPlan.length - onFreePlan.length)}
-							detail={onFreePlan.length > 0 && `${formatNumber(onFreePlan.length)} more on a free plan`}
-						/>
-					)}
 					<CardStat
 						label="Blocked"
 						value={formatNumber(blocked.length)}

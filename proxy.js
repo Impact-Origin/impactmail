@@ -1,14 +1,9 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse } from "next/server";
 import { getArchiveHostUrl } from "@/lib/archive-hosts";
-import { isCloud } from "@/lib/config";
 import { resolveArchiveHost } from "@/lib/host-routing";
-import { siteExtensions } from "@/lib/site-extensions";
 
-// No route can live under an underscore folder, so this always renders the not-found page with a 404.
-const NOT_FOUND_PATH = "/_not-on-this-server";
-
-// Reachable without a session: recipients, mail providers, AWS, Stripe, QStash, Vercel Cron, API-key
+// Reachable without a session: recipients, mail providers, AWS, QStash, Vercel Cron, API-key
 // and OAuth clients (REST and MCP, OAuth discovery), the docs and uptime checks. The consent page checks
 // the session itself, so a signed-out visitor goes to sign-in with the app's request.
 const PUBLIC_PATHS = [
@@ -87,16 +82,6 @@ export async function proxy(request) {
 
 	// Only whether a session cookie is there: pages, actions and routes check the session itself.
 	const hasSession = Boolean(getSessionCookie(request));
-	// MailCheap Cloud's marketing site (site extensions): its landing page shows at / to signed-out visitors, rendered
-	// at landingPath, which never shows in the address bar. A self-hosted server has none of its pages.
-	const { landingPath, publicPages, isPublicPath } = siteExtensions;
-	if (isCloud()) {
-		if (pathname === "/" && landingPath) return hasSession ? NextResponse.next() : rewriteTo(request, landingPath);
-		if (pathname === landingPath) return NextResponse.redirect(new URL("/", request.url), 308);
-		if (publicPages.includes(pathname) || isPublicPath(pathname)) return NextResponse.next();
-	} else if (pathname === landingPath || (pathname !== "/" && publicPages.includes(pathname))) {
-		return rewriteTo(request, NOT_FOUND_PATH);
-	}
 	if (PUBLIC_PATHS.some((pattern) => pattern.test(pathname))) return NextResponse.next();
 	if (hasSession) return NextResponse.next();
 	if (pathname === "/") return NextResponse.redirect(new URL("/signin", request.url));

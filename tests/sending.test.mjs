@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { siteExtensions } from "@/lib/site-extensions";
 import { LIMITS } from "../lib/config.js";
 import { UNSUBSCRIBE_PLACEHOLDER } from "../lib/render-email.js";
 import {
@@ -168,8 +167,7 @@ test("send problems block incomplete or oversized emails", () => {
 	);
 	assert.equal(
 		getSendProblem({ campaign, newsletter: { ...newsletter, postalAddress: "" } }),
-		siteExtensions.defaultPostalAddress ? null : "Add a postal address to the newsletter",
-		"one never set has the server's default, if it has one"
+		"Add a postal address to the newsletter"
 	);
 	assert.equal(getSendProblem({ campaign: { ...campaign, subject: "  " }, newsletter }), "Add a subject");
 	assert.equal(getSendProblem({ campaign: { ...campaign, markdown: "" }, newsletter }), "Add content");

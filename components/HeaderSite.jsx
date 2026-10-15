@@ -2,15 +2,12 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import LogoWordmark from "@/components/LogoWordmark";
 import { Button } from "@/components/ui/button";
-import { isCloud } from "@/lib/config";
-import { siteExtensions } from "@/lib/site-extensions";
 
 // Public pages are static, so the header can't tell who's signed in: signing in leads signed-in users on to the dashboard.
 // On phones the links sit in a popover, which needs no client code. They're plain links there: the header outlives a
 // client-side navigation, and the popover would stay open over the next page.
 export default function HeaderSite() {
-	const { headerLinks, headerAction } = isCloud() ? siteExtensions : { headerLinks: [], headerAction: null };
-	const links = [...headerLinks, ...LINKS];
+	const links = LINKS;
 
 	return (
 		<header className="sticky top-0 z-30 border-b border-border/60 bg-site/80 backdrop-blur-md">
@@ -24,11 +21,6 @@ export default function HeaderSite() {
 							</Button>
 						))}
 					</span>
-					{headerAction && (
-						<Button asChild size="sm" className="ml-1.5">
-							<Link href={headerAction.href}>{headerAction.label}</Link>
-						</Button>
-					)}
 					<Button variant="ghost" size="icon-sm" popoverTarget="site-menu" aria-label="Menu" className="sm:hidden">
 						<Menu />
 					</Button>

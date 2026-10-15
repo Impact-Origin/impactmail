@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import mongoose from "mongoose";
-import { activate, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 
 // A newsletter's slug, as the settings form shows it: checked while it's typed (check_newsletter_slug), unique down to
 // the database, and what saving a new one does to the old subdomain.
@@ -11,7 +11,6 @@ let m;
 
 async function customer(email, slug) {
 	const user = await signIn(email);
-	await activate(user);
 	const url = await as(user, () =>
 		catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" })))
 	);

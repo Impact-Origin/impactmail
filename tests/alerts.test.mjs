@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { ADMIN_ALERTS, isTelegramAlert } from "../lib/alert-rules.js";
 import { getTeamStatusAlerts } from "../lib/email-provider/postshiba-rules.js";
 import { escapeTelegramHtml, formatTelegramAlert, isTelegramConfigured } from "../lib/telegram.js";
-import { activate, answerTelegram, as, catchRedirect, form, platformEmails, signIn, startTestApp, telegramMessages, withEnv } from "./helpers/app.mjs";
+import { answerTelegram, as, catchRedirect, form, platformEmails, signIn, startTestApp, telegramMessages, withEnv } from "./helpers/app.mjs";
 import { POSTSHIBA_ENV, createFakePostshiba } from "./helpers/postshiba.mjs";
 import { failNextPublish } from "./stubs/dns-broker.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
@@ -115,7 +115,6 @@ describe("which alerts reach Telegram", () => {
 			"inbound-cap",
 			"platform-email-failed",
 			"send-refused:approval_pending",
-			"stripe-webhook-failed:invoice.paid",
 			"job-failing:/api/jobs/send-batch",
 			"postshiba-kyc:pending",
 		];
@@ -388,7 +387,7 @@ describe("what alerts", () => {
 	});
 
 	test("sign-in codes that can't go out alert the admins, once the form has answered", async () => {
-		await withEnv({ ...TELEGRAM, RESEND_API_KEY: "" }, async () => {
+		await withEnv({ ...TELEGRAM, RESEND_API_KEY: "", EMAIL_FROM: "" }, async () => {
 			const before = telegramMessages.length;
 			const visitor = { jar: new Map(), ip: `203.0.113.${++visitors}` };
 			const result = await quietly(() => as(visitor, () => m.signin.sendSigninCode(null, form({ email: "no-code@example.com" }))));
@@ -397,7 +396,7 @@ describe("what alerts", () => {
 			assert.deepEqual(
 				telegramMessages.slice(before).map(({ text }) => text),
 				[
-					"<b>MailCheap</b> · Sign-in codes not sending\n\nRESEND_API_KEY is not set: MailCheap Cloud sends its own emails through Resend only.\nNobody can sign in with a code until it's fixed: check Resend's key, domain and quota.\nhttps://resend.com/emails",
+					"<b>MailCheap</b> · Sign-in codes not sending\n\nEMAIL_FROM is not set: MailCheap's own emails need a from address on a domain Resend or the email provider verified.\nNobody can sign in with a code until it's fixed: check EMAIL_FROM and the email provider.",
 				]
 			);
 		});
@@ -408,7 +407,6 @@ describe("what alerts", () => {
 			const first = await signIn("dns-cap@example.com");
 			const second = await signIn("dns-cap-two@example.com");
 			const third = await signIn("dns-own@example.com");
-			for (const user of [first, second, third]) await activate(user);
 			const save = (user, slug) => as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" }))));
 			const before = { telegram: telegramMessages.length, emails: platformEmails.length };
 			await quietly(async () => {

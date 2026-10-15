@@ -3,7 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { activate, anonymous, as, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, form, signIn, startTestApp } from "./helpers/app.mjs";
 
 // Every action of the registry has to reach every surface: a REST route, an MCP tool, the docs. And the
 // dashboard's server actions may only run registered actions, so the dashboard can't drift from the API.
@@ -85,7 +85,6 @@ describe("every action", () => {
 
 	test("is an MCP tool with the same name, schemas and annotations", async () => {
 		const user = await signIn("parity@example.com");
-		await activate(user);
 		const { key } = await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Parity", level: "full" })));
 		const tools = new Map((await listTools(key)).map((tool) => [tool.name, tool]));
 
@@ -156,7 +155,7 @@ describe("every action", () => {
 describe("dashboard server actions", () => {
 	test("import nothing but the registry's runner and Next.js navigation", async () => {
 		const files = await findServerActionFiles();
-		assert.ok(files.length >= 6, "found the dashboard's action files");
+		assert.ok(files.length >= 5, "found the dashboard's action files");
 		for (const file of files) {
 			const source = await readFile(join(ROOT, file), "utf8");
 			assert.match(source, /^"use server";/, `${file} is a server action file`);

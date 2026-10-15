@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Copy, ExternalLink, Globe, Pause, Pin, PinOff, Play } from "lucide-react";
 import {
 	duplicateCampaign,
@@ -10,11 +9,9 @@ import AvatarNewsletter from "@/components/AvatarNewsletter";
 import BadgeStatus from "@/components/BadgeStatus";
 import ButtonCampaignAction from "@/components/ButtonCampaignAction";
 import ButtonCopy from "@/components/ButtonCopy";
-import GatePlan from "@/components/GatePlan";
 import CardStat from "@/components/CardStat";
 import DialogSendMore from "@/components/DialogSendMore";
 import HeaderPage from "@/components/HeaderPage";
-import IconWarmup from "@/components/IconWarmup";
 import ImageFavicon from "@/components/ImageFavicon";
 import InputCampaignSlug from "@/components/InputCampaignSlug";
 import PreviewEmail from "@/components/PreviewEmail";
@@ -28,10 +25,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { isPlanLimitCode } from "@/lib/account-state";
 import { getArchiveUrls } from "@/lib/archive-hosts";
 import { FIRST_SEND, LIMITS, isSendingEnabled } from "@/lib/config";
-import { formatCount, formatDate, formatNumber, formatRate } from "@/lib/format";
+import { formatDate, formatNumber, formatRate } from "@/lib/format";
 import { rateTone } from "@/lib/health";
 import { PROVIDER_DOMAINS, PROVIDER_LABELS } from "@/lib/providers";
 import { UNSUBSCRIBE_PLACEHOLDER, renderEmail, withResponsiveImages } from "@/lib/render-email";
@@ -41,9 +37,7 @@ export default function CampaignReport({
 	newsletter,
 	providers,
 	remainingCount = 0,
-	emailsLeft = 0,
 	isBlocked = false,
-	pace = null,
 	newContacts = 0,
 }) {
 	const { stats } = campaign;
@@ -69,17 +63,13 @@ export default function CampaignReport({
 				meta={<BadgeStatus status={campaign.status} />}
 			>
 				{campaign.status === "sent" && remainingCount > 0 && isSendingEnabled() && !isBlocked && (
-					<GatePlan reason="send">
-						<DialogSendMore
-							campaignId={id}
-							sentCount={stats.recipients}
-							remainingCount={remainingCount}
-							emailsLeft={emailsLeft}
-							isCleanupEnabled={Boolean(newsletter.cleanup?.enabled)}
-							pace={pace}
-							newContacts={newContacts}
-						/>
-					</GatePlan>
+					<DialogSendMore
+						campaignId={id}
+						sentCount={stats.recipients}
+						remainingCount={remainingCount}
+						isCleanupEnabled={Boolean(newsletter.cleanup?.enabled)}
+						newContacts={newContacts}
+					/>
 				)}
 				{campaign.status === "sending" && (
 					<ButtonCampaignAction action={pauseCampaign} id={id}>
@@ -88,16 +78,14 @@ export default function CampaignReport({
 					</ButtonCampaignAction>
 				)}
 				{campaign.status === "paused" && (
-					<GatePlan reason="send">
-						<ButtonCampaignAction
-							action={resumeCampaign}
-							id={id}
-							disabledReason={isBlocked ? "The account is blocked" : isSendingEnabled() ? null : "Sending is off"}
-						>
-							<Play data-icon="inline-start" />
-							Resume
-						</ButtonCampaignAction>
-					</GatePlan>
+					<ButtonCampaignAction
+						action={resumeCampaign}
+						id={id}
+						disabledReason={isBlocked ? "The account is blocked" : isSendingEnabled() ? null : "Sending is off"}
+					>
+						<Play data-icon="inline-start" />
+						Resume
+					</ButtonCampaignAction>
 				)}
 				{isOnArchive && (
 					<>
@@ -121,7 +109,7 @@ export default function CampaignReport({
 
 			<div className="flex flex-col gap-6">
 				{campaign.status === "paused" && campaign.pauseReason && (
-					<TextPauseReason reason={campaign.pauseReason} code={campaign.pauseCode} />
+					<TextPauseReason reason={campaign.pauseReason} />
 				)}
 				{["sending", "paused"].includes(campaign.status) && (
 					<div className="flex flex-col gap-2 animate-enter">
@@ -143,15 +131,6 @@ export default function CampaignReport({
 								{formatNumber(campaign.firstSend.held)} follow {FIRST_SEND.waitMinutes / 60} hours after them if their bounces and
 								complaints stay low. If they don&apos;t, the rest waits for you to resume, and if they&apos;re far over, your account is
 								blocked.
-							</p>
-						)}
-						{campaign.status === "sending" && campaign.sendingUntil && campaign.spreadHours > 0 && (
-							<p className="flex gap-1.5 text-xs text-pretty text-muted-foreground">
-								<IconWarmup className="size-3.5 translate-y-px" />
-								<span>
-									It goes out over hours while your account warms up{pace?.warmup ? "" : " to sends this size"}: about{" "}
-									{formatCount(hoursUntil(campaign.sendingUntil), "hour")} to go.
-								</span>
 							</p>
 						)}
 					</div>
@@ -281,20 +260,10 @@ export default function CampaignReport({
 	);
 }
 
-function TextPauseReason({ reason, code }) {
+function TextPauseReason({ reason }) {
 	return (
 		<p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-amber-500/10 px-4 py-3 text-sm animate-enter">
 			<span className="text-pretty">Paused: {reason}</span>
-			{isPlanLimitCode(code) && (
-				<Link href="/billing" className="font-medium underline underline-offset-4">
-					Upgrade
-				</Link>
-			)}
 		</p>
 	);
-}
-
-// Whole hours left, at least one: the last batch's time is approximate.
-function hoursUntil(date) {
-	return Math.max(1, Math.ceil((new Date(date).getTime() - Date.now()) / 3_600_000));
 }

@@ -1,27 +1,20 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { getPostalAddress, toPostalAddressFields } from "../lib/postal-address.js";
-import { activate, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 import { sent } from "./stubs/ses.mjs";
 
-// A newsletter's postal address: its own, else the server's default (lib/site-extensions.js), unless its owner saved
-// it empty, which keeps sending off until it has one.
-const DEFAULT = "Example Company, 1 Example Way";
-
+// A newsletter's postal address: an empty one keeps sending off until it has one.
 describe("the address emails print", () => {
-	test("the newsletter's own, else the default, unless it was cleared", () => {
-		assert.equal(getPostalAddress({ postalAddress: " 1 Main St " }, DEFAULT), "1 Main St");
-		assert.equal(getPostalAddress({}, DEFAULT), DEFAULT);
-		assert.equal(getPostalAddress({ postalAddress: "" }, DEFAULT), DEFAULT, "saved before there was a default");
-		assert.equal(getPostalAddress({ postalAddress: "", postalAddressCleared: true }, DEFAULT), "");
-		assert.equal(getPostalAddress({}, null), "", "a self-hosted server has none");
+	test("the newsletter's own, trimmed", () => {
+		assert.equal(getPostalAddress({ postalAddress: " 1 Main St " }), "1 Main St");
+		assert.equal(getPostalAddress({}), "");
+		assert.equal(getPostalAddress(null), "");
 	});
 
-	test("saving the default's text keeps the default, an empty one clears it, any other is the newsletter's", () => {
-		assert.deepEqual(toPostalAddressFields(DEFAULT, DEFAULT), { postalAddress: "", postalAddressCleared: false });
-		assert.deepEqual(toPostalAddressFields("  ", DEFAULT), { postalAddress: "", postalAddressCleared: true });
-		assert.deepEqual(toPostalAddressFields("1 Main St", DEFAULT), { postalAddress: "1 Main St", postalAddressCleared: false });
-		assert.deepEqual(toPostalAddressFields("1 Main St", null), { postalAddress: "1 Main St", postalAddressCleared: false });
+	test("saving an empty one clears it, any other is the newsletter's", () => {
+		assert.deepEqual(toPostalAddressFields("  "), { postalAddress: "", postalAddressCleared: true });
+		assert.deepEqual(toPostalAddressFields("1 Main St"), { postalAddress: "1 Main St", postalAddressCleared: false });
 	});
 });
 
@@ -50,7 +43,6 @@ describe("clearing it", () => {
 
 	test("saved empty in the settings, nothing sends until an address is typed in", async () => {
 		const user = await signIn("postal-clear@example.com");
-		await activate(user);
 		let newsletterId = null;
 		const save = (postalAddress) => form({ ...(newsletterId && { id: newsletterId }), name: "Cleared", slug: "cleared-notes", postalAddress });
 		newsletterId = (await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, save(""))))).split("/").at(-1);

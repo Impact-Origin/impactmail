@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { getConfirmationContent } from "../lib/confirmation-content.js";
-import { activate, as, callApi, catchRedirect, form, jsonRequest, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { as, callApi, catchRedirect, form, jsonRequest, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 import { published } from "./stubs/qstash.mjs";
 import { remoteImages } from "./stubs/remote-image.mjs";
@@ -53,9 +53,8 @@ async function createKey(user, level, name = `${level} key`) {
 	return (await as(user, () => m.apiKeys.createApiKey(null, form({ name, level })))).key;
 }
 
-async function customer(email, { limits, postalAddress = "1 Main St, Paris" } = {}) {
+async function customer(email, { postalAddress = "1 Main St, Paris" } = {}) {
 	const user = await signIn(email);
-	await activate(user, limits ? { limitOverrides: limits } : {});
 	user.slug = email.split("@")[0].replace(/[^a-z0-9]/g, "-");
 	const url = await as(user, () =>
 		catchRedirect(m.newsletters.saveNewsletter(null, form({ name: `${user.slug} news`, slug: user.slug, postalAddress })))
@@ -155,7 +154,6 @@ describe("key levels", () => {
 			["GET", "/campaigns"],
 			["POST", "/campaigns", { subject: "Nope" }],
 			["POST", "/api-keys", { name: "Escalate", level: "full" }],
-			["GET", "/billing"],
 		]) {
 			assertError(await api(user.signupsKey, method, path, body), 403, "forbidden");
 		}
@@ -287,20 +285,11 @@ describe("errors", () => {
 		assert.equal((await api(stranger.key, "POST", "/api-keys", { name: "Theirs", level: "signups" })).status, 201, "another account counts on its own");
 	});
 
-	test("an account without an active plan only reaches billing", async () => {
-		const user = await customer("canceled-api@example.com");
-		await m.Account.updateOne({ _id: user.accountId }, { $set: { subscriptionStatus: "canceled" } });
-		assertError(await api(user.key, "GET", "/campaigns"), 402, "subscription_required");
-		assertError(await api(user.signupsKey, "POST", "/contacts", { email: "late@example.org" }), 402, "subscription_required");
-		const billing = await api(user.key, "GET", "/billing");
-		assert.equal(billing.status, 200);
-		assert.deepEqual({ status: billing.body.status, isActive: billing.body.isActive }, { status: "canceled", isActive: false });
-	});
 });
 
 describe("sending through the API", () => {
-	test("the dashboard's checks run: postal address, from address, plan limits, paused accounts", async () => {
-		const user = await customer("checks-api@example.com", { limits: { emailsPerMonth: 2, subscribers: 100 }, postalAddress: "" });
+	test("the dashboard's checks run: postal address, from address, paused accounts", async () => {
+		const user = await customer("checks-api@example.com", { postalAddress: "" });
 		await importReaders(user, 3);
 		const id = await draft(user);
 		assert.equal((await api(user.key, "GET", `/campaigns/${id}`)).body.sendProblem.code, "send_check_failed");
@@ -313,10 +302,6 @@ describe("sending through the API", () => {
 		assert.match(assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 422, "sender_not_allowed"), /isn't verified yet/);
 		await api(user.key, "PATCH", `/newsletters/${user.slug}`, { fromEmail: `hello@${user.slug}.mailcheapmail.com` });
 
-		assert.match(assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 402, "plan_limit_emails"), /needs 3 emails/);
-		await m.accounts.setLimitOverrides(user.accountId, { emailsPerMonth: 100, subscribers: 2 });
-		assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 402, "plan_limit_subscribers");
-		await m.accounts.setLimitOverrides(user.accountId, { emailsPerMonth: 100, subscribers: 100 });
 		await m.blocks.blockAccount(user.accountId, { reason: "Review" });
 		assertError(await api(user.key, "POST", `/campaigns/${id}/send`), 403, "account_blocked");
 		const later = new Date(Date.now() + 3_600_000).toISOString();
@@ -507,7 +492,7 @@ describe("newsletters and images", () => {
 		const user = await customer("settings-api@example.com");
 		await api(user.key, "PATCH", `/newsletters/${user.slug}`, { welcome: { enabled: true, subject: "Hi", markdown: "Hello." } });
 		const updated = await api(user.key, "PATCH", `/newsletters/${user.newsletterId}`, { welcome: { subject: "Hello there" }, replyTo: "Me@Example.org" });
-		assert.deepEqual(updated.body.welcome, { enabled: true, subject: "Hello there", previewText: "", markdown: "Hello.", paused: false });
+		assert.deepEqual(updated.body.welcome, { enabled: true, subject: "Hello there", previewText: "", markdown: "Hello." });
 		assert.equal(updated.body.replyTo, "me@example.org");
 		assert.equal(updated.body.postalAddress, "1 Main St, Paris");
 		assert.equal(updated.body.fromEmail, `hello@${user.slug}.mailcheapmail.com`);

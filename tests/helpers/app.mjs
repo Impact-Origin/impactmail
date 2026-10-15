@@ -8,11 +8,10 @@ import { startMongo } from "./mongo.mjs";
 export const platformEmails = [];
 // Messages to Telegram's Bot API, newest last, with the token their URL carried.
 export const telegramMessages = [];
-let stripeHandler = null;
 let telegramAnswer = null;
 let visitor = 0;
 
-// No test talks to the network: Resend and Telegram are recorded and Stripe answers from mockStripe's handler.
+// No test talks to the network: Resend and Telegram are recorded.
 function installFetch() {
 	globalThis.fetch = async (input, init = {}) => {
 		const url = String(input?.url ?? input);
@@ -27,39 +26,8 @@ function installFetch() {
 			telegramMessages.push({ token: telegram[1], ...JSON.parse(init.body) });
 			return Response.json({ ok: true, result: { message_id: telegramMessages.length } });
 		}
-		if (url.startsWith("https://api.stripe.com/")) {
-			if (!stripeHandler) throw new Error(`Unexpected Stripe request: ${init.method ?? "GET"} ${url}`);
-			const { pathname, searchParams } = new URL(url);
-			const body = new URLSearchParams(typeof init.body === "string" ? init.body : "");
-			const result = await stripeHandler({ method: init.method ?? "GET", path: pathname, query: searchParams, body });
-			return Response.json(result?.error ? { error: result.error } : result, {
-				status: result?.error ? (result.status ?? 400) : 200,
-				headers: { "request-id": "req_test" },
-			});
-		}
 		throw new Error(`Unexpected request to ${url}`);
 	};
-}
-
-export function mockStripe(handler) {
-	stripeHandler = handler;
-}
-
-// The lookup keys a prices.list asks for, as Stripe gets them: lookup_keys[0], lookup_keys[1]…
-export function readLookupKeys(query) {
-	return [...query].filter(([name]) => name.startsWith("lookup_keys[")).map(([, value]) => value);
-}
-
-// Stripe's answer to a prices.list when it has both prices of every plan, at lib/plans.js's amounts.
-export async function listPlanPrices(query) {
-	const { getPlan, getPrice, parseLookupKey } = await import("../../lib/plans.js");
-	const data = readLookupKeys(query).flatMap((lookupKey) => {
-		const price = parseLookupKey(lookupKey);
-		if (!price) return [];
-		const amount = getPrice(getPlan(price.plan), price.interval) * 100;
-		return [{ id: `price_${lookupKey}`, object: "price", lookup_key: lookupKey, unit_amount: amount, currency: "usd", recurring: { interval: price.interval } }];
-	});
-	return { object: "list", data, has_more: false };
 }
 
 // Telegram answers this Response instead, while the function returns one.
@@ -67,23 +35,22 @@ export function answerTelegram(answer) {
 	telegramAnswer = answer;
 }
 
-// MailCheap Cloud by default; a self-hosted server with { MAILCHEAP_CLOUD: "" }.
+// Everyone at the test domains signs in: ALLOWED_EMAILS takes them all.
 export async function startTestApp(env = {}) {
 	const mongo = await startMongo();
 	Object.assign(process.env, {
 		NODE_ENV: "test",
-		MAILCHEAP_CLOUD: "true",
 		MONGODB_URI: mongo.uri,
 		BETTER_AUTH_SECRET: "test-secret-for-integration-tests-0123456789",
 		SUPPRESSION_HASH_KEY: "test-suppression-hash-key-0123456789abcdef",
 		APP_URL: "http://localhost:3000",
 		RESEND_API_KEY: "re_test",
+		EMAIL_FROM: "MailCheap <hello@r.mailcheap.ai>",
 		SENDING_ENABLED: "true",
 		QSTASH_TOKEN: "qstash-test",
 		SEND_RATE_PER_SECOND: "14",
-		STRIPE_SECRET_KEY: "sk_test_mailcheap",
-		STRIPE_WEBHOOK_SECRET: "whsec_test_mailcheap",
 		ADMIN_EMAILS: "admin@example.com",
+		ALLOWED_EMAILS: "@example.com,@team.example.org,@gmail.com,@googlemail.com,@outlook.com,@yahoo.com,@yopmail.com",
 		BLOB_READ_WRITE_TOKEN: "blob-test",
 		SHARED_DOMAIN: "mailcheapmail.com",
 		ARCHIVE_CNAME_TARGET: "cname.mailcheap.ai",
@@ -169,55 +136,9 @@ export async function signIn(email) {
 	const Account = (await import("../../models/Account.js")).default;
 	const stored = await mongoose.connection.db.collection("users").findOne({ email: email.toLowerCase() });
 	user.userId = stored._id;
-	// Past its warm-up: sends up to 200 emails, or 5 times what it proved (proveVolume), go out at full speed. Tests of the
-	// warm-up unset it.
-	await Account.updateOne({ ownerId: stored._id }, { $set: { spreadUntil: new Date(0) } });
 	user.account = await Account.findOne({ ownerId: stored._id }).lean();
 	user.accountId = user.account._id;
 	return user;
-}
-
-// What the Stripe webhook writes for a paid subscription.
-export async function activate(user, { plan = "starter", interval = "month", ...set } = {}) {
-	const Account = (await import("../../models/Account.js")).default;
-	const { addMonths, startUsagePeriod } = await import("../../lib/usage-period.js");
-	const start = new Date();
-	const end = addMonths(start, interval === "year" ? 12 : 1);
-	await Account.updateOne(
-		{ _id: user.accountId },
-		{
-			$set: {
-				plan,
-				interval,
-				subscriptionStatus: "active",
-				stripeCustomerId: `cus_${user.accountId}`,
-				stripeSubscriptionId: `sub_${user.accountId}`,
-				currentPeriodStart: start,
-				currentPeriodEnd: end,
-				usage: startUsagePeriod({ start, end }),
-				...set,
-			},
-		}
-	);
-	user.account = await Account.findById(user.accountId).lean();
-	return user.account;
-}
-
-// A campaign the account sent before, which proves its volume (lib/send-spread.js) once it's a day old and under the
-// pause level.
-export async function proveVolume(user, sent, { bounced = 0, hoursAgo = 48 } = {}) {
-	const Campaign = (await import("../../models/Campaign.js")).default;
-	const at = new Date(Date.now() - hoursAgo * 3_600_000);
-	await Campaign.create({
-		accountId: user.accountId,
-		newsletterId: user.newsletterId,
-		subject: "Earlier issue",
-		status: "sent",
-		stats: { recipients: sent, sent, bounced },
-		startedAt: at,
-		sentAt: at,
-		finishedAt: at,
-	});
 }
 
 // A domain added through the Domains page, with its DNS records in and its archive subdomain pointed at us.

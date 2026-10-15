@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { INTERVALS, PLAN_IDS } from "../lib/plans.js";
 
 export const ACCOUNT_STATUSES = ["active", "paused"];
 export const BLOCK_SOURCES = ["admin", "rates", "campaign", "slice", "trap", "ses", "postshiba", "gmail"];
@@ -8,24 +7,9 @@ const accountSchema = new mongoose.Schema(
 	{
 		// The Better Auth user who signed up. One user per account at launch.
 		ownerId: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true },
-		// Written by the Stripe webhook (lib/billing.js) and the checkout return, never from a form.
-		plan: { type: String, enum: PLAN_IDS },
-		interval: { type: String, enum: INTERVALS },
-		stripeCustomerId: { type: String },
-		stripeSubscriptionId: { type: String },
-		subscriptionStatus: { type: String },
-		currentPeriodStart: { type: Date },
-		currentPeriodEnd: { type: Date },
-		cancelAt: { type: Date },
-		// Emails sent this month of the paid period (lib/usage-period.js): every kind counts. welcomePausedAt: when the
-		// month's first welcome email was skipped for want of emails left, which told the owner; a new month clears it.
+		// Emails the account has sent, every kind counted.
 		usage: {
 			emailsSent: { type: Number, default: 0 },
-			periodStart: { type: Date },
-			periodEnd: { type: Date },
-			anchor: { type: Date },
-			paidThrough: { type: Date },
-			welcomePausedAt: { type: Date },
 		},
 		// "paused" is a blocked account (lib/account-blocks.js): it sends nothing, welcome and confirmation emails
 		// included, and refuses every change but stopping things, until an admin unblocks it. pauseReason is what its
@@ -39,7 +23,7 @@ const accountSchema = new mongoose.Schema(
 		pausedBy: { type: String, enum: BLOCK_SOURCES },
 		// The last time an admin unblocked it: Gmail's data on the days up to then doesn't block it again.
 		unblockedAt: { type: Date },
-		// The account's SES tenant and configuration set, created when its plan starts (lib/email-provider/ses.js).
+		// The account's SES tenant and configuration set, created with the account (lib/email-provider/ses.js).
 		ses: {
 			tenantName: { type: String },
 			tenantArn: { type: String },
@@ -50,7 +34,7 @@ const accountSchema = new mongoose.Schema(
 			tenantStatusAt: { type: Date },
 			lastFinding: { type: String },
 		},
-		// The account's PostShiba tenant (slug mc-<accountId>) and SMTP credentials, created when its plan starts
+		// The account's PostShiba tenant (slug mc-<accountId>) and SMTP credentials
 		// (lib/email-provider/postshiba.js).
 		postshiba: {
 			tenantId: { type: String },
@@ -81,30 +65,13 @@ const accountSchema = new mongoose.Schema(
 			bounceRate: { type: Number },
 			complaintRate: { type: Number },
 		},
-		// The end of the account's 30-day warm-up, set by its first campaign: until then, a send can grow less over what
-		// the account proved before it's paced (lib/send-spread.js). An admin can end it early or start it again.
-		spreadUntil: { type: Date },
-		// What the account answered at /welcome (lib/onboarding.js): listSize picks the plan the paywall shows first.
-		// The overview's get-started list (lib/get-started.js) stays hidden once it's dismissed or finished.
+		// What the account answered at /welcome (lib/onboarding.js). The overview's get-started list (lib/get-started.js) stays hidden once it's dismissed or finished.
 		onboarding: {
 			listSize: { type: String, trim: true },
 			listSource: { type: String, trim: true },
 			completedAt: { type: Date },
 			checklistDismissedAt: { type: Date },
 			checklistFinishedAt: { type: Date },
-		},
-		// Set by an admin; they replace the plan's numbers.
-		limitOverrides: {
-			emailsPerMonth: { type: Number, min: 0 },
-			subscribers: { type: Number, min: 0 },
-		},
-		// A free plan an admin gave from /admin (lib/billing.js grantFreePlan): the plan's limits without Stripe, from
-		// grantedAt until `until`, or with no end. Ending it sets `until`. by: the admin's email.
-		comp: {
-			plan: { type: String, enum: PLAN_IDS },
-			grantedAt: { type: Date },
-			until: { type: Date },
-			by: { type: String, trim: true },
 		},
 		// The owner deleted the account (lib/account-deletion.js): it stopped at once, and its data goes for good at
 		// purgeAt unless they sign in and restore it before. Once the purge has started, it can't be restored.
@@ -117,11 +84,6 @@ const accountSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
-accountSchema.index(
-	{ stripeCustomerId: 1 },
-	{ unique: true, partialFilterExpression: { stripeCustomerId: { $type: "string" } } }
-);
-accountSchema.index({ stripeSubscriptionId: 1 }, { partialFilterExpression: { stripeSubscriptionId: { $type: "string" } } });
 accountSchema.index({ createdAt: -1 });
 accountSchema.index({ "ses.tenantName": 1 }, { unique: true, partialFilterExpression: { "ses.tenantName": { $type: "string" } } });
 accountSchema.index({ "postshiba.tenantSlug": 1 }, { unique: true, partialFilterExpression: { "postshiba.tenantSlug": { $type: "string" } } });

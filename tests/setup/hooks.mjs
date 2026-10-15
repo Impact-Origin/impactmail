@@ -30,10 +30,6 @@ const STUBS = {
 	"@/lib/remote-image": stub("remote-image.mjs"),
 };
 
-// MailCheap Cloud's marketing site extends the shared pages through this module where its file exists, as in
-// next.config.mjs. The open source has none, so the default stays.
-const SITE_EXTENSIONS = { "@/lib/site-extensions": "lib/marketing/site-extensions.js" };
-
 const EXTENSIONS = ["", ".js", ".jsx", ".mjs", "/index.js"];
 
 function isFile(path) {
@@ -54,8 +50,6 @@ export async function resolve(specifier, context, nextResolve) {
 	if (STUBS[specifier]) return { url: STUBS[specifier], shortCircuit: true };
 	// The share images render for real; next/og has no exports map, so only its file name resolves.
 	if (specifier === "next/og") return nextResolve("next/og.js", context);
-	const extension = SITE_EXTENSIONS[specifier] && `${ROOT}${SITE_EXTENSIONS[specifier]}`;
-	if (extension && isFile(extension)) return { url: pathToFileURL(extension).href, shortCircuit: true };
 	if (specifier.startsWith("@/")) {
 		const url = resolveAlias(specifier);
 		if (url) return { url, shortCircuit: true };

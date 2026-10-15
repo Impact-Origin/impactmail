@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { activate, anonymous, as, callApi, catchRedirect, form, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchRedirect, form, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
 import { sent, state } from "./stubs/ses.mjs";
 import { dnsRecords } from "./stubs/dns-broker.mjs";
 
@@ -41,7 +41,6 @@ async function callTool(key, name, args) {
 
 async function customer(email, slug) {
 	const user = await signIn(email);
-	await activate(user);
 	const url = await as(user, () =>
 		catchRedirect(m.newsletters.saveNewsletter(null, form({ name: slug, slug, postalAddress: "1 Main St, Paris", archiveEnabled: "on" })))
 	);
@@ -71,7 +70,6 @@ before(async () => {
 		proxy: (await import("../proxy.js")).proxy,
 		NextRequest: (await import("next/server")).NextRequest,
 		archiveHosts: await import("../lib/archive-hosts.js"),
-		siteExtensions: (await import("@/lib/site-extensions")).siteExtensions,
 		hostRouting: await import("../lib/host-routing.js"),
 		sharedSender: await import("../lib/shared-sender.js"),
 		auth: await import("../lib/auth.js"),
@@ -111,10 +109,9 @@ describe("hosts", () => {
 	});
 
 	test("the app answers on its own hosts, and an archive host only opens the archive and its links", async () => {
-		// Signed out, / is the marketing site's landing page where MailCheap Cloud has one, else sign-in.
-		const { landingPath } = m.siteExtensions;
+		// Signed out, / is sign-in.
 		for (const url of [`${APP_URL}/`, "https://www.mailcheap.ai/", "https://api.mailcheap.ai/"]) {
-			assert.deepEqual(outcome(await visit(url)), landingPath ? { rewrite: landingPath } : { status: 307 }, url);
+			assert.deepEqual(outcome(await visit(url)), { status: 307 }, url);
 		}
 		assert.deepEqual(outcome(await visit(`${APP_URL}/signin`)), { next: true });
 
@@ -153,7 +150,6 @@ describe("reserved slugs", () => {
 	test("a slug made from the name skips the ones MailCheap keeps", async () => {
 		const user = await signIn("blog@example.com");
 		assert.equal(await as(user, () => catchRedirect(m.welcome.completeOnboarding(null, form({ name: "Blog" })))), "/");
-		await activate(user);
 		assert.equal(await as(user, () => catchRedirect(m.newsletters.createNewsletter(null, form({ name: "Support" })))), "/newsletters");
 		user.key = (await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })))).key;
 		assert.equal((await callApi("POST", "/api/v1/newsletters", { key: user.key, body: { name: "Status" } })).status, 201);

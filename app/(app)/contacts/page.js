@@ -10,7 +10,6 @@ import CardAddContacts from "@/components/CardAddContacts";
 import DialogAddContact from "@/components/DialogAddContact";
 import DialogImportContacts from "@/components/DialogImportContacts";
 import FilterContacts from "@/components/FilterContacts";
-import GatePlan from "@/components/GatePlan";
 import HeaderPage from "@/components/HeaderPage";
 import MenuContact from "@/components/MenuContact";
 import StateEmpty from "@/components/StateEmpty";
@@ -73,9 +72,7 @@ export default async function ContactsPage({ searchParams }) {
 			<HeaderPage title="Contacts">
 				<ButtonExportContacts newsletterId={newsletterId} status={status} query={query} isDisabled={total === 0} />
 				{hasContacts && <DialogAddContact newsletter={newsletter} />}
-				<GatePlan reason="import">
-					<DialogImportContacts newsletter={newsletter} />
-				</GatePlan>
+				<DialogImportContacts newsletter={newsletter} />
 			</HeaderPage>
 
 			<div className="flex flex-col gap-4">

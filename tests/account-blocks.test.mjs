@@ -5,7 +5,7 @@ import { createConfirmToken } from "../lib/confirmation.js";
 import { getEventPlan } from "../lib/email-event-rules.js";
 import { getClickUrl, getOpenUrl } from "../lib/tracking.js";
 import { createUnsubscribeToken } from "../lib/unsubscribe.js";
-import { activate, anonymous, as, callApi, catchNotFound, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchNotFound, catchRedirect, form, jsonRequest, platformEmails, signIn, startTestApp } from "./helpers/app.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 import { published } from "./stubs/qstash.mjs";
 import { sent as sesEmails } from "./stubs/ses.mjs";
@@ -41,10 +41,8 @@ const sentCount = (results) => results.reduce((sum, { sent = 0 }) => sum + sent,
 const loadAccount = (user) => m.Account.findById(user.accountId).lean();
 const loadCampaign = (user, id) => m.Campaign.findOne({ accountId: user.accountId, _id: id }).lean();
 
-async function customer(email, { contacts = 2, isFree = false } = {}) {
+async function customer(email, { contacts = 2 } = {}) {
 	const user = await signIn(email);
-	if (isFree) assert.equal((await as(admin, () => m.admin.giveFreePlan(null, form({ accountId: String(user.accountId), plan: "starter" })))).ok, true);
-	else await activate(user);
 	const slug = email.split("@")[0];
 	const url = await as(user, () =>
 		catchRedirect(
@@ -156,7 +154,6 @@ before(async () => {
 		Contact: (await import("../models/Contact.js")).default,
 		Message: (await import("../models/Message.js")).default,
 		Newsletter: (await import("../models/Newsletter.js")).default,
-		siteExtensions: (await import("@/lib/site-extensions")).siteExtensions,
 	};
 	admin = await signIn("admin@example.com");
 });
@@ -182,7 +179,7 @@ describe("what blocks an account", () => {
 		assert.match(toAdmins.text, /blocked by a spam trap/);
 		assert.ok(toAdmins.text.includes(`${hard.email} bounced: Hard bounce: 550 5.1.1 This address is a spam trap`));
 		assert.ok(!toOwner.text.includes(hard.email), "the trap's address stays with the admins");
-		assert.ok(toOwner.text.endsWith(`welcome emails included, and imports and changes are off. Chat with us to unblock it.\nhttp://localhost:3000${m.siteExtensions.supportChatPath ?? "/"}`), toOwner.text);
+		assert.ok(toOwner.text.endsWith(`welcome emails included, and imports and changes are off. An admin can unblock it on the admin page.\nhttp://localhost:3000/`), toOwner.text);
 		assert.ok(!toOwner.text.includes("hello@mailcheap.ai"), "the chat, not email");
 	});
 
@@ -252,8 +249,8 @@ describe("what blocks an account", () => {
 });
 
 describe("a blocked account", () => {
-	test("sends nothing, welcome and confirmation emails included, even on a free plan", async () => {
-		const user = await customer("blocked-free@example.com", { contacts: 2, isFree: true });
+	test("sends nothing, welcome and confirmation emails included", async () => {
+		const user = await customer("blocked-free@example.com", { contacts: 2 });
 		const sending = await draft(user, "Going out");
 		const later = await draft(user, "Later");
 		assert.deepEqual(await as(user, () => m.campaigns.sendCampaign(sending, {})), { ok: true });
@@ -280,7 +277,7 @@ describe("a blocked account", () => {
 		assert.equal((await loadCampaign(user, later)).status, "draft", "a scheduled send goes back to draft");
 
 		const test = await as(user, () => m.campaigns.sendTestCampaign(sending));
-		assert.deepEqual(test, { error: "This account is blocked: Review. Chat with us to unblock it.", code: "account_blocked" });
+		assert.deepEqual(test, { error: "This account is blocked: Review. An admin can unblock it on the admin page.", code: "account_blocked" });
 		assert.equal((await as(user, () => m.newsletters.sendWelcomeTest(user.newsletterId))).code, "account_blocked");
 
 		const newsletter = await m.Newsletter.findOne({ accountId: user.accountId, _id: user.newsletterId }).lean();
@@ -303,7 +300,7 @@ describe("a blocked account", () => {
 		await as(user, () => m.campaigns.scheduleCampaign(scheduled, { scheduledAt: new Date(Date.now() + 86_400_000).toISOString() }));
 		await m.blocks.blockAccount(user.accountId, { reason: "Review" });
 
-		const refused = { error: "This account is blocked: Review. Chat with us to unblock it.", code: "account_blocked" };
+		const refused = { error: "This account is blocked: Review. An admin can unblock it on the admin page.", code: "account_blocked" };
 		const rows = [{ email: "new@example.org", status: "active" }];
 		assert.deepEqual(await as(user, () => m.contacts.importContacts({ newsletterId: user.newsletterId, consent: true, rows })), refused);
 		assert.deepEqual(await as(user, () => m.campaigns.sendCampaign(id, {})), refused);
@@ -316,9 +313,7 @@ describe("a blocked account", () => {
 		const signup = await callApi("POST", "/api/v1/contacts", { key: signupsKey, body: { newsletter: user.slug, email: "visitor@example.org" } });
 		await flushAfter();
 		assertError(signup, 403, "account_blocked");
-		const { supportChatPath } = m.siteExtensions;
-		const hint = supportChatPath ? `Chat with us to unblock it: http://localhost:3000${supportChatPath}` : "Chat with us to unblock it.";
-		assert.equal(signup.body.error.message, `This account is blocked: Review. ${hint}`, "the API gives the chat's address, having no button for it");
+		assert.equal(signup.body.error.message, "This account is blocked: Review. An admin can unblock it on the admin page.");
 		assertError(await callApi("POST", "/api/v1/contacts", { key: user.key, body: { newsletter: user.slug, email: "visitor@example.org" } }), 403, "account_blocked");
 		assertError(await callApi("POST", "/api/v1/contacts/import", { key: user.key, body: { newsletter: user.slug, consent: true, contacts: rows } }), 403, "account_blocked");
 		assertError(await callApi("POST", "/api/v1/campaigns", { key: user.key, body: { subject: "New" } }), 403, "account_blocked");
@@ -328,7 +323,6 @@ describe("a blocked account", () => {
 
 		assert.equal((await callApi("GET", "/api/v1/contacts", { key: user.key })).status, 200);
 		assert.equal((await callApi("GET", `/api/v1/campaigns/${id}`, { key: user.key })).status, 200);
-		assert.equal((await callApi("GET", "/api/v1/billing", { key: user.key })).body.status, "blocked");
 		assert.equal((await callApi("POST", `/api/v1/campaigns/${scheduled}/unschedule`, { key: user.key })).status, 200);
 		const { apiKeys } = (await callApi("GET", "/api/v1/api-keys", { key: user.key })).body;
 		const site = apiKeys.find(({ name }) => name === "Site");

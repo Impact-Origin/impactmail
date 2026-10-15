@@ -2,9 +2,6 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { ChevronRight, Newspaper, Plus } from "lucide-react";
-import BannerUsage from "@/components/BannerUsage";
-import CardUsage from "@/components/CardUsage";
-import CardWarmup from "@/components/CardWarmup";
 import ChartSends from "@/components/ChartSends";
 import ChartSubscribers from "@/components/ChartSubscribers";
 import CookieTimezone from "@/components/CookieTimezone";
@@ -16,53 +13,35 @@ import StateEmpty from "@/components/StateEmpty";
 import SwatchChart from "@/components/SwatchChart";
 import TableCampaigns from "@/components/TableCampaigns";
 import { Button } from "@/components/ui/button";
-import { hasActiveSubscription } from "@/lib/account-state";
 import { requireAccount } from "@/lib/auth";
-import { getSendVolumes, listNewsletterCampaigns } from "@/lib/campaign-queries";
+import { listNewsletterCampaigns } from "@/lib/campaign-queries";
 import { formatNumber, formatSigned } from "@/lib/format";
 import { ADD_NEWSLETTER_PATH } from "@/lib/newsletters";
 import { getEmailStats, getHourlySends, getSubscriberHistory } from "@/lib/overview-data";
 import { PERIOD_DAYS } from "@/lib/overview-series";
-import { getAccountPlan } from "@/lib/plans";
 import { getSelectedNewsletter, openNewsletter } from "@/lib/selected-newsletter";
-import { getPace, getWarmup } from "@/lib/send-spread";
 import { TIME_ZONE_COOKIE, resolveTimeZone, timeZoneLabel } from "@/lib/time-zone";
-import { getUsage, hasWelcomeEmailsOn } from "@/lib/usage";
 import { cn } from "@/lib/utils";
 
-// The open newsletter's numbers, then the plan its account's newsletters share. The page waits for the
+// The open newsletter's numbers. The page waits for the
 // newsletter; every section then loads on its own behind a skeleton of its size.
 export default async function OverviewPage({ searchParams }) {
 	const { account } = await requireAccount();
-	const [view, { newsletter: newsletterParam }, cookieStore, usage] = await Promise.all([
-		getSelectedNewsletter(),
-		searchParams,
-		cookies(),
-		getUsage(account),
-	]);
+	const [view, { newsletter: newsletterParam }, cookieStore] = await Promise.all([getSelectedNewsletter(), searchParams, cookies()]);
 	openNewsletter(view, newsletterParam, "/");
-	const { newsletters, selected } = view;
+	const { selected } = view;
 	const timeZone = resolveTimeZone(cookieStore.get(TIME_ZONE_COOKIE)?.value);
 	const selectedId = selected?._id.toString();
 	const accountId = account._id;
-	const hasPlan = hasActiveSubscription(account);
-	const pace = hasPlan && getWarmup(account) ? getPace(account, await getSendVolumes(account)) : null;
-	const isWelcomePaused = usage.welcomeEmailsPaused && (await hasWelcomeEmailsOn(accountId));
 
 	return (
 		<>
 			<Suspense fallback={null}>
 				<CookieTimezone />
 			</Suspense>
-			{hasPlan && <BannerUsage usage={usage} isWelcomePaused={isWelcomePaused} />}
 			<HeaderPage title="Overview" />
 
 			<div className="flex flex-col gap-8">
-				{pace && (
-					<section style={{ "--stagger": 1 }} className="animate-enter">
-						<CardWarmup pace={pace} />
-					</section>
-				)}
 				{selected ? (
 					<>
 						<Section title={`Last ${PERIOD_DAYS} days`} stagger={1}>
@@ -99,12 +78,6 @@ export default async function OverviewPage({ searchParams }) {
 							</Link>
 						</Button>
 					</StateEmpty>
-				)}
-
-				{hasPlan && usage.emailsLimit !== null && (
-					<Section title={`${getAccountPlan(account)?.name ?? "Your"} plan`} href="/billing" stagger={4}>
-						<CardUsage usage={usage} isShared={newsletters.length > 1} />
-					</Section>
 				)}
 			</div>
 		</>

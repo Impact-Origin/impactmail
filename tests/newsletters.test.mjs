@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { getCleanupSettings } from "../lib/cleanup.js";
-import { activate, addVerifiedDomain, as, callApi, catchNotFound, catchRedirect, form, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
+import { addVerifiedDomain, as, callApi, catchNotFound, catchRedirect, form, signIn, startTestApp, withEnv } from "./helpers/app.mjs";
 
 // Jane has two newsletters, Alpha (her first) and Beta, and a stranger has one. The dashboard shows the newsletter
 // its cookie names, checked against Jane's account every time; each newsletter's campaigns and contacts only show
@@ -86,8 +86,6 @@ before(async () => {
 
 	jane = await signIn("jane@example.com");
 	stranger = await signIn("stranger@example.com");
-	await activate(jane);
-	await activate(stranger);
 	alpha = await createNewsletter(jane, "alpha");
 	beta = await createNewsletter(jane, "beta-letter");
 	strangerNewsletter = await createNewsletter(stranger, "stranger");
@@ -201,27 +199,18 @@ describe("each newsletter's pages only show its own", () => {
 	});
 });
 
-describe("the plan is the account's", () => {
-	test("subscribers count every newsletter, and a send checks them all", async () => {
+describe("usage is the account's", () => {
+	test("subscribers count every newsletter", async () => {
 		const account = await m.Account.findById(jane.accountId).lean();
 		const active = await m.Contact.countDocuments({ accountId: jane.accountId, status: "active" });
 		assert.equal(active, 6);
 		assert.equal((await m.usage.getUsage(account)).subscribers, active);
-
-		await m.accounts.setLimitOverrides(jane.accountId, { emailsPerMonth: 1000, subscribers: 5 });
-		const alphaDraft = await m.Campaign.findOne({ accountId: jane.accountId, newsletterId: alpha, status: "draft" }).lean();
-		const sent = await api(jane.key, "POST", `/campaigns/${alphaDraft._id}/send`);
-		assert.equal(sent.status, 402, JSON.stringify(sent.body));
-		assert.equal(sent.body.error.code, "plan_limit_subscribers");
-		assert.match(sent.body.error.message, /You have 6 subscribers and your plan allows 5/, "Alpha alone has 3");
-		await m.accounts.setLimitOverrides(jane.accountId, {});
 	});
 });
 
 describe("up to 3 newsletters", () => {
 	test("the dashboard, Add a newsletter's dialog and the REST API all stop at 3, and say so", async () => {
 		const user = await signIn("three@example.com");
-		await activate(user);
 		const first = await createNewsletter(user, "three-one");
 		await createNewsletter(user, "three-two");
 		await createNewsletter(user, "three-three");
@@ -266,7 +255,6 @@ describe("Add a newsletter's dialog", () => {
 
 	test("without a shared domain, it sends from an address on one of the account's domains", async () => {
 		const user = await signIn("own-domain@example.com");
-		await activate(user);
 		await addVerifiedDomain(user, "own-domain.dev");
 		await withEnv({ SHARED_DOMAIN: "" }, async () => {
 			const add = (fields) => as(user, () => m.newsletters.createNewsletter(null, form(fields)));

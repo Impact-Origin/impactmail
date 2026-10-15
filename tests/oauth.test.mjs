@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { after, before, describe, test } from "node:test";
 import { SignJWT, exportJWK, generateKeyPair } from "jose";
 import mongoose from "mongoose";
-import { activate, anonymous, as, catchRedirect, form, platformEmails, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, catchRedirect, form, platformEmails, startTestApp } from "./helpers/app.mjs";
 import { metadataDocuments } from "./stubs/cimd-node.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 
@@ -134,7 +134,6 @@ async function customer(email, { slug } = {}) {
 	const stored = await mongoose.connection.db.collection("users").findOne({ email });
 	user.userId = stored._id;
 	user.accountId = (await m.Account.findOne({ ownerId: stored._id }).lean())._id;
-	await activate(user);
 	if (slug) {
 		await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: `${slug} news`, slug, postalAddress: "1 Main St, Paris" }))));
 	}
@@ -460,10 +459,8 @@ describe("connecting with the official MCP client", () => {
 			resource: MCP_URL,
 		});
 		assert.equal(token.status, 200, JSON.stringify(token.body));
-		const billing = await callTool(token.body.access_token, "get_billing");
-		assert.equal(billing.structuredContent.status, "no_plan", "billing tools work before a plan, so the app can open checkout");
 		const contacts = await callTool(token.body.access_token, "list_contacts");
-		assert.equal(toolError(contacts).code, "subscription_required", "the rest answers what an API key would without a plan");
+		assert.deepEqual(contacts.structuredContent.contacts, [], "the app reads what an API key would");
 
 		const google = { jar: new Map(), ip: `198.51.100.${++visitor}` };
 		const googleStart = await as(google, () => m.authRoute.GET(new Request(authorizationUrl(AGENT, { challenge }))));
@@ -805,7 +802,7 @@ describe("tokens", () => {
 		await strangerApp.close();
 	});
 
-	test("blocked and canceled accounts answer an app exactly as they answer a full access key", async () => {
+	test("blocked accounts answer an app exactly as they answer a full access key", async () => {
 		const user = await customer("oauth-states@example.com", { slug: "oauth-states" });
 		const { key } = await as(user, () => m.apiKeys.createApiKey(null, form({ name: "Agent", level: "full" })));
 		const provider = createProvider();
@@ -821,11 +818,6 @@ describe("tokens", () => {
 		assert.deepEqual(byApp, byKey);
 		assert.equal(toolError(await callTool(token, "add_contact", { email: "new-reader@example.org" })).code, "account_blocked");
 		assert.equal((await callTool(token, "list_contacts")).structuredContent.contacts.length, 1, "reads still work");
-
-		await m.Account.updateOne({ _id: user.accountId }, { $set: { status: "active", subscriptionStatus: "canceled" } });
-		const canceledByKey = toolError(await callTool(key, "list_contacts"));
-		assert.equal(canceledByKey.code, "subscription_required");
-		assert.deepEqual(toolError(await callTool(token, "list_contacts")), canceledByKey);
 	});
 
 	test("an app's signups count against its account with its keys and contacts added by hand: 600 an hour, and the owner hears of it", async () => {

@@ -61,12 +61,12 @@ test("path parameters and key levels", () => {
 
 test("errors keep known codes and hide the rest", () => {
 	assert.deepEqual(toActionError(actionError("conflict", "Already sending")), { code: "conflict", message: "Already sending" });
-	assert.deepEqual(toActionError(Object.assign(new Error("Over"), { code: "plan_limit_emails" })), { code: "plan_limit_emails", message: "Over" });
+	assert.deepEqual(toActionError(Object.assign(new Error("Blocked"), { code: "account_blocked" })), { code: "account_blocked", message: "Blocked" });
 	assert.equal(toActionError(Object.assign(new Error("E11000 duplicate key"), { code: 11000 })).code, "internal_error");
 	assert.doesNotMatch(toActionError(new Error("connection string mongodb://secret")).message, /mongodb/);
-	assert.equal(getErrorStatus("plan_limit_subscribers"), 402);
+	assert.equal(getErrorStatus("account_blocked"), 403);
 	assert.equal(getErrorStatus("nonsense"), 500);
-	for (const code of ["unauthorized", "forbidden", "not_found", "validation_failed", "conflict", "rate_limited", "plan_limit_emails", "plan_limit_subscribers", "account_blocked"]) {
+	for (const code of ["unauthorized", "forbidden", "not_found", "validation_failed", "conflict", "rate_limited", "account_blocked", "account_deleting"]) {
 		assert.ok(ERRORS[code], code);
 	}
 	const issues = z.object({ subject: z.string().max(2), nested: z.object({ count: z.number() }) }).safeParse({ subject: "long", nested: { count: "1" } }).error.issues;

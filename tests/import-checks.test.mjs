@@ -5,7 +5,7 @@ import { normalizeEmail as normalizeCsvEmail } from "../lib/csv-import.js";
 import { getEmailSuggestion } from "../lib/email-typos.js";
 import { getDropReason, getSignupEmailProblem } from "../lib/import-checks.js";
 import { normalizeEmail } from "../lib/validation.js";
-import { activate, anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
+import { anonymous, as, callApi, catchRedirect, form, signIn, startTestApp } from "./helpers/app.mjs";
 import { flushAfter } from "./stubs/next-server.mjs";
 import { domainsWithoutMail } from "./stubs/mail-domains.mjs";
 
@@ -91,7 +91,6 @@ describe("contact imports", () => {
 			Suppression: (await import("../models/Suppression.js")).default,
 		};
 		user = await signIn("importer@example.com");
-		await activate(user);
 		const url = await as(user, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: "Importer", slug: "importer", postalAddress: "1 Main St" }))));
 		user.newsletterId = url.split("/").at(-1);
 	});
@@ -158,7 +157,6 @@ describe("contact imports", () => {
 
 	test("an import id from another account or newsletter is refused", async () => {
 		const other = await signIn("other-importer@example.com");
-		await activate(other);
 		const url = await as(other, () => catchRedirect(m.newsletters.saveNewsletter(null, form({ name: "Other", slug: "other-importer", postalAddress: "1 Main St" }))));
 		const { importId } = await as(user, () =>
 			m.contacts.importContacts({ newsletterId: user.newsletterId, consent: true, rows: [{ email: "dan@example.org", status: "active" }] })

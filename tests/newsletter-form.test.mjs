@@ -55,14 +55,11 @@ test("the shared address follows the slug; an own domain keeps its address", () 
 	assert.equal(getDraftFromEmail(removed, sharedDomain), "hello@field-notes.mailcheapmail.com", "a domain the account removed falls back to the shared address");
 });
 
-test("the postal address starts as the one emails print: the newsletter's own, else the default, unless it was cleared", () => {
-	const defaultPostalAddress = "Example Company, 1 Example Way";
-	const draft = (fields) => getNewsletterDraft({ newsletter: { ...newsletter, ...fields }, domains: [], sharedDomain, defaultPostalAddress });
+test("the postal address starts as the newsletter's own", () => {
+	const draft = (fields) => getNewsletterDraft({ newsletter: { ...newsletter, ...fields }, domains: [], sharedDomain });
 	assert.equal(draft({}).postalAddress, "1 Main St, Paris");
-	assert.equal(draft({ postalAddress: undefined }).postalAddress, defaultPostalAddress);
-	assert.equal(draft({ postalAddress: "" }).postalAddress, defaultPostalAddress, "saved before there was a default");
-	assert.equal(draft({ postalAddress: "", postalAddressCleared: true }).postalAddress, "");
-	assert.equal(getNewsletterDraft({ newsletter: { ...newsletter, postalAddress: "" }, domains: [], sharedDomain }).postalAddress, "");
+	assert.equal(draft({ postalAddress: undefined }).postalAddress, "");
+	assert.equal(draft({ postalAddress: "  " }).postalAddress, "");
 });
 
 test("a new slug says what it moves: the shared address and the website, whose old pages go while sent links stay", () => {

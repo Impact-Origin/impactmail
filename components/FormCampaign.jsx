@@ -24,7 +24,6 @@ import CardSettings from "@/components/CardSettings";
 import DialogDiscardCampaign from "@/components/DialogDiscardCampaign";
 import DialogPreviewEmail from "@/components/DialogPreviewEmail";
 import EditorRich from "@/components/EditorRich";
-import IconWarmup from "@/components/IconWarmup";
 import ListChecks from "@/components/ListChecks";
 import NavSteps from "@/components/NavSteps";
 import PanelSend from "@/components/PanelSend";
@@ -41,10 +40,8 @@ import { formatCount, formatSendTime } from "@/lib/format";
 import { markdownToHtml } from "@/lib/markdown";
 import { getPresendChecks } from "@/lib/presend-checks";
 import { UNSUBSCRIBE_PLACEHOLDER, renderEmail, withResponsiveImages } from "@/lib/render-email";
-import { getPaceHours } from "@/lib/send-spread";
 import { toast } from "@/lib/toast";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { usePaywall } from "@/lib/use-paywall";
 import { useSendCampaign } from "@/lib/use-send-campaign";
 import { useToastError } from "@/lib/use-toast-error";
 import { useAutosave } from "@/lib/use-autosave";
@@ -63,9 +60,7 @@ export default function FormCampaign({
 	testEmail,
 	sendTimes,
 	archiveUrlBase,
-	planProblem,
-	emailsLeft,
-	pace,
+	accountProblem,
 	newContacts,
 }) {
 	const isHtml = campaign.format === "html";
@@ -86,8 +81,6 @@ export default function FormCampaign({
 	const [isTesting, startTesting] = useTransition();
 	const [isWorking, startWorking] = useTransition();
 	const toastError = useToastError();
-	const paywall = usePaywall();
-	const hasPlan = paywall?.hasPlan ?? true;
 	const deferredValues = useDeferredValue(values);
 	const isUploading = values.body.includes('src="blob:');
 	const scheduledAt = campaign.status === "scheduled" ? campaign.scheduledAt : null;
@@ -125,28 +118,23 @@ export default function FormCampaign({
 		rendered,
 		senderProblem,
 		isSendingEnabled,
-		planProblem,
+		accountProblem,
 	});
-	// Without a plan, Send and Schedule open the paywall first; the checks wait until there's one.
-	const blockingMessage = !hasPlan ? null : isUploading ? UPLOADING_MESSAGE : blocking[0]?.message;
+	const blockingMessage = isUploading ? UPLOADING_MESSAGE : blocking[0]?.message;
 	const reviewChecks = checks.map((check) => ({ ...check, fix: getCheckFix(check, { newsletterId: newsletter._id }) }));
-	const warmupCheck = getWarmupCheck(pace, { emails: audienceCount, newContacts });
 	const sending = useSendCampaign({
 		campaignId: campaign._id,
 		audienceCount,
 		audienceLimit: campaign.audienceLimit,
-		emailsLeft,
 		scheduledAt,
 		isCleanupEnabled: Boolean(newsletter.cleanup?.enabled),
 		sendTimes,
 		blockingMessage,
-		hasPlan,
 		onBeforeSend: persist,
 	});
-	const isTestDisabled = hasPlan && !isSendingEnabled;
+	const isTestDisabled = !isSendingEnabled;
 
 	function sendTest() {
-		if (!hasPlan) return paywall.open("test");
 		startTesting(async () => {
 			if (isUploading) return void toast.error(UPLOADING_MESSAGE);
 			if (!(await persist())) return;
@@ -224,15 +212,15 @@ export default function FormCampaign({
 
 	const sendAction =
 		sending.choice === "now"
-			? { label: "Send now", icon: Send, reason: "send", run: () => sending.setIsConfirmOpen(true) }
-			: { label: "Schedule", icon: CalendarClock, reason: "schedule", run: sending.schedule };
+			? { label: "Send now", icon: Send, run: () => sending.setIsConfirmOpen(true) }
+			: { label: "Schedule", icon: CalendarClock, run: sending.schedule };
 	const action = {
 		write: { label: "Next: review", icon: ArrowRight, isIconAfter: true, onClick: () => goToStep("review") },
 		review: { label: "Next: send", icon: ArrowRight, isIconAfter: true, onClick: () => goToStep("send"), problem: blockingMessage },
 		send: {
 			label: sendAction.label,
 			icon: sendAction.icon,
-			onClick: () => (hasPlan ? sendAction.run() : paywall.open(sendAction.reason)),
+			onClick: sendAction.run,
 			problem: sending.problem,
 			isPending: sending.isPending,
 		},
@@ -334,7 +322,7 @@ export default function FormCampaign({
 
 				<section aria-label="Review" hidden={step !== "review"} className="flex flex-col gap-6">
 					<ListChecks
-						checks={warmupCheck ? [...reviewChecks, warmupCheck] : reviewChecks}
+						checks={reviewChecks}
 						renderFix={({ fix }) =>
 							fix && (
 								<ButtonFix
@@ -372,8 +360,6 @@ export default function FormCampaign({
 						newsletter={newsletter}
 						subject={values.subject}
 						audienceCount={audienceCount}
-						emailsLeft={emailsLeft}
-						pace={pace}
 						newContacts={newContacts}
 						archiveUrlBase={archiveUrlBase}
 					/>
@@ -412,21 +398,6 @@ export default function FormCampaign({
 			/>
 		</div>
 	);
-}
-
-// The checklist's warm-up row, for a send to everyone: while the account warms up, or when the send would go out over
-// hours (lib/send-spread.js). It never blocks and isn't counted.
-function getWarmupCheck(pace, { emails, newContacts }) {
-	const hours = getPaceHours(pace, { emails, newContacts });
-	if (!hours && !pace?.warmup) return null;
-	const { warmup } = pace;
-	return {
-		id: "warmup",
-		label: hours ? `Goes out over ${formatCount(hours, "hour")}` : "Sends now",
-		detail: warmup ? (warmup.hasStarted ? `Warm-up day ${warmup.day} of ${warmup.days}` : "Starts the warm-up") : null,
-		isOk: true,
-		icon: IconWarmup,
-	};
 }
 
 function TitleCampaign({ title, newsletter, status }) {

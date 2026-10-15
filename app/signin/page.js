@@ -3,10 +3,8 @@ import ButtonSigninGoogle from "@/components/ButtonSigninGoogle";
 import FormSignin from "@/components/FormSignin";
 import LayoutSplit from "@/components/LayoutSplit";
 import LogoWordmark from "@/components/LogoWordmark";
-import { SigninAside, SiteAnalytics } from "@/components/SiteExtensions";
 import { DELETION_GRACE_DAYS } from "@/lib/account-deletion";
 import { getSession, getSignupError, isGoogleEnabled } from "@/lib/auth";
-import { isCloud } from "@/lib/config";
 import { readOAuthRequest } from "@/lib/oauth";
 import { toSafeNextPath } from "@/lib/validation";
 
@@ -24,7 +22,7 @@ export default async function SigninPage({ searchParams }) {
 	const intro = getIntro(oauthRequest, deleted !== undefined);
 
 	return (
-		<LayoutSplit aside={SigninAside && <SigninAside />}>
+		<LayoutSplit>
 			<header className="flex h-9 items-center">
 				<LogoWordmark href="/" className="rounded-md" />
 			</header>
@@ -54,7 +52,6 @@ export default async function SigninPage({ searchParams }) {
 					)}
 				</div>
 			</div>
-			{SiteAnalytics && <SiteAnalytics />}
 		</LayoutSplit>
 	);
 }
@@ -65,6 +62,5 @@ function getIntro(oauthRequest, isDeleted) {
 	if (oauthRequest?.isExpired) return "This sign-in link expired. Go back to the app and connect MailCheap again.";
 	if (oauthRequest) return `${oauthRequest.client.name} wants to connect to your MailCheap account. Sign in first.`;
 	if (isDeleted) return `Your account is deleted. Sign in within ${DELETION_GRACE_DAYS} days to restore it.`;
-	if (!isCloud()) return "Only the emails this server allows can sign in.";
-	return null;
+	return "Only the emails this server allows can sign in.";
 }
