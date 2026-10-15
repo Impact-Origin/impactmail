@@ -15,7 +15,7 @@ const APP_URL = "http://localhost:3000";
 const MCP_URL = `${APP_URL}/mcp`;
 const TOKEN_URL = `${APP_URL}/api/auth/oauth2/token`;
 const REGISTER_URL = `${APP_URL}/api/auth/oauth2/register`;
-const MCP_SCOPE = "mailcheap:full";
+const MCP_SCOPE = "impactmail:full";
 
 const AGENT = {
 	clientId: "https://agent.example.test/oauth/client.json",
@@ -140,7 +140,7 @@ async function customer(email, { slug } = {}) {
 	return user;
 }
 
-// What the browser does between the app and MailCheap: open the authorization URL, answer the consent page
+// What the browser does between the app and ImpactMail: open the authorization URL, answer the consent page
 // when it shows, and land on the app's redirect URI.
 async function authorizeInBrowser(user, authorizationUrl, { decision = "allow" } = {}) {
 	const response = await as(user, () => m.authRoute.GET(new Request(authorizationUrl, { headers: { cookie: cookieOf(user) } })));
@@ -387,7 +387,7 @@ describe("connecting with the official MCP client", () => {
 		assert.equal(claims.sub, String(users.owner.userId));
 		assert.equal(claims.azp, AGENT.clientId);
 		assert.equal(claims.exp - claims.iat, 3600);
-		assert.deepEqual(claims.scope.split(" ").sort(), ["mailcheap:full", "offline_access"]);
+		assert.deepEqual(claims.scope.split(" ").sort(), ["impactmail:full", "offline_access"]);
 
 		const { tools } = await client.listTools();
 		assert.equal(tools.length, m.registry.ACTIONS.length, "full access: every tool");
@@ -492,7 +492,7 @@ describe("connecting with the official MCP client", () => {
 		const tampered = new URL(start.headers.get("location"), APP_URL).search.slice(1).replace("state-123", "state-999");
 		await as(user, () => m.signin.sendSigninCode(null, form({ email })));
 		const result = await as(user, () => m.signin.verifySigninCode(null, form({ email, code: signInCode(email), oauth_query: tampered })));
-		assert.equal(result.error, "This sign-in link expired. Go back to the app and connect MailCheap again.");
+		assert.equal(result.error, "This sign-in link expired. Go back to the app and connect ImpactMail again.");
 		assert.equal(user.jar.size, 0, "no session");
 	});
 
@@ -737,7 +737,7 @@ describe("registering, as Grok Bot does", () => {
 });
 
 describe("tokens", () => {
-	test("a token without the mailcheap:full scope gets a 403 asking for it", async () => {
+	test("a token without the impactmail:full scope gets a 403 asking for it", async () => {
 		const { challenge, verifier } = pkce();
 		const callback = await authorizeInBrowser(users.owner, authorizationUrl(AGENT, { challenge, scope: "offline_access" }));
 		const token = await postToken({
@@ -750,7 +750,7 @@ describe("tokens", () => {
 		});
 		const { status, headers, body } = await mcpRequest(token.body.access_token);
 		assert.equal(status, 403);
-		assert.match(headers.get("www-authenticate"), /^Bearer error="insufficient_scope", scope="mailcheap:full", resource_metadata="[^"]+\/mcp"/);
+		assert.match(headers.get("www-authenticate"), /^Bearer error="insufficient_scope", scope="impactmail:full", resource_metadata="[^"]+\/mcp"/);
 		assert.equal(body.error.code, "forbidden");
 	});
 
@@ -839,7 +839,7 @@ describe("tokens", () => {
 		assert.deepEqual(await byHand("hand-again@example.org"), { error: "You can add 600 contacts an hour. Try again later." });
 		await flushAfter();
 		assert.equal(await m.Contact.countDocuments({ accountId: user.accountId }), 600);
-		assert.equal(platformEmails.filter(({ to, subject }) => to.includes(user.email) && subject === "[MailCheap] Signups paused").length, 1);
+		assert.equal(platformEmails.filter(({ to, subject }) => to.includes(user.email) && subject === "[ImpactMail] Signups paused").length, 1);
 	});
 });
 

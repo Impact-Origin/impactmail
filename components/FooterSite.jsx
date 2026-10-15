@@ -56,7 +56,7 @@ const FOOTER = {
 	tagline: "Newsletters sent from your own server.",
 	columns: [
 		{
-			title: "MailCheap",
+			title: "ImpactMail",
 			links: [
 				{ href: "/docs", label: "Docs" },
 				{ href: SOURCE_URL, label: "Source code", isExternal: true },

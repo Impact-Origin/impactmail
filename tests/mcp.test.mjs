@@ -83,7 +83,7 @@ describe("connecting", () => {
 		assert.equal(status, 200);
 		assert.equal(headers.get("mcp-session-id"), null, "no session to keep");
 		assert.equal(body.result.protocolVersion, "2025-06-18");
-		assert.equal(body.result.serverInfo.name, "mailcheap");
+		assert.equal(body.result.serverInfo.name, "impactmail");
 		assert.ok(body.result.capabilities.tools);
 		assert.match(body.result.instructions, /can't be undone/);
 		assert.equal((await mcp(owner.fullKey, "notifications/initialized")).status, 202);

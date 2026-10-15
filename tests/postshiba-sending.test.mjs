@@ -183,7 +183,7 @@ describe("PostShiba tenants", () => {
 		assert.ok(account.postshiba.tenantId);
 		assert.equal(account.postshiba.provisionedAt, undefined);
 
-		// A lost write: PostShiba has the tenant, MailCheap forgot it.
+		// A lost write: PostShiba has the tenant, ImpactMail forgot it.
 		await m.Account.updateOne({ _id: user.accountId }, { $unset: { "postshiba.tenantId": 1 } });
 		await m.tenants.provisionTenant(user.accountId);
 		account = await loadAccount(user);
@@ -235,7 +235,7 @@ describe("PostShiba domains", () => {
 		const domain = await m.Domain.findOne({ accountId: owner.accountId, domain: "ps-owner.dev" }).lean();
 		const domainsBefore = fake.state.domains.size;
 		assert.deepEqual(await as(other, () => m.domains.addDomainAction(null, form({ domain: "ps-owner.dev" }))), {
-			error: "ps-owner.dev is used by another MailCheap account",
+			error: "ps-owner.dev is used by another ImpactMail account",
 		});
 		assert.equal(fake.state.domains.size, domainsBefore, "PostShiba never heard of the second claim");
 		assert.deepEqual(await as(other, () => m.domains.checkDomainAction(String(domain._id))), { error: "Domain not found" });
@@ -406,7 +406,7 @@ describe("PostShiba sending", () => {
 		assert.equal(body.subject, "[Test] Issue 7");
 		assert.match(body.headers["List-Unsubscribe"], /\/api\/unsubscribe\?token=/);
 		assert.equal(body.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
-		assert.equal(body.headers["Feedback-ID"], `${id}:mc-${user.accountId}:test:mailcheap`, "PostShiba writes its own in its place, led by the same mc-<accountId>");
+		assert.equal(body.headers["Feedback-ID"], `${id}:mc-${user.accountId}:test:impactmail`, "PostShiba writes its own in its place, led by the same mc-<accountId>");
 		assert.deepEqual(body.unique_args, { account_id: String(user.accountId), message_id: String(message._id), kind: "test", campaign_id: id });
 		assert.ok(response.message_id);
 		assert.equal(message.providerMessageId, undefined, "the Message-ID /sends answers with isn't the id PostShiba's events carry");
@@ -515,7 +515,7 @@ describe("PostShiba sending", () => {
 		fake.fail({ method: "POST", path: /\/sends$/, status: 403, body: { error: "kyc_required", field: "to" } });
 		assert.match((await as(user, () => m.campaigns.sendTestCampaign(id))).error, /hasn't approved production sending/);
 		const toAdmins = platformEmails.slice(emailsBefore).filter(({ to }) => to.includes("admin@example.com"));
-		assert.deepEqual(toAdmins.map(({ subject }) => subject), ["[MailCheap] PostShiba refuses MailCheap's sends"], "the campaign and the test are the same problem");
+		assert.deepEqual(toAdmins.map(({ subject }) => subject), ["[ImpactMail] PostShiba refuses ImpactMail's sends"], "the campaign and the test are the same problem");
 		assert.match(toAdmins[0].text, new RegExp(`Account ${user.accountId}: PostShiba hasn't approved production sending yet \\(kyc_required\\)\\.\\nReaders' emails are refused until PostShiba approves the team\\.`));
 	});
 
@@ -570,7 +570,7 @@ describe("Feedback-ID on every email", () => {
 		assert.equal(steps.length, 2, "the first step and the next");
 		assert.deepEqual(
 			steps.map(({ body }) => body.content.headers["Feedback-ID"]),
-			[`${id}:${account}:campaign:mailcheap`, `${id}:${account}:campaign:mailcheap`],
+			[`${id}:${account}:campaign:impactmail`, `${id}:${account}:campaign:impactmail`],
 			"the campaign's, the same on each of its emails"
 		);
 
@@ -578,7 +578,7 @@ describe("Feedback-ID on every email", () => {
 		await m.Campaign.updateOne({ accountId: user.accountId, _id: id }, { $set: { status: "sending" } });
 		const lastChance = await m.Message.create({ accountId: user.accountId, campaignId: id, newsletterId: user.newsletterId, contactId: third._id, email: third.email, kind: "last-chance" });
 		assert.equal((await m.sending.sendMessageBatch({ accountId: String(user.accountId), messageIds: [String(lastChance._id)] })).sent, 1);
-		assert.equal(fake.state.injects.at(-1).body.content.headers["Feedback-ID"], `${id}:${account}:last-chance:mailcheap`);
+		assert.equal(fake.state.injects.at(-1).body.content.headers["Feedback-ID"], `${id}:${account}:last-chance:impactmail`);
 
 		await as(user, () =>
 			m.newsletters.saveNewsletter(
@@ -596,10 +596,10 @@ describe("Feedback-ID on every email", () => {
 		assert.deepEqual(
 			fake.state.sends.slice(sent).map(({ body }) => body.headers["Feedback-ID"]),
 			[
-				`${user.newsletterId}:${account}:welcome:mailcheap`,
-				`${user.newsletterId}:${account}:confirmation:mailcheap`,
-				`${id}:${account}:test:mailcheap`,
-				`${user.newsletterId}:${account}:test:mailcheap`,
+				`${user.newsletterId}:${account}:welcome:impactmail`,
+				`${user.newsletterId}:${account}:confirmation:impactmail`,
+				`${id}:${account}:test:impactmail`,
+				`${user.newsletterId}:${account}:test:impactmail`,
 			]
 		);
 	});

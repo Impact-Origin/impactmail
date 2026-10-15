@@ -45,7 +45,7 @@ export async function startTestApp(env = {}) {
 		SUPPRESSION_HASH_KEY: "test-suppression-hash-key-0123456789abcdef",
 		APP_URL: "http://localhost:3000",
 		RESEND_API_KEY: "re_test",
-		EMAIL_FROM: "MailCheap <hello@r.mailcheap.ai>",
+		EMAIL_FROM: "ImpactMail <hello@r.mailcheap.ai>",
 		SENDING_ENABLED: "true",
 		QSTASH_TOKEN: "qstash-test",
 		SEND_RATE_PER_SECOND: "14",

@@ -30,10 +30,10 @@ test("the server doesn't start with a short secret or hash key", () =>
 	withEnv(STRONG, () => {
 		assert.doesNotThrow(register);
 		process.env.SUPPRESSION_HASH_KEY = "short";
-		assert.throws(register, /MailCheap can't start\. SUPPRESSION_HASH_KEY must be at least 32 characters/);
+		assert.throws(register, /ImpactMail can't start\. SUPPRESSION_HASH_KEY must be at least 32 characters/);
 		process.env.SUPPRESSION_HASH_KEY = STRONG.SUPPRESSION_HASH_KEY;
 		process.env.BETTER_AUTH_SECRET = "short";
-		assert.throws(register, /MailCheap can't start\. BETTER_AUTH_SECRET must be at least 32 characters/);
+		assert.throws(register, /ImpactMail can't start\. BETTER_AUTH_SECRET must be at least 32 characters/);
 	}));
 
 test("the health check answers ok, or fails with the reason and never a value", async () => {

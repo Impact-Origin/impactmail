@@ -5,10 +5,10 @@ import { POSTSHIBA, POSTSHIBA_ENV, createFakePostshiba } from "./helpers/postshi
 import { flushAfter } from "./stubs/next-server.mjs";
 import { platformSent, sent as sesEmails } from "./stubs/ses.mjs";
 
-// Who carries MailCheap's own emails (sign-in codes, alerts): Resend when it's set up, else the provider. Customers'
+// Who carries ImpactMail's own emails (sign-in codes, alerts): Resend when it's set up, else the provider. Customers'
 // emails (issues, welcome, confirmation, last-chance, tests) always go through the provider.
-const SELF_HOSTED = { EMAIL_FROM: "MailCheap <login@mail.selfhost.dev>" };
-const CODE_SUBJECT = /^\d{6} is your MailCheap code$/;
+const SELF_HOSTED = { EMAIL_FROM: "ImpactMail <login@mail.selfhost.dev>" };
+const CODE_SUBJECT = /^\d{6} is your ImpactMail code$/;
 
 let app;
 let fake;
@@ -82,7 +82,7 @@ describe("sign-in codes and alerts", () => {
 			assert.deepEqual(await requestCode("self-resend@example.com"), { email: "self-resend@example.com" });
 		});
 		assert.deepEqual(added(before), { resend: 1, ses: 0, postshiba: 0, customer: 0 });
-		assert.equal(platformEmails.at(-1).from, "MailCheap <login@mail.selfhost.dev>");
+		assert.equal(platformEmails.at(-1).from, "ImpactMail <login@mail.selfhost.dev>");
 		assert.equal(platformEmails.at(-1).reply_to, undefined, "no support address");
 	});
 
@@ -94,9 +94,9 @@ describe("sign-in codes and alerts", () => {
 		});
 		assert.deepEqual(added(before), { resend: 0, ses: 2, postshiba: 0, customer: 0 });
 		const [code, alert] = platformSent.slice(-2);
-		assert.deepEqual([code.from, code.to, code.tenantName, code.configurationSet], ["MailCheap <login@mail.selfhost.dev>", "self-ses@example.com", undefined, undefined]);
+		assert.deepEqual([code.from, code.to, code.tenantName, code.configurationSet], ["ImpactMail <login@mail.selfhost.dev>", "self-ses@example.com", undefined, undefined]);
 		assert.match(code.subject, CODE_SUBJECT);
-		assert.deepEqual([alert.to, alert.subject], ["admin@example.com", "[MailCheap] Self-hosted alert"]);
+		assert.deepEqual([alert.to, alert.subject], ["admin@example.com", "[ImpactMail] Self-hosted alert"]);
 	});
 
 	test("without it on PostShiba, a tenant of their own sends them once EMAIL_FROM's domain is verified there", async () => {
@@ -120,7 +120,7 @@ describe("sign-in codes and alerts", () => {
 			assert.deepEqual(added(before), { resend: 0, ses: 0, postshiba: 1, customer: 0 });
 			const { clusterId, body } = fake.state.sends.at(-1);
 			assert.equal(clusterId, POSTSHIBA.transactionalClusterId);
-			assert.deepEqual([body.tenant, body.from, body.to], [tenants[0].id, "MailCheap <login@mail.selfhost.dev>", ["self-ps@example.com"]]);
+			assert.deepEqual([body.tenant, body.from, body.to], [tenants[0].id, "ImpactMail <login@mail.selfhost.dev>", ["self-ps@example.com"]]);
 			assert.match(body.subject, CODE_SUBJECT);
 			assert.deepEqual(body.unique_args, { kind: "platform" });
 			assert.equal(credentials().length, 1, "the credential is made once");

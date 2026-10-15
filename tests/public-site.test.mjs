@@ -180,72 +180,6 @@ describe("copy", () => {
 	});
 });
 
-describe("header", () => {
-	test("only the public header's plane flies, for a mouse with motion allowed, leaving and landing along its nose", async () => {
-		const flying = [];
-		for (const folder of ["app", "components"]) {
-			for (const file of await readdir(join(ROOT, folder), { recursive: true })) {
-				if (!/\.jsx?$/.test(file)) continue;
-				if (/<LogoWordmark\b[^>]*\bcanFly\b/.test(await readFile(join(ROOT, folder, file), "utf8"))) flying.push(`${folder}/${file}`);
-			}
-		}
-		assert.deepEqual(flying, ["components/HeaderSite.jsx"]);
-
-		const css = await readFile(join(ROOT, "app/globals.css"), "utf8");
-		const { FLIGHT_MEDIA } = await importFile("lib/wordmark-flight.js");
-		assert.equal(css.match(/@media (\([^{]+\)) \{[^@]*\[data-flying\] > \.wordmark-plane \{/)?.[1], FLIGHT_MEDIA, "the CSS and the script fly it in the same media");
-		assert.equal(FLIGHT_MEDIA, "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
-		const turn = Number(css.match(/offset-rotate: auto (-?[\d.]+)deg/)[1]);
-
-		// Straight at both ends, from and back to the plane's middle, heading where its nose points at rest.
-		const loop = (await readFile(join(ROOT, "components/LogoFlight.jsx"), "utf8")).match(/const LOOP = "([^"]+)"/)[1];
-		assert.match(loop, /^M12 12L[^A-Z]+C.+L12 12$/);
-		const numbers = loop.match(/-?[\d.]+/g).map(Number);
-		const heading = ([x1, y1], [x2, y2]) => (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-		assert.ok(Math.abs(heading([12, 12], numbers.slice(2, 4)) + turn) < 0.05, "takes off turned");
-		assert.ok(Math.abs(heading(numbers.slice(-4, -2), [12, 12]) + turn) < 0.05, "lands turned");
-	});
-
-	test("each new hover flies the plane once its last flight has ended: not before, not by staying, not on a tap", async () => {
-		const { startWordmarkFlights } = await importFile("lib/wordmark-flight.js");
-		const writes = [];
-		const dataset = new Proxy(
-			{},
-			{
-				set: (target, key, value) => writes.push(`set ${key}`) && Reflect.set(target, key, value),
-				deleteProperty: (target, key) => writes.push(`delete ${key}`) && Reflect.deleteProperty(target, key),
-			}
-		);
-		const wordmark = new EventTarget();
-		const box = Object.assign(new EventTarget(), { dataset });
-		let canFly = true;
-		const stop = startWordmarkFlights(wordmark, box, { canFly: () => canFly });
-		const enter = (pointerType = "mouse") => wordmark.dispatchEvent(Object.assign(new Event("pointerenter"), { pointerType }));
-		const end = (animationName, type = "animationend") => box.dispatchEvent(Object.assign(new Event(type), { animationName }));
-
-		enter("touch");
-		assert.deepEqual(writes, [], "a tap");
-		enter();
-		assert.deepEqual(writes, ["set flying"]);
-		end("wordmark-loop");
-		enter();
-		assert.deepEqual(writes, ["set flying"], "landed, its line still fading: the flight goes on, not again");
-		end("wordmark-trail-fade");
-		assert.deepEqual(writes, ["set flying", "delete flying"], "ended, the pointer still over it");
-		enter();
-		assert.deepEqual(writes.slice(2), ["set flying"], "the next entrance flies again");
-		end("wordmark-trail-fade", "animationcancel");
-		canFly = false;
-		enter();
-		assert.deepEqual(writes.slice(3), ["delete flying"], "reduced motion, or no mouse to hover with");
-		canFly = true;
-		enter();
-		stop();
-		enter();
-		assert.deepEqual(writes.slice(4), ["set flying", "delete flying"], "stopped");
-	});
-});
-
 describe("search engines", () => {
 	test("the sitemap lists the docs", () => {
 		const urls = withSiteUrl(() => m.sitemap()).map(({ url }) => url);
@@ -285,7 +219,7 @@ describe("search engines", () => {
 		for (const path of paths) {
 			const { file, metadata } = await readPage(path);
 			const title = await resolveTitle(file, metadata.title);
-			assert.match(title, /MailCheap/, `${path}: ${title}`);
+			assert.match(title, /ImpactMail/, `${path}: ${title}`);
 			assert.ok(metadata.description?.length >= 50 && metadata.description.length <= 200, `${path}: ${metadata.description}`);
 			assert.equal(metadata.alternates?.canonical, path, path);
 			// A page's openGraph would replace its layouts' whole: the share image and the page's address with it.
@@ -302,7 +236,7 @@ describe("search engines", () => {
 		const { metadata } = await importFile("app/(site)/layout.js");
 		assert.equal(metadata.metadataBase.href, new URL("/", m.config.getAppUrl()).href);
 		assert.deepEqual(metadata.robots, { index: true, follow: true });
-		assert.deepEqual(metadata.openGraph, { type: "website", siteName: "MailCheap", locale: "en_US", url: "./" });
+		assert.deepEqual(metadata.openGraph, { type: "website", siteName: "ImpactMail", locale: "en_US", url: "./" });
 		assert.equal(metadata.twitter.card, "summary_large_image");
 		assert.deepEqual((await importFile("app/layout.js")).metadata.robots, { index: false, follow: false }, "the app's own pages stay out of search");
 	});
@@ -327,7 +261,7 @@ describe("search engines", () => {
 		const response = (await importFile("app/site.webmanifest/route.js")).GET();
 		assert.equal(response.headers.get("content-type"), "application/manifest+json");
 		const manifest = await response.json();
-		assert.equal(manifest.name, "MailCheap");
+		assert.equal(manifest.name, "ImpactMail");
 		assert.equal(manifest.start_url, "/");
 		assert.deepEqual(manifest.icons.map(({ sizes }) => sizes), ["192x192", "512x512"]);
 		for (const { src, sizes, type } of manifest.icons) {

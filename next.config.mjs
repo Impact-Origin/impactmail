@@ -17,7 +17,7 @@ const SECURITY_HEADERS = [
 	{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
 	{ key: "X-Frame-Options", value: "DENY" },
 	{ key: "X-Content-Type-Options", value: "nosniff" },
-	// The origin only, MailCheap's own pages included: a URL like a contacts search can hold a subscriber's email,
+	// The origin only, ImpactMail's own pages included: a URL like a contacts search can hold a subscriber's email,
 	// and the page it leads to can send its referrer to analytics.
 	{ key: "Referrer-Policy", value: "strict-origin" },
 ];
